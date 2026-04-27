@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.agents.solver.schemas import PlanStep, TestCase
+from app.sandbox.schemas import TestExecutionResult
 
 SYSTEM_MESSAGE = (
     "You are an expert Python instructor solving beginner-level problems. "
@@ -68,6 +69,58 @@ def build_code_messages(
         f"{_format_test_cases(test_cases)}\n\n"
         "Implement the function in Python 3.11. Include the full `def` signature. "
         "The code must run as-is when pasted into a fresh module.\n\n"
+        "Return ONLY a JSON object of the form:\n"
+        '{"code": "<full python source>", "explanation": "<<=150 words plain language>"}\n'
+        "No prose outside the JSON."
+    )
+    return [
+        {"role": "system", "content": SYSTEM_MESSAGE},
+        {"role": "user", "content": user},
+    ]
+
+
+def _format_failures(test_results: list[TestExecutionResult]) -> str:
+    if not test_results:
+        return "  (no per-test results — sandbox could not execute the code)"
+    lines = []
+    for r in test_results:
+        if r.passed:
+            continue
+        if r.error:
+            outcome = f"raised {r.error}"
+        else:
+            outcome = f"got {r.actual!r}, expected {r.expected!r}"
+        lines.append(f"  - test {r.test_index} (input={r.input}): {outcome}")
+    return "\n".join(lines) if lines else "  (no individual failures recorded)"
+
+
+def build_code_retry_messages(
+    problem_text: str,
+    plan_steps: list[PlanStep],
+    test_cases: list[TestCase],
+    previous_code: str,
+    test_results: list[TestExecutionResult],
+    sandbox_error: str | None = None,
+) -> list[dict[str, Any]]:
+    plan_str = "\n".join(f"  {s.step_number}. {s.action} — {s.rationale}" for s in plan_steps)
+    failure_block = _format_failures(test_results)
+    sandbox_note = f"\n\nSandbox-level error: {sandbox_error}" if sandbox_error else ""
+    user = (
+        "Problem:\n"
+        f"{problem_text}\n\n"
+        "Plan:\n"
+        f"{plan_str}\n\n"
+        "Test cases:\n"
+        f"{_format_test_cases(test_cases)}\n\n"
+        "Your previous attempt failed sandbox verification.\n\n"
+        "Previous code:\n"
+        "```python\n"
+        f"{previous_code}\n"
+        "```\n\n"
+        "Test results:\n"
+        f"{failure_block}"
+        f"{sandbox_note}\n\n"
+        "Generate a corrected version that addresses the specific failures above. "
         "Return ONLY a JSON object of the form:\n"
         '{"code": "<full python source>", "explanation": "<<=150 words plain language>"}\n'
         "No prose outside the JSON."

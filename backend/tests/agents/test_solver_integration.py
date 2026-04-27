@@ -9,6 +9,7 @@ from app.agents.solver.agent import SolverAgent
 from app.agents.solver.schemas import SolverInput
 from app.core.config import get_settings
 from app.llm.client import DeepSeekClient
+from app.sandbox.runner import PythonSubprocessRunner
 
 pytestmark = [
     pytest.mark.integration,
@@ -29,7 +30,13 @@ def _load_problems() -> list[SolverInput]:
 @pytest.mark.parametrize("problem", _load_problems(), ids=lambda p: p.problem_id)
 async def test_solver_against_real_deepseek(problem: SolverInput):
     # get_settings is cached; this picks up DEEPSEEK_API_KEY from env / .env.
-    agent = SolverAgent(DeepSeekClient(get_settings()))
+    settings = get_settings()
+    agent = SolverAgent(
+        client=DeepSeekClient(settings),
+        runner=PythonSubprocessRunner(),
+        sandbox_timeout_seconds=settings.SANDBOX_TIMEOUT_SECONDS,
+        sandbox_memory_mb=settings.SANDBOX_MEMORY_MB,
+    )
 
     output = await agent.solve(problem)
 
@@ -39,3 +46,6 @@ async def test_solver_against_real_deepseek(problem: SolverInput):
     assert output.plan_steps, "plan_steps empty"
     assert output.analysis.strip(), "analysis empty"
     assert output.explanation.strip(), "explanation empty"
+    assert output.verified is True, f"sandbox verification failed: {output.test_results}"
+    assert len(output.test_results) == len(problem.test_cases)
+    assert all(r.passed for r in output.test_results)

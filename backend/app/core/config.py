@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     LLM_TIMEOUT_SECONDS: int = 30
     LLM_MAX_RETRIES: int = 3
 
+    SANDBOX_TIMEOUT_SECONDS: int = 5
+    SANDBOX_MEMORY_MB: int = 128
+    SANDBOX_PYTHON_PATH: str = ""  # empty = resolve to sys.executable at runtime
+
 
 @lru_cache
 def get_settings() -> Settings:

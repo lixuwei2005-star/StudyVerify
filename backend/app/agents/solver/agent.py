@@ -2,19 +2,27 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from functools import lru_cache
 
 from pydantic import TypeAdapter, ValidationError
 
 from app.agents.solver import prompts
 from app.agents.solver.schemas import PlanStep, SolverInput, SolverOutput
+from app.core.config import get_settings
 from app.llm.client import DeepSeekClient, get_llm_client
 from app.llm.exceptions import LLMError
+from app.sandbox.runner import PythonSubprocessRunner, get_sandbox_runner
+from app.sandbox.schemas import SandboxRunRequest, SandboxRunResult
 
 logger = logging.getLogger("app.agents.solver")
 
 _PLAN_STEPS_ADAPTER = TypeAdapter(list[PlanStep])
 _SNIPPET_LEN = 200
+_DEF_PATTERN = re.compile(r"^(?:async\s+)?def\s+(\w+)\s*\(", re.MULTILINE)
+
+_UNVERIFIED_CONFIDENCE_CAP = 0.4
+_RETRIED_CONFIDENCE_CAP = 0.85
 
 
 class SolverError(Exception):
@@ -27,10 +35,19 @@ class SolverError(Exception):
 
 
 class SolverAgent:
-    """3-stage Solver: analyze → plan → code. No sandbox in this step."""
+    """4-stage Solver: analyze → plan → code → sandbox-verify (retry-once)."""
 
-    def __init__(self, client: DeepSeekClient) -> None:
+    def __init__(
+        self,
+        client: DeepSeekClient,
+        runner: PythonSubprocessRunner,
+        sandbox_timeout_seconds: int = 5,
+        sandbox_memory_mb: int = 128,
+    ) -> None:
         self._client = client
+        self._runner = runner
+        self._sandbox_timeout_seconds = sandbox_timeout_seconds
+        self._sandbox_memory_mb = sandbox_memory_mb
 
     async def solve(self, request: SolverInput) -> SolverOutput:
         pid = request.problem_id
@@ -40,7 +57,26 @@ class SolverAgent:
         plan_steps = await self._plan(request, analysis)
         code, explanation = await self._code(request, plan_steps)
 
-        confidence = self._compute_confidence(analysis, plan_steps, code)
+        test_payload = [tc.model_dump() for tc in request.test_cases]
+        entry_function = self._extract_entry_function(code, pid)
+        sandbox_result = await self._run_sandbox(code, entry_function, test_payload)
+
+        retry_used = False
+        if self._should_retry(sandbox_result):
+            logger.info(
+                "solver.retry_code problem_id=%s prior_status=%s", pid, sandbox_result.status
+            )
+            retry_used = True
+            code, explanation = await self._code_retry(
+                request, plan_steps, code, sandbox_result
+            )
+            entry_function = self._extract_entry_function(code, pid)
+            sandbox_result = await self._run_sandbox(code, entry_function, test_payload)
+
+        verified = sandbox_result.status == "all_passed"
+        confidence = self._compute_confidence(
+            analysis, plan_steps, code, verified=verified, retry_used=retry_used
+        )
         output = SolverOutput(
             problem_id=pid,
             analysis=analysis,
@@ -48,9 +84,24 @@ class SolverAgent:
             code=code,
             explanation=explanation,
             confidence=confidence,
+            verified=verified,
+            test_results=sandbox_result.test_results,
         )
-        logger.info("solver.done problem_id=%s confidence=%.2f", pid, confidence)
+        logger.info(
+            "solver.done problem_id=%s confidence=%.2f verified=%s status=%s retry_used=%s",
+            pid,
+            confidence,
+            verified,
+            sandbox_result.status,
+            retry_used,
+        )
         return output
+
+    @staticmethod
+    def _should_retry(result: SandboxRunResult) -> bool:
+        # Retry on wrong-answer or hard sandbox errors; do NOT retry on timeout
+        # (likely an infinite loop — regenerating won't help quickly).
+        return result.status in ("some_failed", "error")
 
     async def _analyze(self, request: SolverInput) -> str:
         messages = prompts.build_analyze_messages(request.problem_text, request.test_cases)
@@ -74,6 +125,48 @@ class SolverAgent:
         except LLMError as exc:
             raise SolverError("code", request.problem_id, str(exc)) from exc
         return self._parse_code(raw, request.problem_id)
+
+    async def _code_retry(
+        self,
+        request: SolverInput,
+        plan_steps: list[PlanStep],
+        previous_code: str,
+        sandbox_result: SandboxRunResult,
+    ) -> tuple[str, str]:
+        messages = prompts.build_code_retry_messages(
+            request.problem_text,
+            plan_steps,
+            request.test_cases,
+            previous_code,
+            sandbox_result.test_results,
+            sandbox_error=sandbox_result.error,
+        )
+        try:
+            raw = await self._client.chat(messages, temperature=0.1, json_mode=True)
+        except LLMError as exc:
+            raise SolverError("code_retry", request.problem_id, str(exc)) from exc
+        return self._parse_code(raw, request.problem_id)
+
+    async def _run_sandbox(
+        self, code: str, entry_function: str, test_cases: list[dict]
+    ) -> SandboxRunResult:
+        sandbox_request = SandboxRunRequest(
+            code=code,
+            entry_function=entry_function,
+            test_cases=test_cases,
+            timeout_seconds=self._sandbox_timeout_seconds,
+            memory_mb=self._sandbox_memory_mb,
+        )
+        return await self._runner.run(sandbox_request)
+
+    @staticmethod
+    def _extract_entry_function(code: str, problem_id: str) -> str:
+        match = _DEF_PATTERN.search(code.lstrip("﻿"))
+        if not match:
+            raise SolverError(
+                "sandbox", problem_id, "no top-level function definition found in generated code"
+            )
+        return match.group(1)
 
     @staticmethod
     def _parse_plan(raw: str, problem_id: str) -> list[PlanStep]:
@@ -113,7 +206,14 @@ class SolverAgent:
         return code, explanation
 
     @staticmethod
-    def _compute_confidence(analysis: str, plan_steps: list[PlanStep], code: str) -> float:
+    def _compute_confidence(
+        analysis: str,
+        plan_steps: list[PlanStep],
+        code: str,
+        *,
+        verified: bool,
+        retry_used: bool,
+    ) -> float:
         score = 1.0
         if len(analysis) < 50:
             score -= 0.2
@@ -121,9 +221,20 @@ class SolverAgent:
             score -= 0.2
         if "def " not in code:
             score -= 0.3
-        return max(0.0, score)
+        score = max(0.0, score)
+        if not verified:
+            return min(score, _UNVERIFIED_CONFIDENCE_CAP)
+        if retry_used:
+            return min(score, _RETRIED_CONFIDENCE_CAP)
+        return score
 
 
 @lru_cache
 def get_solver_agent() -> SolverAgent:
-    return SolverAgent(get_llm_client())
+    settings = get_settings()
+    return SolverAgent(
+        client=get_llm_client(),
+        runner=get_sandbox_runner(),
+        sandbox_timeout_seconds=settings.SANDBOX_TIMEOUT_SECONDS,
+        sandbox_memory_mb=settings.SANDBOX_MEMORY_MB,
+    )
