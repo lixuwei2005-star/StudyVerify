@@ -25,17 +25,19 @@ def _make_session_obj(**overrides) -> SolverSession:
         verified=True,
         test_results=[{"passed": True}, {"passed": True}],
         confidence=Decimal("0.95"),
+        retry_used=False,
+        total_latency_ms=1234,
     )
     defaults.update(overrides)
     return SolverSession(**defaults)
 
 
-async def test_create_and_read_round_trip(session: AsyncSession) -> None:
+async def test_create_and_read_round_trip(sqlite_session: AsyncSession) -> None:
     obj = _make_session_obj()
-    session.add(obj)
-    await session.commit()
+    sqlite_session.add(obj)
+    await sqlite_session.commit()
 
-    fetched = (await session.execute(select(SolverSession))).scalar_one()
+    fetched = (await sqlite_session.execute(select(SolverSession))).scalar_one()
     assert isinstance(fetched.id, uuid.UUID)
     assert fetched.problem_id == "prob_001"
     assert fetched.problem_text == "Compute fib(n)."
@@ -46,20 +48,26 @@ async def test_create_and_read_round_trip(session: AsyncSession) -> None:
     assert fetched.plan_steps == ["init a=0,b=1", "loop n times", "return a"]
     assert fetched.verified is True
     assert fetched.confidence == Decimal("0.95")
+    assert fetched.retry_used is False
+    assert fetched.total_latency_ms == 1234
 
 
-async def test_filter_by_problem_id(session: AsyncSession) -> None:
-    session.add_all(
+async def test_filter_by_problem_id(sqlite_session: AsyncSession) -> None:
+    sqlite_session.add_all(
         [
             _make_session_obj(problem_id="prob_a"),
             _make_session_obj(problem_id="prob_b"),
             _make_session_obj(problem_id="prob_a"),
         ]
     )
-    await session.commit()
+    await sqlite_session.commit()
 
     rows = (
-        (await session.execute(select(SolverSession).where(SolverSession.problem_id == "prob_a")))
+        (
+            await sqlite_session.execute(
+                select(SolverSession).where(SolverSession.problem_id == "prob_a")
+            )
+        )
         .scalars()
         .all()
     )
@@ -67,18 +75,22 @@ async def test_filter_by_problem_id(session: AsyncSession) -> None:
     assert all(r.problem_id == "prob_a" for r in rows)
 
 
-async def test_filter_by_verified_false(session: AsyncSession) -> None:
-    session.add_all(
+async def test_filter_by_verified_false(sqlite_session: AsyncSession) -> None:
+    sqlite_session.add_all(
         [
             _make_session_obj(verified=True),
             _make_session_obj(verified=False),
             _make_session_obj(verified=False),
         ]
     )
-    await session.commit()
+    await sqlite_session.commit()
 
     rows = (
-        (await session.execute(select(SolverSession).where(SolverSession.verified.is_(False))))
+        (
+            await sqlite_session.execute(
+                select(SolverSession).where(SolverSession.verified.is_(False))
+            )
+        )
         .scalars()
         .all()
     )
@@ -86,36 +98,46 @@ async def test_filter_by_verified_false(session: AsyncSession) -> None:
     assert all(r.verified is False for r in rows)
 
 
-async def test_update_verified(session: AsyncSession) -> None:
+async def test_update_verified(sqlite_session: AsyncSession) -> None:
     obj = _make_session_obj(verified=False)
-    session.add(obj)
-    await session.commit()
+    sqlite_session.add(obj)
+    await sqlite_session.commit()
 
     obj.verified = True
-    await session.commit()
+    await sqlite_session.commit()
 
-    fetched = (await session.execute(select(SolverSession))).scalar_one()
+    fetched = (await sqlite_session.execute(select(SolverSession))).scalar_one()
     assert fetched.verified is True
 
 
-async def test_created_at_auto_populated(session: AsyncSession) -> None:
+async def test_created_at_auto_populated(sqlite_session: AsyncSession) -> None:
     obj = _make_session_obj()
-    session.add(obj)
-    await session.commit()
-    await session.refresh(obj)
+    sqlite_session.add(obj)
+    await sqlite_session.commit()
+    await sqlite_session.refresh(obj)
 
     assert obj.created_at is not None
 
 
-async def test_jsontype_variant_round_trip(session: AsyncSession) -> None:
+async def test_jsontype_variant_round_trip(sqlite_session: AsyncSession) -> None:
     """Storing nested list-of-dicts works on SQLite via the JSONType variant."""
     payload = [
         {"input": [1, 2, 3], "expected": [3, 2, 1], "meta": {"weight": 1.0}},
         {"input": [], "expected": [], "meta": {"weight": 0.5}},
     ]
     obj = _make_session_obj(test_results=payload)
-    session.add(obj)
-    await session.commit()
+    sqlite_session.add(obj)
+    await sqlite_session.commit()
 
-    fetched = (await session.execute(select(SolverSession))).scalar_one()
+    fetched = (await sqlite_session.execute(select(SolverSession))).scalar_one()
     assert fetched.test_results == payload
+
+
+async def test_retry_used_true_round_trip(sqlite_session: AsyncSession) -> None:
+    obj = _make_session_obj(retry_used=True, total_latency_ms=9876)
+    sqlite_session.add(obj)
+    await sqlite_session.commit()
+
+    fetched = (await sqlite_session.execute(select(SolverSession))).scalar_one()
+    assert fetched.retry_used is True
+    assert fetched.total_latency_ms == 9876

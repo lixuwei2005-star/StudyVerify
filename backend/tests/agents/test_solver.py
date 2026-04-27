@@ -130,6 +130,7 @@ async def test_solve_happy_path_verified_first_try():
     assert sandbox_run.await_count == 1
     assert out.problem_id == "py-001-sum-list"
     assert out.verified is True
+    assert out.retry_used is False
     assert len(out.test_results) == 2
     assert all(r.passed for r in out.test_results)
     assert out.confidence == pytest.approx(1.0)
@@ -214,6 +215,7 @@ async def test_solve_retries_once_when_first_attempt_fails_sandbox():
     assert chat.await_count == 4  # extra code retry call
     assert sandbox_run.await_count == 2
     assert out.verified is True
+    assert out.retry_used is True
     assert out.confidence <= 0.85
     # Code should reflect the retry's output, not the first attempt
     assert "return sum(nums)" in out.code
@@ -232,6 +234,7 @@ async def test_solve_returns_unverified_when_both_attempts_fail():
     assert chat.await_count == 4
     assert sandbox_run.await_count == 2
     assert out.verified is False
+    assert out.retry_used is True
     assert out.confidence <= 0.4
     assert len(out.test_results) > 0  # final failure details attached
 
@@ -248,6 +251,7 @@ async def test_solve_does_not_retry_on_timeout():
     assert chat.await_count == 3  # no retry
     assert sandbox_run.await_count == 1
     assert out.verified is False
+    assert out.retry_used is False
     assert out.confidence <= 0.4
     assert out.test_results == []
 

@@ -34,3 +34,7 @@ class SolverOutput(BaseModel):
         description="True iff generated code passed all sandbox-executed test cases"
     )
     test_results: list[TestExecutionResult] = Field(default_factory=list)
+    retry_used: bool = Field(
+        default=False,
+        description="True iff the code-generation step was retried due to sandbox failure",
+    )

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, Numeric, String, Text, Uuid, func
+from sqlalchemy import Boolean, DateTime, Integer, Numeric, String, Text, Uuid, false, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import JSON
@@ -33,6 +33,13 @@ class SolverSession(Base):
     verified: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
     test_results: Mapped[list] = mapped_column(JSONType, nullable=False)
     confidence: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False)
+
+    retry_used: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=false(),
+    )
+    total_latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

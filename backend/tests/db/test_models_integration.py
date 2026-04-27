@@ -65,6 +65,8 @@ async def test_create_and_read_against_postgres(
         verified=True,
         test_results=[{"passed": True}],
         confidence=Decimal("0.99"),
+        retry_used=True,
+        total_latency_ms=4242,
     )
     integration_session.add(obj)
     await integration_session.commit()
@@ -72,6 +74,8 @@ async def test_create_and_read_against_postgres(
     fetched = (await integration_session.execute(select(SolverSession))).scalar_one()
     assert fetched.problem_id == "pg_int_001"
     assert fetched.confidence == Decimal("0.99")
+    assert fetched.retry_used is True
+    assert fetched.total_latency_ms == 4242
 
 
 async def test_jsonb_storage_round_trip(integration_session: AsyncSession) -> None:
@@ -90,6 +94,8 @@ async def test_jsonb_storage_round_trip(integration_session: AsyncSession) -> No
         verified=False,
         test_results=payload,
         confidence=Decimal("0.10"),
+        retry_used=False,
+        total_latency_ms=0,
     )
     integration_session.add(obj)
     await integration_session.commit()
@@ -112,6 +118,8 @@ async def test_uuid_is_native(integration_session: AsyncSession) -> None:
         verified=True,
         test_results=[],
         confidence=Decimal("1.00"),
+        retry_used=False,
+        total_latency_ms=0,
     )
     integration_session.add(obj)
     await integration_session.commit()

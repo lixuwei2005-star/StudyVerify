@@ -84,6 +84,7 @@ class SolverAgent:
             confidence=confidence,
             verified=verified,
             test_results=sandbox_result.test_results,
+            retry_used=retry_used,
         )
         logger.info(
             "solver.done problem_id=%s confidence=%.2f verified=%s status=%s retry_used=%s",

@@ -1,7 +1,7 @@
-"""SQLite-in-memory fixtures for fast unit tests of the data layer.
+"""Top-level test fixtures shared across all test packages.
 
-Builds a fresh engine per test so every test starts with empty tables; SQLite
-in-memory dies with the connection so cleanup is automatic on `engine.dispose()`.
+Promoted from tests/db/conftest.py so tests/repositories/, tests/services/,
+and tests/api/ can also use the SQLite-in-memory data-layer fixture.
 """
 
 from collections.abc import AsyncIterator
@@ -18,7 +18,9 @@ from app.db.base import Base
 
 
 @pytest_asyncio.fixture
-async def session() -> AsyncIterator[AsyncSession]:
+async def sqlite_session() -> AsyncIterator[AsyncSession]:
+    """Fresh in-memory SQLite session per test. Renamed from `session` to avoid
+    collision with API-layer fixtures that wrap an HTTP-coupled session."""
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

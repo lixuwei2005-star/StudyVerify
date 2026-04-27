@@ -49,3 +49,6 @@ async def test_solver_against_real_deepseek(problem: SolverInput):
     assert output.verified is True, f"sandbox verification failed: {output.test_results}"
     assert len(output.test_results) == len(problem.test_cases)
     assert all(r.passed for r in output.test_results)
+    # Sample problems are tractable; first-try success is expected. If a real
+    # run trips this, investigate prompts/model rather than relaxing the assert.
+    assert output.retry_used is False
