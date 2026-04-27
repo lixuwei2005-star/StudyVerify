@@ -32,3 +32,11 @@ htmlcov/
 backend/.env
 **/.env
 **/.env.local
+
+# Docker env files (separate from backend app secrets)
+.env.docker
+.env.docker.local
+**/.env.docker
+
+# Local Docker Compose overrides
+docker-compose.override.yml
