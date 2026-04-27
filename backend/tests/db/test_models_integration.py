@@ -1,59 +1,26 @@
 """Integration tests for SolverSession against real Postgres.
 
-Each test runs in a fresh `test_<uuid>` schema that is dropped at teardown,
-so production tables in the configured database are never touched.
+Each test runs in a fresh `test_<uuid>` schema (via the shared `pg_session`
+fixture in tests/conftest.py) that is dropped at teardown, so production
+tables in the configured database are never touched.
 
 Skip behavior: skipped if DATABASE_URL is empty.
 Marker: integration (run with `-m integration`).
 """
 
 import uuid
-from collections.abc import AsyncIterator
 from decimal import Decimal
 
 import pytest
-import pytest_asyncio
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
-from app.db import models as _models  # noqa: F401  — register metadata
-from app.db.base import Base
 from app.db.models import SolverSession
 
 pytestmark = pytest.mark.integration
 
 
-@pytest_asyncio.fixture
-async def integration_session() -> AsyncIterator[AsyncSession]:
-    settings = get_settings()
-    if not settings.DATABASE_URL:
-        pytest.skip("DATABASE_URL not set")
-
-    schema_name = f"test_{uuid.uuid4().hex}"
-    engine = create_async_engine(
-        settings.DATABASE_URL,
-        connect_args={"server_settings": {"search_path": schema_name}},
-    )
-
-    # Setup schema in its own connection so the search_path applies cleanly to
-    # subsequent connections from the engine.
-    async with engine.begin() as setup_conn:
-        await setup_conn.execute(text(f'CREATE SCHEMA "{schema_name}"'))
-        await setup_conn.run_sync(Base.metadata.create_all)
-
-    try:
-        async with AsyncSession(engine, expire_on_commit=False) as session:
-            yield session
-    finally:
-        async with engine.begin() as teardown_conn:
-            await teardown_conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE'))
-        await engine.dispose()
-
-
-async def test_create_and_read_against_postgres(
-    integration_session: AsyncSession,
-) -> None:
+async def test_create_and_read_against_postgres(pg_session: AsyncSession) -> None:
     obj = SolverSession(
         problem_id="pg_int_001",
         problem_text="Real Postgres round trip.",
@@ -68,17 +35,17 @@ async def test_create_and_read_against_postgres(
         retry_used=True,
         total_latency_ms=4242,
     )
-    integration_session.add(obj)
-    await integration_session.commit()
+    pg_session.add(obj)
+    await pg_session.commit()
 
-    fetched = (await integration_session.execute(select(SolverSession))).scalar_one()
+    fetched = (await pg_session.execute(select(SolverSession))).scalar_one()
     assert fetched.problem_id == "pg_int_001"
     assert fetched.confidence == Decimal("0.99")
     assert fetched.retry_used is True
     assert fetched.total_latency_ms == 4242
 
 
-async def test_jsonb_storage_round_trip(integration_session: AsyncSession) -> None:
+async def test_jsonb_storage_round_trip(pg_session: AsyncSession) -> None:
     payload = [
         {"input": [1, 2, 3], "expected": [3, 2, 1], "tags": {"k": "v"}},
         {"input": [], "expected": []},
@@ -97,15 +64,15 @@ async def test_jsonb_storage_round_trip(integration_session: AsyncSession) -> No
         retry_used=False,
         total_latency_ms=0,
     )
-    integration_session.add(obj)
-    await integration_session.commit()
+    pg_session.add(obj)
+    await pg_session.commit()
 
-    fetched = (await integration_session.execute(select(SolverSession))).scalar_one()
+    fetched = (await pg_session.execute(select(SolverSession))).scalar_one()
     assert fetched.test_cases == payload
     assert fetched.test_results == payload
 
 
-async def test_uuid_is_native(integration_session: AsyncSession) -> None:
+async def test_uuid_is_native(pg_session: AsyncSession) -> None:
     """Verify the id column is a real Postgres uuid, not CHAR/TEXT."""
     obj = SolverSession(
         problem_id="pg_int_003",
@@ -121,10 +88,10 @@ async def test_uuid_is_native(integration_session: AsyncSession) -> None:
         retry_used=False,
         total_latency_ms=0,
     )
-    integration_session.add(obj)
-    await integration_session.commit()
+    pg_session.add(obj)
+    await pg_session.commit()
 
-    result = await integration_session.execute(
+    result = await pg_session.execute(
         text(
             "SELECT data_type FROM information_schema.columns "
             "WHERE table_schema = current_schema() "
@@ -135,5 +102,5 @@ async def test_uuid_is_native(integration_session: AsyncSession) -> None:
     data_type = result.scalar_one()
     assert data_type == "uuid"
 
-    fetched = (await integration_session.execute(select(SolverSession))).scalar_one()
+    fetched = (await pg_session.execute(select(SolverSession))).scalar_one()
     assert isinstance(fetched.id, uuid.UUID)
