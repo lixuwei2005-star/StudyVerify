@@ -1,0 +1,29 @@
+[
+  {
+    "problem_id": "py-001-sum-list",
+    "problem_text": "Write a Python function `sum_list(nums)` that returns the sum of all integers in the input list. If the list is empty, return 0.",
+    "test_cases": [
+      {"input": "[1, 2, 3]", "expected": "6", "description": "basic"},
+      {"input": "[]", "expected": "0", "description": "empty list"},
+      {"input": "[-1, 1]", "expected": "0", "description": "mixed signs"}
+    ]
+  },
+  {
+    "problem_id": "py-002-find-max",
+    "problem_text": "Write a Python function `find_max(nums)` that returns the largest integer in the input list. If the list is empty, return None.",
+    "test_cases": [
+      {"input": "[3, 1, 4, 1, 5]", "expected": "5", "description": "basic"},
+      {"input": "[]", "expected": "None", "description": "empty list returns None"},
+      {"input": "[-5, -2, -10]", "expected": "-2", "description": "all negatives"}
+    ]
+  },
+  {
+    "problem_id": "py-003-count-vowels",
+    "problem_text": "Write a Python function `count_vowels(s)` that returns the number of vowels (a, e, i, o, u, case-insensitive) in the input string.",
+    "test_cases": [
+      {"input": "\"hello\"", "expected": "2", "description": "basic"},
+      {"input": "\"\"", "expected": "0", "description": "empty string"},
+      {"input": "\"AEIOU\"", "expected": "5", "description": "all uppercase vowels"}
+    ]
+  }
+]
