@@ -63,9 +63,7 @@ def _all_passed_result(n: int = 2) -> SandboxRunResult:
         )
         for i in range(n)
     ]
-    return SandboxRunResult(
-        status="all_passed", test_results=results, pass_count=n, fail_count=0
-    )
+    return SandboxRunResult(status="all_passed", test_results=results, pass_count=n, fail_count=0)
 
 
 def _some_failed_result(n: int = 2) -> SandboxRunResult:
@@ -202,10 +200,7 @@ async def test_solve_retries_once_when_first_attempt_fails_sandbox():
     # Second code response (retry) is also valid JSON — same body works.
     retry_code = json.dumps(
         {
-            "code": (
-                "def sum_list(nums):\n"
-                "    return sum(nums)\n"
-            ),
+            "code": ("def sum_list(nums):\n    return sum(nums)\n"),
             "explanation": "use builtin",
         }
     )
@@ -259,9 +254,7 @@ async def test_solve_does_not_retry_on_timeout():
 
 async def test_solve_raises_when_generated_code_has_no_def():
     analysis, plan, _ = _good_responses()
-    bad_code = json.dumps(
-        {"code": "x = 1  # no function!", "explanation": "broken"}
-    )
+    bad_code = json.dumps({"code": "x = 1  # no function!", "explanation": "broken"})
     # Sandbox results not consumed because we should fail before running.
     agent, _, sandbox_run = _agent([analysis, plan, bad_code], sandbox_results=[])
 

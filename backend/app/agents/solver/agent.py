@@ -67,9 +67,7 @@ class SolverAgent:
                 "solver.retry_code problem_id=%s prior_status=%s", pid, sandbox_result.status
             )
             retry_used = True
-            code, explanation = await self._code_retry(
-                request, plan_steps, code, sandbox_result
-            )
+            code, explanation = await self._code_retry(request, plan_steps, code, sandbox_result)
             entry_function = self._extract_entry_function(code, pid)
             sandbox_result = await self._run_sandbox(code, entry_function, test_payload)
 

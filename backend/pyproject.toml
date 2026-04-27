@@ -4,15 +4,19 @@ version = "0.1.0"
 description = "StudyVerify backend — verification-driven AI learning companion."
 requires-python = ">=3.11,<3.12"
 dependencies = [
+    "alembic>=1.13",
+    "asyncpg>=0.29",
     "fastapi>=0.136.1",
     "openai>=2.32.0",
     "pydantic-settings>=2.14.0",
+    "sqlalchemy[asyncio]>=2.0,<3.0",
     "uvicorn[standard]>=0.46.0",
 ]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
@@ -31,6 +35,7 @@ markers = [
 
 [dependency-groups]
 dev = [
+    "aiosqlite>=0.19",
     "httpx>=0.28.1",
     "mypy>=1.20.2",
     "pytest>=9.0.3",

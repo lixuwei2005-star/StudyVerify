@@ -22,6 +22,16 @@ class Settings(BaseSettings):
     SANDBOX_MEMORY_MB: int = 128
     SANDBOX_PYTHON_PATH: str = ""  # empty = resolve to sys.executable at runtime
 
+    # Required: set in backend/.env, e.g.
+    #   postgresql+asyncpg://studyverify:<password>@localhost:5432/studyverify
+    # Empty triggers loud-fail at engine creation rather than a misleading auth error later.
+    DATABASE_URL: str = ""
+    DATABASE_URL_TEST: str = "sqlite+aiosqlite:///:memory:"
+    DB_ECHO_SQL: bool = False
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_TIMEOUT_SECONDS: int = 30
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -1,0 +1,131 @@
+"""Integration tests for SolverSession against real Postgres.
+
+Each test runs in a fresh `test_<uuid>` schema that is dropped at teardown,
+so production tables in the configured database are never touched.
+
+Skip behavior: skipped if DATABASE_URL is empty.
+Marker: integration (run with `-m integration`).
+"""
+
+import uuid
+from collections.abc import AsyncIterator
+from decimal import Decimal
+
+import pytest
+import pytest_asyncio
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+
+from app.core.config import get_settings
+from app.db import models as _models  # noqa: F401  — register metadata
+from app.db.base import Base
+from app.db.models import SolverSession
+
+pytestmark = pytest.mark.integration
+
+
+@pytest_asyncio.fixture
+async def integration_session() -> AsyncIterator[AsyncSession]:
+    settings = get_settings()
+    if not settings.DATABASE_URL:
+        pytest.skip("DATABASE_URL not set")
+
+    schema_name = f"test_{uuid.uuid4().hex}"
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        connect_args={"server_settings": {"search_path": schema_name}},
+    )
+
+    # Setup schema in its own connection so the search_path applies cleanly to
+    # subsequent connections from the engine.
+    async with engine.begin() as setup_conn:
+        await setup_conn.execute(text(f'CREATE SCHEMA "{schema_name}"'))
+        await setup_conn.run_sync(Base.metadata.create_all)
+
+    try:
+        async with AsyncSession(engine, expire_on_commit=False) as session:
+            yield session
+    finally:
+        async with engine.begin() as teardown_conn:
+            await teardown_conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE'))
+        await engine.dispose()
+
+
+async def test_create_and_read_against_postgres(
+    integration_session: AsyncSession,
+) -> None:
+    obj = SolverSession(
+        problem_id="pg_int_001",
+        problem_text="Real Postgres round trip.",
+        test_cases=[{"input": 1, "expected": 1}],
+        analysis="trivial",
+        plan_steps=["return n"],
+        code="def f(n):\n    return n\n",
+        explanation="identity",
+        verified=True,
+        test_results=[{"passed": True}],
+        confidence=Decimal("0.99"),
+    )
+    integration_session.add(obj)
+    await integration_session.commit()
+
+    fetched = (await integration_session.execute(select(SolverSession))).scalar_one()
+    assert fetched.problem_id == "pg_int_001"
+    assert fetched.confidence == Decimal("0.99")
+
+
+async def test_jsonb_storage_round_trip(integration_session: AsyncSession) -> None:
+    payload = [
+        {"input": [1, 2, 3], "expected": [3, 2, 1], "tags": {"k": "v"}},
+        {"input": [], "expected": []},
+    ]
+    obj = SolverSession(
+        problem_id="pg_int_002",
+        problem_text="JSONB nested round trip.",
+        test_cases=payload,
+        analysis="-",
+        plan_steps=["-"],
+        code="-",
+        explanation="-",
+        verified=False,
+        test_results=payload,
+        confidence=Decimal("0.10"),
+    )
+    integration_session.add(obj)
+    await integration_session.commit()
+
+    fetched = (await integration_session.execute(select(SolverSession))).scalar_one()
+    assert fetched.test_cases == payload
+    assert fetched.test_results == payload
+
+
+async def test_uuid_is_native(integration_session: AsyncSession) -> None:
+    """Verify the id column is a real Postgres uuid, not CHAR/TEXT."""
+    obj = SolverSession(
+        problem_id="pg_int_003",
+        problem_text="-",
+        test_cases=[],
+        analysis="-",
+        plan_steps=[],
+        code="-",
+        explanation="-",
+        verified=True,
+        test_results=[],
+        confidence=Decimal("1.00"),
+    )
+    integration_session.add(obj)
+    await integration_session.commit()
+
+    result = await integration_session.execute(
+        text(
+            "SELECT data_type FROM information_schema.columns "
+            "WHERE table_schema = current_schema() "
+            "AND table_name = 'solver_sessions' "
+            "AND column_name = 'id'"
+        )
+    )
+    data_type = result.scalar_one()
+    assert data_type == "uuid"
+
+    fetched = (await integration_session.execute(select(SolverSession))).scalar_one()
+    assert isinstance(fetched.id, uuid.UUID)

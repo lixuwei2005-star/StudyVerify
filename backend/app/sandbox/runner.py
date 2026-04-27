@@ -30,7 +30,7 @@ _STDERR_TRUNC = 500
 _STDOUT_TRUNC = 500
 _FATAL_EXIT_CODE = 2
 
-WRAPPER_SCRIPT = r'''
+WRAPPER_SCRIPT = r"""
 import ast
 import json
 import sys
@@ -89,7 +89,7 @@ def _main():
     print(json.dumps(results))
 
 _main()
-'''
+"""
 
 
 def _make_preexec_fn(memory_mb: int, timeout_seconds: int):
