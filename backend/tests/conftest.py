@@ -3,13 +3,19 @@
 - `sqlite_session`: fast in-memory SQLite session for unit tests.
 - `pg_schema`:      creates a per-test PG schema; yields the schema name.
 - `pg_session`:     async session bound to `pg_schema` for direct DB tests.
+- `app_with_overrides` + `client`: TestClient driving the FastAPI app with
+   `get_db_session` rerouted into the per-test schema. Each HTTP request
+   gets its own engine (created on the request's own event loop) so there
+   is no loop-mismatch between pytest-asyncio's loop and TestClient's.
 """
 
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 
 import pytest
 import pytest_asyncio
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -41,7 +47,8 @@ async def pg_schema() -> AsyncIterator[str]:
 
     Schema setup happens here (one-time, in pytest-asyncio's loop). Anything
     that needs a session inside the schema must build its own engine — see
-    `pg_session` below for direct-DB use.
+    `pg_session` below for direct-DB use, and the `app_with_overrides`
+    fixture for the TestClient flow which builds a fresh engine per request.
     """
     settings = get_settings()
     if not settings.DATABASE_URL:
@@ -79,3 +86,49 @@ async def pg_session(pg_schema: str) -> AsyncIterator[AsyncSession]:
             yield s
     finally:
         await engine.dispose()
+
+
+@pytest.fixture
+def app_with_overrides(pg_schema: str) -> Iterator[FastAPI]:
+    """FastAPI app with `get_db_session` rerouted into the per-test schema.
+
+    The override builds a fresh engine + session on each request so the
+    AsyncSession lives entirely inside TestClient's per-request event loop
+    (which is distinct from pytest-asyncio's). Saving and restoring
+    `dependency_overrides` (rather than `clear()`) keeps any per-test agent
+    overrides set later by the calling test from being clobbered.
+    """
+    from app.db.session import get_db_session
+    from app.main import app
+
+    settings = get_settings()
+    old_overrides = app.dependency_overrides.copy()
+
+    async def override_get_session() -> AsyncIterator[AsyncSession]:
+        engine = create_async_engine(
+            settings.DATABASE_URL,
+            connect_args={"server_settings": {"search_path": pg_schema}},
+        )
+        factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        try:
+            async with factory() as session:
+                try:
+                    yield session
+                except Exception:
+                    await session.rollback()
+                    raise
+        finally:
+            await engine.dispose()
+
+    app.dependency_overrides[get_db_session] = override_get_session
+    try:
+        yield app
+    finally:
+        app.dependency_overrides = old_overrides
+
+
+@pytest.fixture
+def client(app_with_overrides: FastAPI) -> Iterator[TestClient]:
+    """Sync TestClient. The `with` triggers FastAPI lifespan startup/shutdown."""
+    with TestClient(app_with_overrides) as c:
+        yield c

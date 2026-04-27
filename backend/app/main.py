@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api.routes import health, health_db, solver
+from app.api.routes import health, health_db, sessions, solver
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.session import dispose_engine
@@ -21,6 +21,7 @@ app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, lifespan=li
 app.include_router(health.router)
 app.include_router(health_db.router)
 app.include_router(solver.router, prefix="/api/v1")
+app.include_router(sessions.router, prefix="/api/v1")
 
 
 @app.get("/")
