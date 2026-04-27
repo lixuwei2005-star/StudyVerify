@@ -2,7 +2,21 @@
 
 Verification-driven AI learning companion.
 
-**Status:** 🚧 Week 1 / 12 — Skeleton in place
+## Status
+🚧 Week 2 / 12 — Solver Agent operational
+
+### What works
+- ✅ FastAPI backend skeleton
+- ✅ Solver Agent: 3-stage LLM pipeline (analyze → plan → code)
+- ✅ DeepSeek V4 Flash integration with retry/backoff
+- ✅ Structured logging with token/latency tracking
+- ✅ POST /api/v1/solve endpoint (tested with real API)
+
+### Roadmap
+- 🔜 Step 2.3: Sandbox self-verification
+- ⬜ Step 3: Database + Docker
+- ⬜ Step 4: Verifier Agent
+- ⬜ ...
 
 ## Quick Start
 
