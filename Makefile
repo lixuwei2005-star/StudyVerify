@@ -11,7 +11,8 @@ COMPOSE := docker compose --env-file .env.docker
 
 .PHONY: help compose-up compose-down compose-down-volumes \
         compose-logs compose-ps compose-config \
-        smoke-db smoke-redis smoke-all
+        smoke-db smoke-redis smoke-all \
+        docker-build docker-build-fresh docker-run-smoke docker-image-size
 
 help:
 	@echo "StudyVerify development commands:"
@@ -25,6 +26,11 @@ help:
 	@echo "  make smoke-db             - Run Postgres smoke test"
 	@echo "  make smoke-redis          - Run Redis smoke test"
 	@echo "  make smoke-all            - Run both smoke tests"
+	@echo ""
+	@echo "  make docker-build         - Build studyverify-api image (arm64)"
+	@echo "  make docker-build-fresh   - Build with --no-cache"
+	@echo "  make docker-run-smoke     - Smoke test: import app.main in image"
+	@echo "  make docker-image-size    - Show built image size"
 
 compose-up:
 	$(COMPOSE) up -d
@@ -55,3 +61,36 @@ smoke-redis:
 	@set -a && source .env.docker && set +a && bash scripts/redis-smoke-test.sh
 
 smoke-all: smoke-db smoke-redis
+
+# ═══ Docker image management (Step 3.4.a) ═══
+
+DOCKER_IMAGE := studyverify-api
+DOCKER_TAG := dev
+
+docker-build:
+	@echo "Building $(DOCKER_IMAGE):$(DOCKER_TAG) for native arm64..."
+	docker build \
+		--platform=linux/arm64 \
+		--provenance=false \
+		--sbom=false \
+		-t $(DOCKER_IMAGE):$(DOCKER_TAG) \
+		.
+
+docker-build-fresh:
+	@echo "Building from scratch (no cache)..."
+	docker build \
+		--platform=linux/arm64 \
+		--provenance=false \
+		--sbom=false \
+		--no-cache \
+		-t $(DOCKER_IMAGE):$(DOCKER_TAG) \
+		.
+
+docker-run-smoke:
+	@echo "Smoke test: import app.main inside the image..."
+	docker run --rm $(DOCKER_IMAGE):$(DOCKER_TAG) \
+		python -c "import app.main; print('✅ Module imports successfully')"
+
+docker-image-size:
+	@docker images $(DOCKER_IMAGE):$(DOCKER_TAG) \
+		--format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"

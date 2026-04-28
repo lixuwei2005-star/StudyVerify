@@ -1,0 +1,60 @@
+# VCS
+.git/
+.gitignore
+.gitattributes
+
+# Virtual environments (we install fresh in builder)
+**/.venv/
+**/venv/
+**/env/
+
+# Python caches
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+
+# Environment files (NEVER bake secrets into images)
+# Comments must be on their own line in .dockerignore
+.env*
+**/.env*
+!.env.example
+!**/.env.example
+!.env.docker.example
+
+# Tests and dev files (out of runtime image)
+backend/tests/
+backend/htmlcov/
+backend/.coverage
+backend/coverage.xml
+
+# Docs and specs (out of runtime image)
+docs/
+*.md
+# Allow these markdown files
+!README.md
+!backend/README.md
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# CI / scripts (not needed in runtime)
+scripts/
+.github/
+
+# Build artifacts
+**/dist/
+**/build/
+**/*.egg-info/
+
+# Docker itself (would cause recursion)
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.override.yml
+Makefile
