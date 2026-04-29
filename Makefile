@@ -9,7 +9,12 @@ SHELL := /usr/bin/env bash
 # Compose command with env-file pre-set
 COMPOSE := docker compose --env-file .env.docker
 
-.PHONY: help compose-up compose-down compose-down-volumes \
+# Optional service filter for `make compose-logs` (e.g. `make compose-logs SERVICE=api`).
+# Empty default = follow all services.
+SERVICE ?=
+
+.PHONY: help compose-up compose-up-infra compose-up-rebuild \
+        compose-down compose-down-volumes \
         compose-logs compose-ps compose-config \
         smoke-db smoke-redis smoke-all \
         docker-build docker-build-fresh docker-run-smoke docker-image-size
@@ -17,23 +22,41 @@ COMPOSE := docker compose --env-file .env.docker
 help:
 	@echo "StudyVerify development commands:"
 	@echo ""
-	@echo "  make compose-up           - Start Postgres + Redis containers"
-	@echo "  make compose-down         - Stop containers (data preserved)"
-	@echo "  make compose-down-volumes - Stop AND delete volumes (DESTRUCTIVE)"
-	@echo "  make compose-logs         - Tail logs from all services"
-	@echo "  make compose-ps           - List running containers"
-	@echo "  make compose-config       - Show resolved compose config"
-	@echo "  make smoke-db             - Run Postgres smoke test"
-	@echo "  make smoke-redis          - Run Redis smoke test"
-	@echo "  make smoke-all            - Run both smoke tests"
+	@echo "  make compose-up                - Start full stack (postgres + redis + api)"
+	@echo "                                   postgres + redis show (healthy);"
+	@echo "                                   api healthcheck arrives in 3.4.c"
+	@echo "  make compose-up-infra          - Start infrastructure only for local uvicorn"
+	@echo "  make compose-up-rebuild        - Rebuild api image, then start stack"
+	@echo "  make compose-down              - Stop containers (data preserved)"
+	@echo "  make compose-down-volumes      - Stop AND delete volumes (DESTRUCTIVE)"
+	@echo "  make compose-logs              - Tail logs from all services"
+	@echo "  make compose-logs SERVICE=api  - Tail logs from one service"
+	@echo "  make compose-ps                - List running containers"
+	@echo "  make compose-config            - Show resolved compose config"
+	@echo "  make smoke-db                  - Run Postgres smoke test"
+	@echo "  make smoke-redis               - Run Redis smoke test"
+	@echo "  make smoke-all                 - Run both smoke tests"
 	@echo ""
-	@echo "  make docker-build         - Build studyverify-api image (arm64)"
-	@echo "  make docker-build-fresh   - Build with --no-cache"
-	@echo "  make docker-run-smoke     - Smoke test: import app.main in image"
-	@echo "  make docker-image-size    - Show built image size"
+	@echo "  make docker-build              - Build studyverify-api image (arm64)"
+	@echo "  make docker-build-fresh        - Build with --no-cache"
+	@echo "  make docker-run-smoke          - Smoke test: import app.main in image"
+	@echo "  make docker-image-size         - Show built image size"
 
 compose-up:
 	$(COMPOSE) up -d
+
+compose-up-infra:
+	@echo "Starting infrastructure only (postgres + redis)..."
+	@echo "Use this when running uvicorn locally (cd backend && uv run uvicorn ...)"
+	$(COMPOSE) up -d postgres redis
+
+compose-up-rebuild: docker-build
+	@echo "Rebuilt image; bringing up full stack..."
+	$(COMPOSE) up -d
+	@echo ""
+	@echo "Stack is starting. Wait ~10s, then check:"
+	@echo "  make compose-ps      # postgres + redis healthy; api healthcheck arrives in 3.4.c"
+	@echo "  curl localhost:8000/health/db"
 
 compose-down:
 	$(COMPOSE) down
@@ -46,7 +69,7 @@ compose-down-volumes:
 	$(COMPOSE) down -v
 
 compose-logs:
-	$(COMPOSE) logs -f
+	$(COMPOSE) logs -f $(SERVICE)
 
 compose-ps:
 	$(COMPOSE) ps

@@ -34,6 +34,44 @@ services:
       retries: 5
       start_period: 5s
 
+  api:
+    image: studyverify-api:dev
+    pull_policy: never  # never try to pull from registry; image must
+                        # be built locally first via `make docker-build`
+                        # or `make compose-up-rebuild`
+    container_name: studyverify-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database URL uses the compose service name 'postgres' as
+      # hostname, NOT localhost. backend/.env's DATABASE_URL is
+      # ignored when running under compose because this var takes
+      # precedence in the container's environment.
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+
+      # Empty default — base stack (postgres/redis/health endpoints)
+      # starts without it. /api/v1/solve will 502 if unset; live LLM
+      # verification requires this var.
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
+      DEEPSEEK_REASONING_EFFORT: ${DEEPSEEK_REASONING_EFFORT:-none}
+
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ENV: ${ENV:-development}
+
+      SANDBOX_TIMEOUT_SECONDS: ${SANDBOX_TIMEOUT_SECONDS:-5}
+      SANDBOX_MEMORY_MB: ${SANDBOX_MEMORY_MB:-128}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    command: >
+      sh -c "alembic upgrade head &&
+             exec uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
 volumes:
   postgres-data:
     name: studyverify-postgres-data
