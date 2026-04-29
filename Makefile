@@ -17,14 +17,14 @@ SERVICE ?=
         compose-down compose-down-volumes \
         compose-logs compose-ps compose-config \
         smoke-db smoke-redis smoke-all \
-        docker-build docker-build-fresh docker-run-smoke docker-image-size
+        docker-build docker-build-fresh docker-run-smoke docker-image-size \
+        regression-all
 
 help:
 	@echo "StudyVerify development commands:"
 	@echo ""
 	@echo "  make compose-up                - Start full stack (postgres + redis + api)"
-	@echo "                                   postgres + redis show (healthy);"
-	@echo "                                   api healthcheck arrives in 3.4.c"
+	@echo "                                   all 3 services report (healthy)"
 	@echo "  make compose-up-infra          - Start infrastructure only for local uvicorn"
 	@echo "  make compose-up-rebuild        - Rebuild api image, then start stack"
 	@echo "  make compose-down              - Stop containers (data preserved)"
@@ -41,6 +41,8 @@ help:
 	@echo "  make docker-build-fresh        - Build with --no-cache"
 	@echo "  make docker-run-smoke          - Smoke test: import app.main in image"
 	@echo "  make docker-image-size         - Show built image size"
+	@echo ""
+	@echo "  make regression-all            - Full pytest sweep (requires compose-up-infra)"
 
 compose-up:
 	$(COMPOSE) up -d
@@ -54,8 +56,8 @@ compose-up-rebuild: docker-build
 	@echo "Rebuilt image; bringing up full stack..."
 	$(COMPOSE) up -d
 	@echo ""
-	@echo "Stack is starting. Wait ~10s, then check:"
-	@echo "  make compose-ps      # postgres + redis healthy; api healthcheck arrives in 3.4.c"
+	@echo "Stack is starting. Wait ~20-30s, then check:"
+	@echo "  make compose-ps      # all 3 services should report (healthy)"
 	@echo "  curl localhost:8000/health/db"
 
 compose-down:
@@ -117,3 +119,12 @@ docker-run-smoke:
 docker-image-size:
 	@docker images $(DOCKER_IMAGE):$(DOCKER_TAG) \
 		--format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+
+# ═══ Step 3 closure regression (Step 3.4.c) ═══
+
+regression-all:
+	@echo "Running full test regression (unit + integration)..."
+	@echo "Pre-requisite: 'make compose-up-infra' must be running"
+	@echo "Pre-requisite: backend/.env must have DEEPSEEK_API_KEY"
+	@echo ""
+	cd backend && uv run pytest -v
