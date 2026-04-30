@@ -10,6 +10,9 @@ from functools import lru_cache
 from fastapi import Depends
 
 from app.agents.solver.agent import SolverAgent, get_solver_agent
+
+# Re-exported for Step 4.3 service consumption.
+from app.agents.verifier.agent import get_verifier_agent  # noqa: F401
 from app.repositories.solver_repository import SolverRepository
 from app.services.solver_service import SolverService
 
