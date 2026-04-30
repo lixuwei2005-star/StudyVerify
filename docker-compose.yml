@@ -66,6 +66,17 @@ services:
 
       SANDBOX_TIMEOUT_SECONDS: ${SANDBOX_TIMEOUT_SECONDS:-5}
       SANDBOX_MEMORY_MB: ${SANDBOX_MEMORY_MB:-128}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Bind host /tmp so DockerCodeRunner's tempfiles
+      # (/sandbox/code.py + input.json) are visible to the host
+      # docker daemon when sibling sandbox containers mount them.
+      # Without this, the daemon resolves the path on host FS,
+      # finds nothing, and silently creates an empty directory.
+      # See Step 4.3 end-to-end smoke for the diagnosis.
+      - /tmp:/tmp
+    group_add:
+      - "0"  # root group — grants access to /var/run/docker.sock (gid=0, mode=660)
     ports:
       - "${API_PORT:-8000}:8000"
     command: >

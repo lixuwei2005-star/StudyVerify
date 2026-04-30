@@ -23,6 +23,7 @@ def _seed_kwargs(**overrides) -> dict:
     base = dict(
         problem_id="prob_api",
         problem_text="Compute something.",
+        entry_function="f",
         test_cases=[
             {"input": "1", "expected": "1", "description": "trivial"},
             {"input": "2", "expected": "4", "description": "square"},

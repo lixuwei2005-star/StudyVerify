@@ -27,6 +27,7 @@ def _create_kwargs(**overrides) -> dict:
     base = dict(
         problem_id="prob_pg",
         problem_text="text",
+        entry_function="f",
         test_cases=[{"input": "1", "expected": "1", "description": "id"}],
         analysis="analysis",
         plan_steps=[{"step_number": 1, "action": "a", "rationale": "r"}],

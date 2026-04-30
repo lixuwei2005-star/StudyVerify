@@ -25,6 +25,7 @@ class PlanStep(BaseModel):
 
 class SolverOutput(BaseModel):
     problem_id: str
+    entry_function: str = Field(description="Python function name students must implement")
     analysis: str = Field(description="Restatement of what's being asked")
     plan_steps: list[PlanStep]
     code: str = Field(description="Final Python code, function signature included")

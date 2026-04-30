@@ -24,6 +24,7 @@ async def test_create_and_read_against_postgres(pg_session: AsyncSession) -> Non
     obj = SolverSession(
         problem_id="pg_int_001",
         problem_text="Real Postgres round trip.",
+        entry_function="f",
         test_cases=[{"input": 1, "expected": 1}],
         analysis="trivial",
         plan_steps=["return n"],
@@ -53,6 +54,7 @@ async def test_jsonb_storage_round_trip(pg_session: AsyncSession) -> None:
     obj = SolverSession(
         problem_id="pg_int_002",
         problem_text="JSONB nested round trip.",
+        entry_function="f",
         test_cases=payload,
         analysis="-",
         plan_steps=["-"],
@@ -77,6 +79,7 @@ async def test_uuid_is_native(pg_session: AsyncSession) -> None:
     obj = SolverSession(
         problem_id="pg_int_003",
         problem_text="-",
+        entry_function="f",
         test_cases=[],
         analysis="-",
         plan_steps=[],

@@ -44,6 +44,7 @@ class SolverService:
             session,
             problem_id=output.problem_id,
             problem_text=solver_input.problem_text,
+            entry_function=output.entry_function,
             test_cases=[tc.model_dump() for tc in solver_input.test_cases],
             analysis=output.analysis,
             plan_steps=[ps.model_dump() for ps in output.plan_steps],

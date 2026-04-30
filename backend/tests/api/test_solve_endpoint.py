@@ -40,6 +40,7 @@ SAMPLE_INPUT = {
 def _canned_output(retry_used: bool = False) -> SolverOutput:
     return SolverOutput(
         problem_id="py-001-sum-list",
+        entry_function="sum_list",
         analysis="Sum the elements; return 0 for an empty list.",
         plan_steps=[
             PlanStep(step_number=1, action="define sum_list(nums)", rationale="signature"),

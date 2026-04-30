@@ -28,6 +28,7 @@ def _create_kwargs(**overrides) -> dict:
     base = dict(
         problem_id="prob_x",
         problem_text="text",
+        entry_function="f",
         test_cases=[{"input": "1", "expected": "1", "description": "id"}],
         analysis="analysis",
         plan_steps=[{"step_number": 1, "action": "a", "rationale": "r"}],
@@ -50,6 +51,7 @@ def _seed_row(problem_id: str, created_at: datetime, **overrides) -> SolverSessi
     return SolverSession(
         problem_id=problem_id,
         problem_text="-",
+        entry_function="f",
         test_cases=[],
         analysis="-",
         plan_steps=[],

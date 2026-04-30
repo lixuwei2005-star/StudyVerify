@@ -17,6 +17,7 @@ def _make_session_obj(**overrides) -> SolverSession:
     defaults = dict(
         problem_id="prob_001",
         problem_text="Compute fib(n).",
+        entry_function="fib",
         test_cases=[{"input": 5, "expected": 5}, {"input": 10, "expected": 55}],
         analysis="Iterate n times.",
         plan_steps=["init a=0,b=1", "loop n times", "return a"],

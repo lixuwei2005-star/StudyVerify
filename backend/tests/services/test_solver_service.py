@@ -41,6 +41,7 @@ def _input() -> SolverInput:
 def _output(retry_used: bool = False) -> SolverOutput:
     return SolverOutput(
         problem_id="py-001-sum-list",
+        entry_function="sum_list",
         analysis="restate",
         plan_steps=[PlanStep(step_number=1, action="a", rationale="r")],
         code="def sum_list(nums):\n    return sum(nums)\n",
@@ -81,6 +82,7 @@ def _service(
             id=uuid.uuid4(),
             problem_id="py-001-sum-list",
             problem_text="-",
+            entry_function="sum_list",
             test_cases=[],
             analysis="-",
             plan_steps=[],

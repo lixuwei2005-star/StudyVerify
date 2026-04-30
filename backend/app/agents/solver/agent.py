@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from functools import lru_cache
 
 from pydantic import TypeAdapter, ValidationError
 
 from app.agents.solver import prompts
+from app.agents.solver.extraction import EntryFunctionExtractionError, extract_entry_function
 from app.agents.solver.schemas import PlanStep, SolverInput, SolverOutput
 from app.core.config import get_settings
 from app.llm.client import DeepSeekClient, get_llm_client
@@ -19,7 +19,6 @@ logger = logging.getLogger("app.agents.solver")
 
 _PLAN_STEPS_ADAPTER = TypeAdapter(list[PlanStep])
 _SNIPPET_LEN = 200
-_DEF_PATTERN = re.compile(r"^(?:async\s+)?def\s+(\w+)\s*\(", re.MULTILINE)
 
 _UNVERIFIED_CONFIDENCE_CAP = 0.4
 _RETRIED_CONFIDENCE_CAP = 0.85
@@ -77,6 +76,7 @@ class SolverAgent:
         )
         output = SolverOutput(
             problem_id=pid,
+            entry_function=entry_function,
             analysis=analysis,
             plan_steps=plan_steps,
             code=code,
@@ -160,12 +160,12 @@ class SolverAgent:
 
     @staticmethod
     def _extract_entry_function(code: str, problem_id: str) -> str:
-        match = _DEF_PATTERN.search(code.lstrip("﻿"))
-        if not match:
+        try:
+            return extract_entry_function(code, problem_id)
+        except EntryFunctionExtractionError:
             raise SolverError(
                 "sandbox", problem_id, "no top-level function definition found in generated code"
             )
-        return match.group(1)
 
     @staticmethod
     def _parse_plan(raw: str, problem_id: str) -> list[PlanStep]:

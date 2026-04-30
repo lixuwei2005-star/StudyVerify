@@ -23,6 +23,7 @@ class SolverRepository:
         *,
         problem_id: str,
         problem_text: str,
+        entry_function: str,
         test_cases: list[dict],
         analysis: str,
         plan_steps: list[dict],
@@ -37,6 +38,7 @@ class SolverRepository:
         row = SolverSession(
             problem_id=problem_id,
             problem_text=problem_text,
+            entry_function=entry_function,
             test_cases=test_cases,
             analysis=analysis,
             plan_steps=plan_steps,

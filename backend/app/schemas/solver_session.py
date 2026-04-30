@@ -22,6 +22,7 @@ class SolverSessionOut(BaseModel):
     id: UUID
     problem_id: str
     problem_text: str
+    entry_function: str
     test_cases: list[TestCase]
     analysis: str
     plan_steps: list[PlanStep]
