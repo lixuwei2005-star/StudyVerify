@@ -16,7 +16,7 @@ SERVICE ?=
 .PHONY: help compose-up compose-up-infra compose-up-rebuild \
         compose-down compose-down-volumes \
         compose-logs compose-ps compose-config \
-        smoke-db smoke-redis smoke-all \
+        smoke-db smoke-redis smoke-all smoke-stack \
         docker-build docker-build-fresh docker-run-smoke docker-image-size \
         regression-all
 
@@ -36,6 +36,7 @@ help:
 	@echo "  make smoke-db                  - Run Postgres smoke test"
 	@echo "  make smoke-redis               - Run Redis smoke test"
 	@echo "  make smoke-all                 - Run both smoke tests"
+	@echo "  make smoke-stack               - Full /solve -> /verify smoke (compose stack must be up)"
 	@echo ""
 	@echo "  make docker-build              - Build studyverify-api image (arm64)"
 	@echo "  make docker-build-fresh        - Build with --no-cache"
@@ -86,6 +87,10 @@ smoke-redis:
 	@set -a && source .env.docker && set +a && bash scripts/redis-smoke-test.sh
 
 smoke-all: smoke-db smoke-redis
+
+smoke-stack:
+	@echo "Running full-stack smoke (requires 'make compose-up' first)..."
+	@bash scripts/smoke-stack.sh
 
 # ═══ Docker image management (Step 3.4.a) ═══
 

@@ -4,22 +4,29 @@ Verification-driven AI learning companion.
 
 ## Status
 
-🚧 **Week 3 / 12 — Persistence layer + REST API operational, full Docker stack ready**
+🚧 **Week 4 / 12 — Verifier Agent + Docker sandbox operational**
 
 ### What works
 - ✅ FastAPI backend with `/health`, `/health/db`,
-  `/api/v1/solve`, `/api/v1/sessions/{id}`, `/api/v1/sessions`
+  `/api/v1/solve`, `/api/v1/verify`, `/api/v1/sessions/...`,
+  `/api/v1/verifier-sessions/...`
 - ✅ Solver Agent: 3-stage LLM pipeline + sandbox self-verification
-- ✅ DeepSeek V4 Flash integration with retry/backoff
-- ✅ Postgres + Redis + FastAPI via Docker Compose (Makefile-wrapped),
-  all three services report `(healthy)`
-- ✅ SQLAlchemy 2.0 async + Alembic migrations (incl. 3-stage
-  backfill pattern); migrations auto-run on api container start
-- ✅ 3-layer architecture: Route → Service → Repository + Agent
-- ✅ Every solve invocation persisted; full session history queryable
-
-### Up next
-- 🔜 Step 4: Verifier Agent (validates student code against ground truth)
+- ✅ Verifier Agent: runs student code in hardened Docker sandbox;
+  generates LLM-based diagnostic feedback when tests fail
+- ✅ Anti-leak contract: redacted student-facing schemas at three
+  layers (Pydantic, prompt construction, DB write)
+- ✅ Postgres + Redis + FastAPI via Docker Compose; all 3 services
+  report (healthy)
+- ✅ SQLAlchemy 2.0 async + Alembic migrations (3-stage backfill
+  pattern for required-field additions)
+- ✅ 4-layer architecture: Route → Service → Repository + Agent
+- ✅ Docker sandbox with 14 hardening flags (network=none,
+  cap_drop=ALL, pids_limit, etc.) verified via baseline
+  isolation smoke tests
+- ✅ Every solve and verify invocation persisted; full session
+  history queryable
+- ✅ 89+ unit tests + 30+ integration tests across mocked,
+  SQLite, real Postgres, real DeepSeek, and real Docker layers
 
 ## Quick Start with Docker
 
@@ -60,6 +67,23 @@ curl -X POST http://localhost:8000/api/v1/solve \
   -d "$(jq '.[0]' backend/tests/agents/fixtures/sample_problems.json)"
 ```
 
+To submit student code against a solved problem:
+
+```bash
+SOLVER_ID=$(curl -s -X POST http://localhost:8000/api/v1/solve \
+  -H "Content-Type: application/json" \
+  -d "$(jq '.[0]' backend/tests/agents/fixtures/sample_problems.json)" | jq -r .session_id)
+curl -X POST http://localhost:8000/api/v1/verify \
+  -H "Content-Type: application/json" \
+  -d "{\"solver_session_id\": \"$SOLVER_ID\", \"student_code\": \"def sum_list(nums):\\n    return sum(nums)\"}"
+```
+
+For an automated end-to-end check:
+
+```bash
+make smoke-stack
+```
+
 Stop with `make compose-down`. See [docs/runbook-docker.md](docs/runbook-docker.md)
 for operations reference.
 
@@ -91,9 +115,9 @@ uv run pytest -v -m integration
 uv run pytest -v
 ```
 
-Test counts (Week 3):
-- Unit: 50+ (mocked LLM, in-memory SQLite)
-- Integration: 25+ (real Postgres, real DeepSeek API)
+Test counts (Week 4):
+- Unit: 89+ (mocked LLM, in-memory SQLite)
+- Integration: 30+ (real Postgres, real DeepSeek API, real Docker)
 
 ## Architecture
 
@@ -112,6 +136,16 @@ Layered architecture with clear separation of concerns:
   Alembic migrations
 - **LLM layer** (`backend/app/llm/`) — DeepSeek client with typed
   exceptions and retry/backoff
+- **Verifier layer** (`backend/app/agents/verifier/`) — stateless
+  agent runs student code in Docker sandbox; LLM generates
+  diagnostic feedback with strict anti-leak prompt construction
+- **Docker sandbox** (`backend/app/sandbox/docker_runner.py`) —
+  14-flag hardened container with bind-mount payload delivery
+  (cross-platform reliable)
+- **Anti-leak defense** — RedactedTestResult schema + prompt
+  construction omits expected values + DB JSONB never stores
+  expected key; verified via Pydantic reflection tests +
+  end-to-end LLM behavior tests
 
 ## Roadmap
 
@@ -119,18 +153,15 @@ Layered architecture with clear separation of concerns:
 - ✅ Step 0-2: Environment, FastAPI skeleton, Solver Agent + sandbox
 - ✅ Step 3: Persistence layer (Postgres + Alembic + Service/Repo +
   full Docker Compose stack)
+- ✅ Step 4: Verifier Agent (Docker sandbox + diagnostic feedback +
+  persistence + REST endpoints)
 
 ### Upcoming
-- ⬜ Step 4: Verifier Agent (validates student code against
-  Solver ground truth, Docker sandbox)
 - ⬜ Step 5: Hint Agent + LangGraph orchestration
 - ⬜ Step 6: Multi-model gateway (Anthropic fallback) + RAG
 - ⬜ Step 7: Frontend (Next.js + Monaco)
-- ⬜ Step 8: ML problem support (incremental adapter)
-- ⬜ Step 9: Evaluation suite (RAGAS-style)
-- ⬜ Step 10: Knowledge graph + spaced repetition
-- ⬜ Step 11: Optimization + technical blog
-- ⬜ Step 12: Open-source release + MCP server
+- ⬜ Step 8-12: ML problems / evaluation / knowledge graph /
+  blog / MCP
 
 ## License
 
