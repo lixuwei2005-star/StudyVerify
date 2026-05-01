@@ -47,6 +47,7 @@ VERIFY_BUG=$(curl -sf -X POST "$API/api/v1/verify" \
     -H "Content-Type: application/json" \
     -d "{\"solver_session_id\": \"$SOLVER_ID\", \"student_code\": \"def sum_list(nums):\\n    return 0\"}")
 VERIFY_BUG_STATUS=$(echo "$VERIFY_BUG" | jq -r .output.status)
+VERIFY_BUG_ID=$(echo "$VERIFY_BUG" | jq -r .session_id)
 DIAGNOSIS=$(echo "$VERIFY_BUG" | jq -r .output.diagnosis)
 
 if [ "$VERIFY_BUG_STATUS" != "some_failed" ]; then
@@ -81,6 +82,48 @@ if [ "$LEAKS" != "0" ]; then
     exit 1
 fi
 echo "  ✓ 0 rows leak 'expected' in JSONB"
+
+echo ""
+echo "▶ Step 6: POST /hint twice + GET hints list..."
+
+HINT1=$(curl -sf -X POST "$API/api/v1/hint" \
+    -H "Content-Type: application/json" \
+    -d "{\"verifier_session_id\": \"$VERIFY_BUG_ID\"}")
+HINT1_TEXT=$(echo "$HINT1" | jq -r .hint_text)
+HINT1_INDEX=$(echo "$HINT1" | jq -r .hint_index)
+
+if [ -z "$HINT1_TEXT" ] || [ "$HINT1_TEXT" == "null" ]; then
+    echo "❌ First hint returned empty text."
+    exit 1
+fi
+if [ "$HINT1_INDEX" != "1" ]; then
+    echo "❌ First hint hint_index expected 1, got $HINT1_INDEX."
+    exit 1
+fi
+echo "  ✓ hint #1: index=$HINT1_INDEX, text=$HINT1_TEXT"
+
+HINT2=$(curl -sf -X POST "$API/api/v1/hint" \
+    -H "Content-Type: application/json" \
+    -d "{\"verifier_session_id\": \"$VERIFY_BUG_ID\"}")
+HINT2_TEXT=$(echo "$HINT2" | jq -r .hint_text)
+HINT2_INDEX=$(echo "$HINT2" | jq -r .hint_index)
+
+if [ -z "$HINT2_TEXT" ] || [ "$HINT2_TEXT" == "null" ]; then
+    echo "❌ Second hint returned empty text."
+    exit 1
+fi
+if [ "$HINT2_INDEX" != "2" ]; then
+    echo "❌ Second hint hint_index expected 2, got $HINT2_INDEX."
+    exit 1
+fi
+echo "  ✓ hint #2: index=$HINT2_INDEX, text=$HINT2_TEXT"
+
+HINTS_TOTAL=$(curl -sf "$API/api/v1/verifier-sessions/$VERIFY_BUG_ID/hints" | jq -r .total)
+if [ "$HINTS_TOTAL" -lt 2 ]; then
+    echo "❌ List endpoint returned $HINTS_TOTAL hints, expected ≥ 2."
+    exit 1
+fi
+echo "  ✓ list endpoint returned $HINTS_TOTAL hints"
 
 echo ""
 echo "✅ Stack smoke passed."

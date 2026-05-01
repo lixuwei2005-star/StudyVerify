@@ -5,8 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.verifier.agent import VerifierError
 from app.db.session import get_db_session
-from app.dependencies import get_verifier_repository, get_verifier_service
+from app.dependencies import (
+    get_hint_repository,
+    get_verifier_repository,
+    get_verifier_service,
+)
+from app.repositories.hint_repository import HintRepository
 from app.repositories.verifier_repository import VerifierRepository
+from app.schemas.hint_session import HintSessionListResponse, HintSessionOut
 from app.schemas.verifier_session import (
     VerifierSessionOut,
     VerifyRequest,
@@ -68,3 +74,19 @@ async def get_verifier_session(
             detail="Session not found",
         )
     return VerifierSessionOut.model_validate(row)
+
+
+@router.get(
+    "/verifier-sessions/{verifier_session_id}/hints",
+    response_model=HintSessionListResponse,
+)
+async def list_hints_for_verifier_session(
+    verifier_session_id: UUID,
+    session: AsyncSession = Depends(get_db_session),
+    repository: HintRepository = Depends(get_hint_repository),
+) -> HintSessionListResponse:
+    items = await repository.list_by_verifier_session(session, verifier_session_id)
+    return HintSessionListResponse(
+        items=[HintSessionOut.model_validate(i) for i in items],
+        total=len(items),
+    )

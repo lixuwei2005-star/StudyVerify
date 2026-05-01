@@ -93,3 +93,40 @@ class VerifierSession(Base):
 
     def __repr__(self) -> str:
         return f"<VerifierSession {self.id} solver={self.solver_session_id} verified={self.verified}>"
+
+
+class HintSession(Base):
+    __tablename__ = "hint_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True, native_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    verifier_session_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True, native_uuid=True),
+        ForeignKey("verifier_sessions.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    hint_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    hint_text: Mapped[str] = mapped_column(Text, nullable=False)
+    prior_hints_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        index=True,
+    )
+
+    __table_args__ = (
+        sa.UniqueConstraint(
+            "verifier_session_id",
+            "hint_index",
+            name="uq_hint_sessions_verifier_index",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<HintSession {self.id} verifier={self.verifier_session_id} index={self.hint_index}>"

@@ -9,10 +9,13 @@ from functools import lru_cache
 
 from fastapi import Depends
 
+from app.agents.hint.agent import HintAgent, get_hint_agent
 from app.agents.solver.agent import SolverAgent, get_solver_agent
 from app.agents.verifier.agent import VerifierAgent, get_verifier_agent
+from app.repositories.hint_repository import HintRepository
 from app.repositories.solver_repository import SolverRepository
 from app.repositories.verifier_repository import VerifierRepository
+from app.services.hint_service import HintService
 from app.services.solver_service import SolverService
 from app.services.verifier_service import VerifierService
 
@@ -42,5 +45,24 @@ def get_verifier_service(
     return VerifierService(
         agent=agent,
         repository=repository,
+        solver_repository=solver_repository,
+    )
+
+
+@lru_cache
+def get_hint_repository() -> HintRepository:
+    return HintRepository()
+
+
+def get_hint_service(
+    agent: HintAgent = Depends(get_hint_agent),
+    repository: HintRepository = Depends(get_hint_repository),
+    verifier_repository: VerifierRepository = Depends(get_verifier_repository),
+    solver_repository: SolverRepository = Depends(get_solver_repository),
+) -> HintService:
+    return HintService(
+        agent=agent,
+        repository=repository,
+        verifier_repository=verifier_repository,
         solver_repository=solver_repository,
     )
