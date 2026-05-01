@@ -4,29 +4,40 @@ Verification-driven AI learning companion.
 
 ## Status
 
-🚧 **Week 4 / 12 — Verifier Agent + Docker sandbox operational**
+🚧 **Week 5 / 12 — Hint Agent operational; Step 5.1 + 5.2 shipped**
 
 ### What works
 - ✅ FastAPI backend with `/health`, `/health/db`,
-  `/api/v1/solve`, `/api/v1/verify`, `/api/v1/sessions/...`,
-  `/api/v1/verifier-sessions/...`
+  `/api/v1/solve`, `/api/v1/verify`, `/api/v1/hint`, plus
+  session-history GET endpoints
 - ✅ Solver Agent: 3-stage LLM pipeline + sandbox self-verification
 - ✅ Verifier Agent: runs student code in hardened Docker sandbox;
-  generates LLM-based diagnostic feedback when tests fail
-- ✅ Anti-leak contract: redacted student-facing schemas at three
-  layers (Pydantic, prompt construction, DB write)
-- ✅ Postgres + Redis + FastAPI via Docker Compose; all 3 services
-  report (healthy)
+  generates diagnostic feedback that names neither code nor
+  algorithm
+- ✅ Hint Agent: progressive hints with diagnosis-as-seed for the
+  first call; concurrent retry on hint_index race; hard cap of
+  5 hints per verifier_session
+- ✅ Anti-leak defense in depth across both Verifier and Hint:
+  - Schema-level redaction (no `expected` field in any
+    student-facing model)
+  - Prompt construction never sees `expected` values
+  - Algorithm-dictation guard with substring contract (no
+    "use a loop", "iterate", "create a variable", "use sum()",
+    etc.) enforced by integration tests
+- ✅ Postgres + Redis + FastAPI via Docker Compose;
+  `make compose-up-rebuild` is clone-and-run
 - ✅ SQLAlchemy 2.0 async + Alembic migrations (3-stage backfill
   pattern for required-field additions)
-- ✅ 4-layer architecture: Route → Service → Repository + Agent
+- ✅ 4-layer architecture: Route → Service → Repository → Agent
 - ✅ Docker sandbox with 14 hardening flags (network=none,
   cap_drop=ALL, pids_limit, etc.) verified via baseline
   isolation smoke tests
-- ✅ Every solve and verify invocation persisted; full session
-  history queryable
-- ✅ 89+ unit tests + 30+ integration tests across mocked,
+- ✅ Every solve / verify / hint invocation persisted; full
+  session history queryable
+- ✅ 120+ unit tests + 70+ integration tests across mocked,
   SQLite, real Postgres, real DeepSeek, and real Docker layers
+- ✅ End-to-end smoke (`make smoke-stack`) covers full
+  /solve → /verify → /hint chain
 
 ## Quick Start with Docker
 
@@ -78,6 +89,19 @@ curl -X POST http://localhost:8000/api/v1/verify \
   -d "{\"solver_session_id\": \"$SOLVER_ID\", \"student_code\": \"def sum_list(nums):\\n    return sum(nums)\"}"
 ```
 
+To request a progressive hint when verification fails (each call
+returns the next hint, more specific than the last, without naming
+code or algorithm steps):
+
+```bash
+VERIFIER_ID=$(curl -s -X POST http://localhost:8000/api/v1/verify \
+  -H "Content-Type: application/json" \
+  -d "{\"solver_session_id\": \"$SOLVER_ID\", \"student_code\": \"def sum_list(nums):\\n    return 0\"}" | jq -r .session_id)
+curl -X POST http://localhost:8000/api/v1/hint \
+  -H "Content-Type: application/json" \
+  -d "{\"verifier_session_id\": \"$VERIFIER_ID\"}"
+```
+
 For an automated end-to-end check:
 
 ```bash
@@ -115,9 +139,9 @@ uv run pytest -v -m integration
 uv run pytest -v
 ```
 
-Test counts (Week 4):
-- Unit: 89+ (mocked LLM, in-memory SQLite)
-- Integration: 30+ (real Postgres, real DeepSeek API, real Docker)
+Test counts (Week 5):
+- Unit: 120+ (mocked LLM, in-memory SQLite)
+- Integration: 70+ (real Postgres, real DeepSeek API, real Docker)
 
 ## Architecture
 
@@ -146,6 +170,13 @@ Layered architecture with clear separation of concerns:
   construction omits expected values + DB JSONB never stores
   expected key; verified via Pydantic reflection tests +
   end-to-end LLM behavior tests
+- **Hint layer** (`backend/app/agents/hint/`) — stateless
+  progressive-hint agent with concurrent-insert handling and
+  diagnosis-as-seed for the first hint
+- **Algorithm-dictation guard** — Verifier and Hint prompts share
+  a substring contract preventing the LLM from naming control
+  structures, built-ins, or stepwise algorithms; enforced by
+  integration tests
 
 ## Roadmap
 
@@ -155,10 +186,12 @@ Layered architecture with clear separation of concerns:
   full Docker Compose stack)
 - ✅ Step 4: Verifier Agent (Docker sandbox + diagnostic feedback +
   persistence + REST endpoints)
+- ✅ Step 5: Hint Agent + verifier prompt tightening
+  (orchestration deferred to Step 6+ when complexity warrants)
 
 ### Upcoming
-- ⬜ Step 5: Hint Agent + LangGraph orchestration
-- ⬜ Step 6: Multi-model gateway (Anthropic fallback) + RAG
+- ⬜ Step 6: Multi-model gateway (Anthropic fallback) + RAG +
+  LangGraph orchestration
 - ⬜ Step 7: Frontend (Next.js + Monaco)
 - ⬜ Step 8-12: ML problems / evaluation / knowledge graph /
   blog / MCP

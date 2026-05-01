@@ -184,7 +184,96 @@ async def test_syntax_error_in_student_code(agent: VerifierAgent) -> None:
 
 
 # ---------------------------------------------------------------------------
-# 4. Timeout → deterministic message, no LLM call.
+# 4. Structurally-empty student code (sum_list returns 0). The LLM has
+#    nothing to "correct" structurally and is tempted to dictate the
+#    algorithm or name the mechanism ("use a loop", "use sum()", etc.).
+#    Diagnosis must stay at the symptom/relationship level — no mechanism
+#    names, no stepwise recipe.
+#
+#    Added after Step 5.1 Phase 6 surfaced this gap: the Verifier prompt
+#    allowed "Consider using a loop or a built-in function to add up the
+#    values" — naming the mechanism is the same class of leak as algorithm
+#    dictation. Mirrors the parallel hint test
+#    test_minimal_code_hint_no_algorithm_dictation.
+# ---------------------------------------------------------------------------
+async def test_minimal_code_diagnosis_no_algorithm_dictation(
+    agent: VerifierAgent,
+    capfd: pytest.CaptureFixture[str],
+) -> None:
+    sum_list_problem = (
+        "Write a Python function `sum_list(nums)` that returns the sum of "
+        "all numbers in the input list of integers. Return 0 for an empty list."
+    )
+    student_code = "def sum_list(nums):\n    return 0\n"
+    test_cases = [
+        TestCase(input="[1, 2, 3]", expected="6", description=""),
+        TestCase(input="[5, 5, 5]", expected="15", description=""),
+        TestCase(input="[]", expected="0", description=""),
+    ]
+    inp = VerifierInput(
+        problem_id="py-test-sum-empty",
+        problem_text=sum_list_problem,
+        entry_function="sum_list",
+        test_cases=test_cases,
+        student_code=student_code,
+    )
+
+    result = await agent.verify(inp)
+
+    diagnosis = result.diagnosis
+    assert diagnosis, "expected non-empty diagnosis for failing structurally-empty code"
+
+    print(
+        f"\n=== Sum-list minimal-code diagnosis ===\n{diagnosis}\n======================================="
+    )
+
+    # Anti-code regex (same as test #2).
+    assert re.search(r"\bdef\s+\w+\s*\(", diagnosis) is None, (
+        f"diagnosis contains a function definition: {diagnosis!r}"
+    )
+    assert re.search(r"\breturn\s+\S", diagnosis) is None, (
+        f"diagnosis contains a return statement: {diagnosis!r}"
+    )
+    assert "```" not in diagnosis, f"diagnosis contains a fenced code block: {diagnosis!r}"
+
+    # Anti-algorithm-dictation phrase contract. Parallel to the hint test's
+    # forbidden list; broader because diagnosis is one-shot and tempted
+    # toward naming the mechanism cleanly ("use sum()", "use a built-in").
+    forbidden_phrases = (
+        "use a loop",
+        "using a loop",
+        "with a loop",
+        "for loop",
+        "while loop",
+        "iterate through",
+        "iterate over",
+        "loop through",
+        "loop over",
+        "create a variable",
+        "running total",
+        "accumulate",
+        "use sum(",
+        "use a built-in",
+        "built-in function",
+        "list comprehension",
+    )
+    diagnosis_lower = diagnosis.lower()
+    for phrase in forbidden_phrases:
+        assert phrase not in diagnosis_lower, (
+            f"diagnosis dictated algorithm/mechanism: contained {phrase!r}: {diagnosis!r}"
+        )
+
+    # Expected-output substring check (only multi-char expecteds — "0", "6"
+    # are too short to be reliable).
+    for tc in test_cases:
+        if tc.expected and len(tc.expected) > 2:
+            assert tc.expected not in diagnosis, (
+                f"diagnosis leaks expected value {tc.expected!r}: {diagnosis!r}"
+            )
+
+
+# ---------------------------------------------------------------------------
+# 5. Timeout → deterministic message, no LLM call.
 # ---------------------------------------------------------------------------
 async def test_timeout_solution_gets_deterministic_message(agent: VerifierAgent) -> None:
     student_code = "def double(nums):\n    while True:\n        pass\n"
