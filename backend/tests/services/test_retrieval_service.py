@@ -28,13 +28,22 @@ from app.services.retrieval_service import (
 # ---------------------------------------------------------------------------
 
 
-def _failure(hints: list[str], similarity: float = 0.9) -> RetrievedFailure:
+def _failure(
+    hints: list[str], similarity: float = 0.9, problem_id: str = "py-001-sum-list"
+) -> RetrievedFailure:
     return RetrievedFailure(
         verifier_session_id=uuid.uuid4(),
         similarity=similarity,
         diagnosis="diag",
         hint_texts=hints,
+        problem_id=problem_id,
     )
+
+
+def test_filter_dangerous_hints_preserves_problem_id() -> None:
+    case = _failure(["loop through"], problem_id="py-005-factorial")
+    [out] = filter_dangerous_hints([case])
+    assert out.problem_id == "py-005-factorial"
 
 
 def test_filter_dangerous_hints_removes_forbidden_phrases() -> None:

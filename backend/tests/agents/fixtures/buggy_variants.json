@@ -1,0 +1,222 @@
+{
+  "py-001-sum-list": [
+    {
+      "category": "off-by-one loops or indexing",
+      "code": "def sum_list(nums):\n    total = 0\n    for i in range(1, len(nums)):\n        total += nums[i]\n    return total"
+    },
+    {
+      "category": "wrong empty-input/base-case handling",
+      "code": "def sum_list(nums):\n    if not nums:\n        return None\n    total = 0\n    for n in nums:\n        total += n\n    return total"
+    },
+    {
+      "category": "wrong operator or comparison",
+      "code": "def sum_list(nums):\n    total = 0\n    for n in nums:\n        total -= n\n    return total"
+    },
+    {
+      "category": "missing accumulator update",
+      "code": "def sum_list(nums):\n    total = 0\n    for n in nums:\n        pass\n    return total"
+    },
+    {
+      "category": "wrong return value",
+      "code": "def sum_list(nums):\n    total = 0\n    for n in nums:\n        total = n\n    return total"
+    }
+  ],
+  "py-002-find-max": [
+    {
+      "category": "off-by-one",
+      "code": "def find_max(nums):\n    if not nums:\n        return None\n    best = nums[0]\n    for i in range(1, len(nums) - 1):\n        if nums[i] > best:\n            best = nums[i]\n    return best"
+    },
+    {
+      "category": "wrong empty-handling",
+      "code": "def find_max(nums):\n    best = 0\n    for n in nums:\n        if n > best:\n            best = n\n    return best"
+    },
+    {
+      "category": "wrong operator",
+      "code": "def find_max(nums):\n    if not nums:\n        return None\n    best = nums[0]\n    for n in nums[1:]:\n        if n < best:\n            best = n\n    return best"
+    },
+    {
+      "category": "missing accumulator update",
+      "code": "def find_max(nums):\n    if not nums:\n        return None\n    best = nums[0]\n    for n in nums[1:]:\n        if n > best:\n            pass\n    return best"
+    },
+    {
+      "category": "wrong return value",
+      "code": "def find_max(nums):\n    if not nums:\n        return None\n    for n in nums:\n        best = n\n    return best"
+    }
+  ],
+  "py-003-count-vowels": [
+    {
+      "category": "off-by-one loops or indexing",
+      "code": "def count_vowels(s):\n    vowels = set('aeiou')\n    count = 0\n    for i in range(len(s)+1):\n        if s[i].lower() in vowels:\n            count += 1\n    return count"
+    },
+    {
+      "category": "wrong empty-input/base-case handling",
+      "code": "def count_vowels(s):\n    if not s:\n        return -1\n    vowels = set('aeiou')\n    count = 0\n    for ch in s.lower():\n        if ch in vowels:\n            count += 1\n    return count"
+    },
+    {
+      "category": "wrong operator or comparison",
+      "code": "def count_vowels(s):\n    vowels = set('aeiou')\n    count = 0\n    for ch in s:\n        if ch in vowels:\n            count += 1\n    return count"
+    },
+    {
+      "category": "missing accumulator update",
+      "code": "def count_vowels(s):\n    vowels = set('aeiou')\n    count = 0\n    for ch in s.lower():\n        if ch in vowels:\n            pass\n    return count"
+    },
+    {
+      "category": "wrong return value",
+      "code": "def count_vowels(s):\n    return [ch for ch in s if ch.lower() in 'aeiou']"
+    }
+  ],
+  "py-004-reverse-string": [
+    {
+      "category": "off-by-one loops or indexing",
+      "code": "def reverse_string(s):\n    result = ''\n    for i in range(len(s)):\n        result += s[i]\n    return result"
+    },
+    {
+      "category": "wrong empty-input/base-case handling",
+      "code": "def reverse_string(s):\n    if s == '':\n        return None\n    return s[::-1]"
+    },
+    {
+      "category": "wrong operator or comparison",
+      "code": "def reverse_string(s):\n    return s[::1]"
+    },
+    {
+      "category": "index error",
+      "code": "def reverse_string(s):\n    result = ''\n    for i in range(len(s)+1):\n        result += s[len(s)-i]\n    return result"
+    },
+    {
+      "category": "missing accumulator update",
+      "code": "def reverse_string(s):\n    result = ''\n    for i in range(len(s)-1, -1, -1):\n        pass\n    return result"
+    }
+  ],
+  "py-005-factorial": [
+    {
+      "category": "off-by-one loop (exclusive upper bound)",
+      "code": "def factorial(n):\n    result = 1\n    for i in range(2, n):\n        result *= i\n    return result"
+    },
+    {
+      "category": "wrong base case (returns 0 for n=0)",
+      "code": "def factorial(n):\n    if n == 0:\n        return 0\n    result = 1\n    for i in range(2, n+1):\n        result *= i\n    return result"
+    },
+    {
+      "category": "wrong operator (addition instead of multiplication)",
+      "code": "def factorial(n):\n    result = 1\n    for i in range(2, n+1):\n        result += i\n    return result"
+    },
+    {
+      "category": "missing accumulator update (forgets to multiply)",
+      "code": "def factorial(n):\n    result = 1\n    for i in range(2, n+1):\n        pass\n    return result"
+    },
+    {
+      "category": "incorrect loop start (includes 0)",
+      "code": "def factorial(n):\n    result = 1\n    for i in range(0, n+1):\n        result *= i\n    return result"
+    }
+  ],
+  "py-006-is-palindrome": [
+    {
+      "category": "wrong operator or comparison",
+      "code": "def is_palindrome(s):\n    return s != s[::-1]"
+    },
+    {
+      "category": "missing accumulator update",
+      "code": "def is_palindrome(s):\n    reversed = ''\n    for ch in s:\n        reversed = ch\n    return s == reversed"
+    },
+    {
+      "category": "index error",
+      "code": "def is_palindrome(s):\n    n = len(s)\n    for i in range(n):\n        if s[i] != s[n - i]:\n            return False\n    return True"
+    },
+    {
+      "category": "wrong empty-input/base-case handling",
+      "code": "def is_palindrome(s):\n    if len(s) == 0:\n        return False\n    return s == s[::-1]"
+    },
+    {
+      "category": "type confusion",
+      "code": "def is_palindrome(s):\n    return list(s) == reversed(s)"
+    }
+  ],
+  "py-007-sort-ascending": [
+    {
+      "category": "wrong empty-input handling",
+      "code": "def sort_ascending(nums):\n    if not nums:\n        return None\n    return sorted(nums)"
+    },
+    {
+      "category": "wrong operator",
+      "code": "def sort_ascending(nums):\n    result = list(nums)\n    for i in range(len(result) - 1):\n        for j in range(len(result) - i - 1):\n            if result[j] < result[j+1]:\n                result[j], result[j+1] = result[j+1], result[j]\n    return result"
+    },
+    {
+      "category": "missing accumulator update",
+      "code": "def sort_ascending(nums):\n    if len(nums) <= 1:\n        return nums\n    mid = len(nums) // 2\n    left = sort_ascending(nums[:mid])\n    right = sort_ascending(nums[mid:])\n    result = []\n    i = j = 0\n    while i < len(left) and j < len(right):\n        if left[i] < right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    return result"
+    },
+    {
+      "category": "incorrectly mutating input (using reverse)",
+      "code": "def sort_ascending(nums):\n    return nums.reverse()"
+    },
+    {
+      "category": "index error",
+      "code": "def sort_ascending(nums):\n    result = []\n    for i in range(len(nums)):\n        for j in range(i + 1, len(nums)):\n            if nums[i] > nums[j]:\n                result.append(nums[j])\n    return result"
+    }
+  ],
+  "py-008-is-prime": [
+    {
+      "category": "off-by-one",
+      "code": "def is_prime(n):\n    if n < 2:\n        return False\n    for i in range(2, int(n ** 0.5)):\n        if n % i == 0:\n            return False\n    return True"
+    },
+    {
+      "category": "wrong base-case",
+      "code": "def is_prime(n):\n    if n == 1:\n        return True\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return False\n    return True"
+    },
+    {
+      "category": "wrong operator",
+      "code": "def is_prime(n):\n    if n < 2:\n        return False\n    for i in range(2, n):\n        if n % i != 0:\n            return True\n        else:\n            return False"
+    },
+    {
+      "category": "missing return",
+      "code": "def is_prime(n):\n    if n < 2:\n        return False\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return False\n    # missing return True"
+    },
+    {
+      "category": "incorrectly mutating input",
+      "code": "def is_prime(n):\n    if n < 2:\n        return False\n    i = 2\n    while n > 1:\n        if n % i == 0:\n            n = n // i\n        i += 1\n    return n == 1"
+    }
+  ],
+  "py-009-binary-search": [
+    {
+      "category": "wrong operator or comparison",
+      "code": "def binary_search(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] > target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1"
+    },
+    {
+      "category": "missing accumulator update",
+      "code": "def binary_search(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid\n        else:\n            hi = mid - 1\n    return -1"
+    },
+    {
+      "category": "wrong return value",
+      "code": "def binary_search(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return 0"
+    },
+    {
+      "category": "index error",
+      "code": "def binary_search(nums, target):\n    lo, hi = 0, len(nums)\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1"
+    },
+    {
+      "category": "incorrectly mutating input",
+      "code": "def binary_search(nums, target):\n    nums = nums[::-1]\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1"
+    }
+  ],
+  "py-010-flatten-list": [
+    {
+      "category": "off-by-one loops or indexing",
+      "code": "def flatten_list(nested):\n    result = []\n    for i in range(len(nested)-1):\n        result.extend(nested[i])\n    return result"
+    },
+    {
+      "category": "wrong empty-input/base-case handling",
+      "code": "def flatten_list(nested):\n    if not nested:\n        return None\n    result = []\n    for sub in nested:\n        result.extend(sub)\n    return result"
+    },
+    {
+      "category": "wrong operator or comparison",
+      "code": "def flatten_list(nested):\n    result = []\n    for sub in nested:\n        result.append(sub)\n    return result"
+    },
+    {
+      "category": "missing accumulator update",
+      "code": "def flatten_list(nested):\n    result = []\n    for sub in nested:\n        pass\n    return result"
+    },
+    {
+      "category": "wrong return value",
+      "code": "def flatten_list(nested):\n    result = []\n    for sub in nested:\n        result.extend(sub)\n    return nested"
+    }
+  ]
+}

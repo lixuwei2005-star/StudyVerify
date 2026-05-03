@@ -40,3 +40,6 @@ backend/.env
 
 # Local Docker Compose overrides
 docker-compose.override.yml
+
+# Operator scratch from Step 6.3 (raw LLM-generated variants, curation script)
+backend/tmp/

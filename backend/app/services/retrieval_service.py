@@ -66,6 +66,7 @@ class RetrievedFailure:
     similarity: float
     diagnosis: str
     hint_texts: list[str]
+    problem_id: str
 
 
 def _is_dangerous_hint(text_value: str) -> bool:
@@ -98,6 +99,7 @@ def filter_dangerous_hints(retrieved: list[RetrievedFailure]) -> list[RetrievedF
                 similarity=item.similarity,
                 diagnosis=item.diagnosis,
                 hint_texts=safe_hints,
+                problem_id=item.problem_id,
             )
         )
     return filtered
@@ -107,6 +109,7 @@ _SIMILARITY_SQL = text(
     """
     SELECT
         v.id,
+        s.problem_id,
         1 - (v.failure_embedding <=> CAST(:query_emb AS vector)) AS similarity,
         v.diagnosis,
         COALESCE(
@@ -115,12 +118,13 @@ _SIMILARITY_SQL = text(
             ARRAY[]::text[]
         ) AS hint_texts
     FROM verifier_sessions v
+    JOIN solver_sessions s ON s.id = v.solver_session_id
     LEFT JOIN hint_sessions h ON h.verifier_session_id = v.id
     WHERE v.failure_embedding IS NOT NULL
       AND v.embedding_status = 'success'
       AND v.verified = false
       AND (CAST(:exclude AS uuid) IS NULL OR v.id <> CAST(:exclude AS uuid))
-    GROUP BY v.id, v.failure_embedding, v.diagnosis
+    GROUP BY v.id, s.problem_id, v.failure_embedding, v.diagnosis
     HAVING 1 - (v.failure_embedding <=> CAST(:query_emb AS vector)) >= :min_sim
     ORDER BY v.failure_embedding <=> CAST(:query_emb AS vector)
     LIMIT :top_k
@@ -158,6 +162,7 @@ class RetrievalService:
                 similarity=float(row.similarity),
                 diagnosis=row.diagnosis or "",
                 hint_texts=list(row.hint_texts) if row.hint_texts else [],
+                problem_id=row.problem_id,
             )
             for row in result
         ]

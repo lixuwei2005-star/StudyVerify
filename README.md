@@ -4,7 +4,7 @@ Verification-driven AI learning companion.
 
 ## Status
 
-🚧 **Week 5 / 12 — Hint Agent operational; Step 5.1 + 5.2 shipped**
+🚧 **Week 6 / 12 — RAG retrieval + corpus expansion shipped (Step 6.1 → 6.3)**
 
 ### What works
 - ✅ FastAPI backend with `/health`, `/health/db`,
@@ -34,7 +34,16 @@ Verification-driven AI learning companion.
   isolation smoke tests
 - ✅ Every solve / verify / hint invocation persisted; full
   session history queryable
-- ✅ 120+ unit tests + 70+ integration tests across mocked,
+- ✅ Multi-provider LLM gateway (DeepSeek primary + OpenAI
+  fallback) with retry/backoff and provider-failure routing
+- ✅ pgvector RAG retrieval over failed verifier sessions —
+  past-failure inspiration for the Hint Agent, with
+  algorithm-dictation guard applied to retrieved hints
+- ✅ RAG corpus seeded from 50 LLM-generated buggy variants
+  across 10 problems (84-row dev corpus) with cross-problem
+  retrieval boundaries validated by Tier-1 deterministic
+  pytest tests and a Tier-2 manual review script
+- ✅ 200+ unit tests + 90+ integration tests across mocked,
   SQLite, real Postgres, real DeepSeek, and real Docker layers
 - ✅ End-to-end smoke (`make smoke-stack`) covers full
   /solve → /verify → /hint chain
@@ -139,9 +148,10 @@ uv run pytest -v -m integration
 uv run pytest -v
 ```
 
-Test counts (Week 5):
-- Unit: 120+ (mocked LLM, in-memory SQLite)
-- Integration: 70+ (real Postgres, real DeepSeek API, real Docker)
+Test counts (Week 6):
+- Unit: 200+ (mocked LLM, in-memory SQLite)
+- Integration: 90+ (real Postgres, real DeepSeek API, real Docker,
+  pgvector retrieval-quality)
 
 ## Architecture
 
@@ -177,6 +187,17 @@ Layered architecture with clear separation of concerns:
   a substring contract preventing the LLM from naming control
   structures, built-ins, or stepwise algorithms; enforced by
   integration tests
+- **RAG retrieval** (`backend/app/services/retrieval_service.py`)
+  — pgvector cosine over `verifier_sessions.failure_embedding`,
+  joined to `solver_sessions.problem_id` for cross-problem
+  quality assertions; reads only, never commits
+- **Corpus operator tools** (`backend/app/scripts/`) —
+  `generate_buggy_variants.py` produces LLM-assisted candidate
+  buggy implementations (parse-validate-retry, provider-switchable
+  via the existing LLM gateway); `seed_failure_corpus.py` drives
+  /solve → /verify against the local stack with sha256-based
+  idempotency, --dry-run, and a localhost-gated destructive
+  reseed flow
 
 ## Roadmap
 
@@ -187,14 +208,18 @@ Layered architecture with clear separation of concerns:
 - ✅ Step 4: Verifier Agent (Docker sandbox + diagnostic feedback +
   persistence + REST endpoints)
 - ✅ Step 5: Hint Agent + verifier prompt tightening
-  (orchestration deferred to Step 6+ when complexity warrants)
+- ✅ Step 6.1: Multi-provider LLM gateway (DeepSeek + OpenAI fallback)
+- ✅ Step 6.2: pgvector RAG retrieval over failed verifier sessions
+- ✅ Step 6.3: RAG corpus expansion (10 problems × 5 buggy variants),
+  cross-problem retrieval-quality tests, and `RetrievedFailure.problem_id`
+  threading
 
 ### Upcoming
-- ⬜ Step 6: Multi-model gateway (Anthropic fallback) + RAG +
-  LangGraph orchestration
 - ⬜ Step 7: Frontend (Next.js + Monaco)
-- ⬜ Step 8-12: ML problems / evaluation / knowledge graph /
-  blog / MCP
+- ⬜ Step 8: LangGraph orchestration (deferred from Step 6 until
+  Step 7 frontend UX clarifies the agent state machine)
+- ⬜ Step 9-12: RAG quality evaluation / ML problems / knowledge
+  graph / blog / MCP
 
 ## License
 
