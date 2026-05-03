@@ -16,7 +16,14 @@ class Settings(BaseSettings):
     DEEPSEEK_MODEL: str = "deepseek-v4-flash"
     DEEPSEEK_REASONING_EFFORT: str = "none"
     LLM_TIMEOUT_SECONDS: int = 30
-    LLM_MAX_RETRIES: int = 3
+    LLM_MAX_RETRIES: int = 3  # DEPRECATED in 6.1 — gateway owns
+    # retry now (3 attempts hardcoded in gateway.MAX_ATTEMPTS_PER_PROVIDER).
+    # Field kept for .env compatibility; Step 9 will reconcile retry policy.
+
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    LLM_FALLBACK_ENABLED: bool = False
+    LLM_FALLBACK_PROVIDER: str = "openai"
 
     SANDBOX_TIMEOUT_SECONDS: int = 5
     SANDBOX_MEMORY_MB: int = 128

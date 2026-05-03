@@ -8,3 +8,7 @@ class LLMTimeoutError(LLMError):
 
 class LLMRateLimitError(LLMError):
     """Raised when the LLM provider rate-limits us beyond our retry budget."""
+
+
+class LLMAllProvidersFailedError(LLMError):
+    """Raised when both primary and fallback providers fail."""
