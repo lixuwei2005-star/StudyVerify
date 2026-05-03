@@ -165,7 +165,8 @@ async def test_minimal_code_hint_no_algorithm_dictation(agent: HintAgent) -> Non
     output = await agent.generate(hint_input)
 
     print(
-        f"\n=== Sum-list minimal-code hint ===\n{output.hint_text}\n=================================="
+        f"\n=== Sum-list minimal-code hint ===\n{output.hint_text}\n"
+        "=================================="
     )
 
     # Same anti-code regex as test #1.
@@ -193,9 +194,15 @@ async def test_minimal_code_hint_no_algorithm_dictation(agent: HintAgent) -> Non
 # ---------------------------------------------------------------------------
 async def test_fourth_hint_or_out_of_hints_fallback(agent: HintAgent) -> None:
     priors = [
-        "Your function's behavior on the input differs from the problem requirement. Re-read the spec.",
+        (
+            "Your function's behavior on the input differs from the problem "
+            "requirement. Re-read the spec."
+        ),
         "Specifically, think about how each element of the list should change.",
-        "The required output has a different relationship to each input element than what your code produces.",
+        (
+            "The required output has a different relationship to each input "
+            "element than what your code produces."
+        ),
     ]
     hint_input = HintInput(
         problem_text=PROBLEM_TEXT,

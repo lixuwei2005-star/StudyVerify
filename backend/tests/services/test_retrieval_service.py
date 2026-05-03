@@ -80,9 +80,9 @@ def test_filter_dangerous_hints_caps_hint_text_at_max_chars() -> None:
     assert out.hint_texts[0].endswith("...")
 
 
-def test_forbidden_phrases_count_is_24() -> None:
+def test_forbidden_phrases_count_is_33() -> None:
     """Lock the count so future contributors notice if list shrinks."""
-    assert len(FORBIDDEN_HINT_PHRASES) == 24
+    assert len(FORBIDDEN_HINT_PHRASES) == 33
 
 
 # ---------------------------------------------------------------------------

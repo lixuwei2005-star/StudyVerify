@@ -18,7 +18,7 @@ SERVICE ?=
         compose-logs compose-ps compose-config \
         smoke-db smoke-redis smoke-all smoke-stack \
         docker-build docker-build-fresh docker-run-smoke docker-image-size \
-        regression-all
+        regression-all test-db-create
 
 help:
 	@echo "StudyVerify development commands:"
@@ -44,6 +44,7 @@ help:
 	@echo "  make docker-image-size         - Show built image size"
 	@echo ""
 	@echo "  make regression-all            - Full pytest sweep (requires compose-up-infra)"
+	@echo "  make test-db-create            - One-time: create studyverify_test database (PG-marked tests)"
 
 compose-up:
 	$(COMPOSE) up -d
@@ -133,3 +134,14 @@ regression-all:
 	@echo "Pre-requisite: backend/.env must have DEEPSEEK_API_KEY"
 	@echo ""
 	cd backend && uv run pytest -v
+
+# One-time bootstrap for PG-marked tests. Runs against the live postgres
+# container (must be `compose-up`-style running), creates studyverify_test
+# if missing, no-ops otherwise. The pg_session test fixture creates per-test
+# schemas inside this DB and drops them after each test.
+test-db-create:
+	@set -a && source .env.docker && set +a && \
+	  docker exec studyverify-postgres psql -U $$POSTGRES_USER \
+	    -d $$POSTGRES_DB -c "CREATE DATABASE studyverify_test;" 2>&1 \
+	    | grep -v "already exists" \
+	    || echo "studyverify_test exists or created"

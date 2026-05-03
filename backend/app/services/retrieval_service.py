@@ -56,6 +56,18 @@ FORBIDDEN_HINT_PHRASES: tuple[str, ...] = (
     "process each element",
     "for every item",
     "for every element",
+    # Step 6.4 paraphrase additions (9 phrases) — patterns surfaced during
+    # Step 6.2 Phase 7 + Phase 9 review. Each extends the family of "name the
+    # algorithm in plain English" leaks the original 24 set didn't catch.
+    "single mathematical operation",
+    "applied to a collection",
+    "applied to the elements",
+    "applied to the elements of",
+    "do you apply",
+    "applied to all the",
+    "each integer in",
+    "each number in the list",
+    "every integer in",
 )
 MAX_RETRIEVED_HINT_CHARS = 300
 

@@ -22,13 +22,14 @@ pytestmark = [
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_problems.json"
 
 
-def _load_problems() -> list[SolverInput]:
+def _load_problems(limit: int | None = None) -> list[SolverInput]:
     raw = json.loads(FIXTURE.read_text())
+    if limit is not None:
+        raw = raw[:limit]
     return [SolverInput.model_validate(p) for p in raw]
 
 
-@pytest.mark.parametrize("problem", _load_problems(), ids=lambda p: p.problem_id)
-async def test_solver_against_real_deepseek(problem: SolverInput):
+async def _run_solver_assertions(problem: SolverInput) -> None:
     # get_settings is cached; this picks up DEEPSEEK_API_KEY from env / .env.
     settings = get_settings()
     agent = SolverAgent(
@@ -52,3 +53,20 @@ async def test_solver_against_real_deepseek(problem: SolverInput):
     # Sample problems are tractable; first-try success is expected. If a real
     # run trips this, investigate prompts/model rather than relaxing the assert.
     assert output.retry_used is False
+
+
+# Default integration sweep: first 3 problems only. Cost budget for the
+# routine `pytest -m integration` run was a 10x amplifier when this
+# parametrized over all 10 fixtures; capping to 3 keeps the suite cheap. The
+# full 10-problem coverage lives in the @pytest.mark.slow variant below.
+@pytest.mark.parametrize("problem", _load_problems(limit=3), ids=lambda p: p.problem_id)
+async def test_solver_against_real_deepseek(problem: SolverInput) -> None:
+    await _run_solver_assertions(problem)
+
+
+# Full 10-problem coverage; opt-in via `pytest -m slow`. Real-DeepSeek calls
+# for every fixture, ~5-10 min, ~\$0.05 in token cost.
+@pytest.mark.slow
+@pytest.mark.parametrize("problem", _load_problems(), ids=lambda p: p.problem_id)
+async def test_solver_against_real_deepseek_full(problem: SolverInput) -> None:
+    await _run_solver_assertions(problem)

@@ -135,17 +135,30 @@ infrastructure.
 
 ## Run tests
 
+First-time PG test setup (one-time): create the `studyverify_test`
+database that pg-marked tests use.
+
+```bash
+make test-db-create
+```
+
 ```bash
 cd backend
 
 # Unit tests only (fast, no external dependencies)
 uv run pytest -v -m "not integration"
 
-# Integration tests (requires `make compose-up-infra` + DEEPSEEK_API_KEY)
+# Integration tests (requires `make compose-up-infra` + DEEPSEEK_API_KEY
+# + studyverify_test DB; OPENAI_API_KEY optional, enables RAG paths)
 uv run pytest -v -m integration
 
-# Full sweep
-uv run pytest -v
+# Slow tests (the full 10-problem solver-against-real-DeepSeek sweep;
+# ~5-10 min, ~$0.05). Gated separately to keep the default integration
+# suite cheap.
+uv run pytest -v -m slow
+
+# Full sweep (unit + integration; excludes slow by default unless added)
+uv run pytest -v -m "not slow"
 ```
 
 Test counts (Week 6):

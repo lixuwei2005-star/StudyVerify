@@ -27,6 +27,7 @@ class LLMProvider(Protocol):
     async def chat(
         self,
         messages: list[ChatMessage],
+        *,
         model: str | None = None,
         temperature: float = 0.3,
         json_mode: bool = False,

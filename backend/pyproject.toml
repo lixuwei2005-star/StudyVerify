@@ -33,6 +33,7 @@ addopts = "-ra"
 asyncio_mode = "auto"
 markers = [
     "integration: tests that hit real external services (deselect with -m 'not integration')",
+    "slow: tests with high LLM cost or long runtime; opt-in via `pytest -m slow`",
 ]
 
 [dependency-groups]
