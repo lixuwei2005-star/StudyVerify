@@ -1,6 +1,9 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    # Pinned: pgvector image extends the official Postgres image. A floating
+    # `pg16` tag could pick up a new pgvector release and silently change
+    # extension behavior between dev machines and CI.
+    image: pgvector/pgvector:0.8.2-pg16
     container_name: studyverify-postgres
     restart: unless-stopped
     environment:
@@ -60,6 +63,15 @@ services:
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
       DEEPSEEK_REASONING_EFFORT: ${DEEPSEEK_REASONING_EFFORT:-none}
+
+      # Empty default — RAG_ENABLED=false short-circuits embed/retrieve so the
+      # API can boot without an OpenAI key. alembic upgrade head must NOT
+      # require this var (Step 6.2 spec).
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+      RAG_ENABLED: ${RAG_ENABLED:-true}
+      RAG_TOP_K: ${RAG_TOP_K:-3}
+      RAG_MIN_SIMILARITY: ${RAG_MIN_SIMILARITY:-0.7}
 
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       ENV: ${ENV:-development}

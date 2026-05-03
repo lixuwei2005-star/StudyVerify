@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import uuid
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,9 +17,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.verifier.agent import VerifierAgent, VerifierError
 from app.agents.verifier.schemas import RedactedTestResult, VerifierOutput
 from app.db.models import SolverSession, VerifierSession
+from app.llm.embedding import EmbeddingService
 from app.repositories.solver_repository import SolverRepository
 from app.repositories.verifier_repository import VerifierRepository
-from app.sandbox.schemas import SandboxStatus
 from app.services.verifier_service import (
     DataIntegrityError,
     SolverSessionNotFoundError,
@@ -35,8 +35,7 @@ def _solver_row(
         problem_id="py-001-sum-list",
         problem_text="Sum a list.",
         entry_function="sum_list",
-        test_cases=test_cases
-        or [{"input": "[1,2,3]", "expected": "6", "description": "basic"}],
+        test_cases=test_cases or [{"input": "[1,2,3]", "expected": "6", "description": "basic"}],
         analysis="-",
         plan_steps=[],
         code="def sum_list(nums): return sum(nums)",
@@ -111,6 +110,10 @@ def _service(
         verifier_repo.create = AsyncMock(side_effect=repo_exc)
     else:
         verifier_repo.create = AsyncMock(return_value=the_verifier_row)
+    verifier_repo.update_embedding = AsyncMock()
+
+    embedding_service = AsyncMock(spec=EmbeddingService)
+    embedding_service.embed = AsyncMock(return_value=[0.1] * 1536)
 
     session = MagicMock(spec=AsyncSession)
     session.commit = AsyncMock()
@@ -121,6 +124,7 @@ def _service(
         agent=agent,
         repository=verifier_repo,
         solver_repository=solver_repo,
+        embedding_service=embedding_service,
     )
     return service, solver_repo.get_by_id, agent.verify, verifier_repo.create, session
 
@@ -139,7 +143,9 @@ async def test_happy_path_orchestration_order() -> None:
     parent.attach_mock(session.commit, "commit")
     parent.attach_mock(session.refresh, "refresh")
 
-    row, output = await service.verify_and_persist(session, solver_id, "def sum_list(n): return sum(n)")
+    row, output = await service.verify_and_persist(
+        session, solver_id, "def sum_list(n): return sum(n)"
+    )
 
     method_names = [c[0] for c in parent.mock_calls]
     assert method_names == ["get_by_id", "verify", "create", "commit", "refresh"]
@@ -165,9 +171,7 @@ async def test_solver_session_not_found_raises() -> None:
 
 
 async def test_verifier_error_propagates_from_agent() -> None:
-    service, _, verify, create, session = _service(
-        agent_exc=VerifierError("Docker unavailable")
-    )
+    service, _, verify, create, session = _service(agent_exc=VerifierError("Docker unavailable"))
 
     with pytest.raises(VerifierError):
         await service.verify_and_persist(session, uuid.uuid4(), "code")
@@ -224,9 +228,7 @@ async def test_test_case_round_trip_from_solver_row() -> None:
 
 
 async def test_malformed_persisted_test_cases_raises_data_integrity_error() -> None:
-    bad_solver_row = _solver_row(
-        test_cases=[{"wrong_key": "no input/expected/description"}]
-    )
+    bad_solver_row = _solver_row(test_cases=[{"wrong_key": "no input/expected/description"}])
     service, _, _, _, session = _service(solver_row=bad_solver_row)
 
     with pytest.raises(DataIntegrityError):

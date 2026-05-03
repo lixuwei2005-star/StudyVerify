@@ -18,7 +18,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.hint.agent import HintAgent
 from app.agents.hint.schemas import HintInput, HintOutput
+from app.core.config import Settings
 from app.db.models import HintSession, SolverSession, VerifierSession
+from app.llm.embedding import EmbeddingService
 from app.repositories.hint_repository import HintRepository
 from app.repositories.solver_repository import SolverRepository
 from app.repositories.verifier_repository import VerifierRepository
@@ -31,7 +33,7 @@ from app.services.hint_service import (
     VerifierSessionNotFoundError,
     VerifierSessionPassedError,
 )
-
+from app.services.retrieval_service import RetrievalService
 
 # ---------------------------------------------------------------------------
 # Fixtures / helpers
@@ -127,9 +129,7 @@ def _service(
     MagicMock,  # session
 ]:
     the_solver = solver_row if solver_row is not None else _solver_row()
-    the_verifier = (
-        verifier_row if verifier_row is not None else _verifier_row(the_solver.id)
-    )
+    the_verifier = verifier_row if verifier_row is not None else _verifier_row(the_solver.id)
     the_priors = prior_hint_rows if prior_hint_rows is not None else []
     the_count = prior_count if prior_count is not None else len(the_priors)
 
@@ -165,11 +165,23 @@ def _service(
     session.refresh = AsyncMock()
     session.rollback = AsyncMock()
 
+    embedding_service = AsyncMock(spec=EmbeddingService)
+    embedding_service.embed = AsyncMock(return_value=[0.1] * 1536)
+    retrieval_service = AsyncMock(spec=RetrievalService)
+    retrieval_service.find_similar_failures = AsyncMock(return_value=[])
+    # Default RAG_ENABLED=False so orchestration-order assertions in existing
+    # tests don't have to account for the embed/retrieve call pair. Tests that
+    # exercise RAG override .settings on the service after construction.
+    settings = Settings(RAG_ENABLED=False)
+
     service = HintService(
         agent=agent,
         repository=hint_repo,
         verifier_repository=verifier_repo,
         solver_repository=solver_repo,
+        embedding_service=embedding_service,
+        retrieval_service=retrieval_service,
+        settings=settings,
     )
     return (
         service,
@@ -345,9 +357,7 @@ async def test_failed_test_inputs_extracted_only_from_failures() -> None:
     ]
     verifier = _verifier_row(solver.id, test_results=test_results)
 
-    (service, _, _, _, _, _, generate, session) = _service(
-        solver_row=solver, verifier_row=verifier
-    )
+    (service, _, _, _, _, _, generate, session) = _service(solver_row=solver, verifier_row=verifier)
 
     await service.generate_and_persist(session, uuid.uuid4())
 
@@ -393,9 +403,7 @@ async def test_agent_unexpected_raise_does_not_commit() -> None:
 # 9. Repo create raises non-IntegrityError → no commit, no retry
 # ---------------------------------------------------------------------------
 async def test_repo_non_integrity_raise_does_not_commit_or_retry() -> None:
-    (service, _, _, _, _, create, _, session) = _service(
-        create_side_effect=RuntimeError("db boom")
-    )
+    (service, _, _, _, _, create, _, session) = _service(create_side_effect=RuntimeError("db boom"))
 
     with pytest.raises(RuntimeError):
         await service.generate_and_persist(session, uuid.uuid4())
@@ -478,8 +486,7 @@ async def test_max_hints_exceeded_raises_before_llm_call() -> None:
     solver = _solver_row()
     verifier = _verifier_row(solver.id, diagnosis="")
     priors = [
-        _hint_row(verifier.id, hint_index=i + 1)
-        for i in range(MAX_HINTS_PER_VERIFIER_SESSION)
+        _hint_row(verifier.id, hint_index=i + 1) for i in range(MAX_HINTS_PER_VERIFIER_SESSION)
     ]
 
     (service, _, _, _, _, create, generate, session) = _service(
@@ -579,3 +586,92 @@ async def test_hint_index_uses_db_count_not_seeded_prior_count() -> None:
     kwargs = create.await_args.kwargs
     assert kwargs["hint_index"] == 1
     assert kwargs["prior_hints_count"] == 1
+
+
+# ---------------------------------------------------------------------------
+# 17. Service-layer regeneration on forbidden phrase or input-value leak.
+#     Step 6.2 Phase 7 surfaced live RAG drift (~33% rate) producing forbidden
+#     phrases like "apply to each element". The unified guardrail in
+#     _find_violations triggers exactly one regeneration if either an input
+#     value or a forbidden phrase appears. If the second attempt is still
+#     dirty, the service ships the hint anyway and logs an error.
+# ---------------------------------------------------------------------------
+async def test_hint_service_regenerates_on_forbidden_phrase(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """First attempt leaks 'apply to each element' (forbidden); retry is clean.
+
+    Asserts:
+    - agent.generate called exactly twice
+    - Persisted hint_text is the clean retry version
+    - Warning log captures the violation detail
+    """
+    import logging
+
+    dirty_hint = HintOutput(
+        hint_text="What single arithmetic operation can you apply to each element?"
+    )
+    clean_hint = HintOutput(hint_text="What relationship should the output have to the input list?")
+
+    (service, _, _, _, _, create, generate, session) = _service(
+        agent_output=dirty_hint,
+    )
+    # Override agent.generate to return dirty then clean across two awaits.
+    generate.side_effect = [dirty_hint, clean_hint]
+    generate.return_value = None  # ensure side_effect drives the values
+
+    with caplog.at_level(logging.WARNING, logger="app.services.hint_service"):
+        await service.generate_and_persist(session, uuid.uuid4())
+
+    assert generate.await_count == 2, "regeneration retry should fire exactly once"
+
+    persisted_hint_text = create.await_args.kwargs["hint_text"]
+    assert persisted_hint_text == clean_hint.hint_text
+
+    warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert any("violations detected (attempt 1)" in r.message for r in warnings), (
+        f"expected violation warning; got: {[r.message for r in warnings]}"
+    )
+    assert any("apply to each element" in r.getMessage() for r in warnings), (
+        "violation log should name the forbidden phrase"
+    )
+
+
+async def test_hint_service_ships_anyway_when_retry_also_violates(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Both attempts dirty: log error and persist the second attempt anyway.
+
+    Better to ship a borderline hint than 500 the user.
+    """
+    import logging
+
+    first = HintOutput(hint_text="Iterate through the list and accumulate.")
+    second = HintOutput(hint_text="Loop over the list to build up the total.")
+
+    (service, _, _, _, _, create, generate, session) = _service(agent_output=first)
+    generate.side_effect = [first, second]
+    generate.return_value = None
+
+    with caplog.at_level(logging.ERROR, logger="app.services.hint_service"):
+        await service.generate_and_persist(session, uuid.uuid4())
+
+    assert generate.await_count == 2
+    persisted_hint_text = create.await_args.kwargs["hint_text"]
+    assert persisted_hint_text == second.hint_text
+
+    errors = [r for r in caplog.records if r.levelno == logging.ERROR]
+    assert any("Shipping anyway" in r.message for r in errors), (
+        f"expected ship-anyway error; got: {[r.message for r in errors]}"
+    )
+
+
+async def test_hint_service_no_retry_when_clean() -> None:
+    """Clean first attempt → no regeneration, exactly 1 LLM call."""
+    clean = HintOutput(hint_text="What does the word 'sum' mean for a list of numbers?")
+
+    (service, _, _, _, _, _, generate, session) = _service(agent_output=clean)
+
+    await service.generate_and_persist(session, uuid.uuid4())
+
+    assert generate.await_count == 1, "clean hint should not trigger retry"

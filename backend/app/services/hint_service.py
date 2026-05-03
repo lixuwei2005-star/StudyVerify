@@ -12,6 +12,7 @@ history. Service layer enforces:
 
 from __future__ import annotations
 
+import logging
 import time
 from uuid import UUID
 
@@ -20,14 +21,50 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.hint.agent import HintAgent
-from app.agents.hint.schemas import HintInput, HintOutput
+from app.agents.hint.schemas import HintInput, HintOutput, RetrievedContext
 from app.agents.verifier.schemas import RedactedTestResult
+from app.core.config import Settings
 from app.db.models import HintSession
+from app.llm.embedding import EmbeddingService, build_failure_text
 from app.repositories.hint_repository import HintRepository
 from app.repositories.solver_repository import SolverRepository
 from app.repositories.verifier_repository import VerifierRepository
+from app.services.retrieval_service import (
+    FORBIDDEN_HINT_PHRASES,
+    RetrievalService,
+    RetrievedFailure,
+)
+
+logger = logging.getLogger(__name__)
 
 MAX_HINTS_PER_VERIFIER_SESSION = 5
+_MAX_LEAK_CHECK_INPUTS = 5
+
+
+def _find_violations(hint_text: str, failed_test_inputs: list[str]) -> list[str]:
+    """Return human-readable descriptions of leaks in hint_text.
+
+    Two leak classes:
+    - input-value: a failed_test_input appears verbatim (Rule 5: don't name
+      inputs or compute their answers)
+    - forbidden-phrase: any of FORBIDDEN_HINT_PHRASES appears (Rules 2-3:
+      no algorithm dictation in English)
+
+    Empty list = clean. Trivially-short inputs (< 3 chars) skipped to avoid
+    false positives like "0" matching "version 0.1".
+    """
+    violations: list[str] = []
+    hint_lower = hint_text.lower()
+    for inp in failed_test_inputs[:_MAX_LEAK_CHECK_INPUTS]:
+        stripped = inp.strip()
+        if len(stripped) < 3:
+            continue
+        if stripped in hint_text:
+            violations.append(f"input value {stripped!r}")
+    for phrase in FORBIDDEN_HINT_PHRASES:
+        if phrase in hint_lower:
+            violations.append(f"forbidden phrase {phrase!r}")
+    return violations
 
 
 class VerifierSessionNotFoundError(Exception):
@@ -66,34 +103,33 @@ class HintService:
         repository: HintRepository,
         verifier_repository: VerifierRepository,
         solver_repository: SolverRepository,
+        embedding_service: EmbeddingService,
+        retrieval_service: RetrievalService,
+        settings: Settings,
     ) -> None:
         self.agent = agent
         self.repository = repository
         self.verifier_repository = verifier_repository
         self.solver_repository = solver_repository
+        self.embedding_service = embedding_service
+        self.retrieval_service = retrieval_service
+        self.settings = settings
 
     async def generate_and_persist(
         self,
         session: AsyncSession,
         verifier_session_id: UUID,
     ) -> tuple[HintSession, HintOutput]:
-        verifier_row = await self.verifier_repository.get_by_id(
-            session, verifier_session_id
-        )
+        verifier_row = await self.verifier_repository.get_by_id(session, verifier_session_id)
         if verifier_row is None:
-            raise VerifierSessionNotFoundError(
-                f"verifier_session {verifier_session_id} not found"
-            )
+            raise VerifierSessionNotFoundError(f"verifier_session {verifier_session_id} not found")
 
         if verifier_row.verified:
             raise VerifierSessionPassedError(
-                f"verifier_session {verifier_session_id} already passed; "
-                "no hint required"
+                f"verifier_session {verifier_session_id} already passed; no hint required"
             )
 
-        solver_row = await self.solver_repository.get_by_id(
-            session, verifier_row.solver_session_id
-        )
+        solver_row = await self.solver_repository.get_by_id(session, verifier_row.solver_session_id)
         if solver_row is None:
             # Should be impossible due to FK RESTRICT, but defensive.
             raise VerifierSessionNotFoundError(
@@ -130,28 +166,98 @@ class HintService:
 
         try:
             redacted_results = [
-                RedactedTestResult.model_validate(tr)
-                for tr in verifier_row.test_results
+                RedactedTestResult.model_validate(tr) for tr in verifier_row.test_results
             ]
         except (ValidationError, TypeError) as exc:
             raise DataIntegrityError(
-                f"verifier_session {verifier_session_id} has malformed "
-                f"test_results: {exc}"
+                f"verifier_session {verifier_session_id} has malformed test_results: {exc}"
             ) from exc
 
-        failed_test_inputs = [
-            tr.input for tr in redacted_results if not tr.passed
-        ]
+        failed_test_inputs = [tr.input for tr in redacted_results if not tr.passed]
+
+        retrieved: list[RetrievedFailure] = []
+        if self.settings.RAG_ENABLED:
+            try:
+                failure_text = build_failure_text(
+                    problem_text=solver_row.problem_text,
+                    student_code=verifier_row.student_code,
+                    failed_test_inputs=failed_test_inputs,
+                    diagnosis=verifier_row.diagnosis,
+                    sandbox_error=verifier_row.sandbox_error,
+                )
+                query_emb = await self.embedding_service.embed(failure_text)
+                retrieved = await self.retrieval_service.find_similar_failures(
+                    session,
+                    query_embedding=query_emb,
+                    exclude_verifier_session_id=verifier_session_id,
+                    top_k=self.settings.RAG_TOP_K,
+                    min_similarity=self.settings.RAG_MIN_SIMILARITY,
+                )
+                logger.info(
+                    "RAG retrieved %d cases for verifier_session %s",
+                    len(retrieved),
+                    verifier_session_id,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "RAG retrieval failed for verifier_session %s: %s. Continuing without context.",
+                    verifier_session_id,
+                    exc,
+                )
+                retrieved = []
 
         hint_input = HintInput(
             problem_text=solver_row.problem_text,
             student_code=verifier_row.student_code,
             failed_test_inputs=failed_test_inputs,
             prior_hints=prior_hints,
+            retrieved_context=[
+                RetrievedContext(
+                    similarity=r.similarity,
+                    past_diagnosis=r.diagnosis,
+                    past_hint_texts=r.hint_texts,
+                )
+                for r in retrieved
+            ],
         )
 
+        # LLM generation with at-most-one regeneration when the produced hint
+        # leaks an input value (Rule 5) or contains an algorithm-dictation
+        # phrase from FORBIDDEN_HINT_PHRASES (Rules 2-3). RAG context makes
+        # both classes more likely; the prompt rules are primary, this loop
+        # is the safety net. Both classes share the single retry budget.
+        # If the second attempt still leaks, log error and ship — better than
+        # 500ing the user. Cost: ~1 extra LLM call per leak; baseline drift
+        # measured ~33% during Step 6.2 Phase 7 smoke, so expect ~1.33 LLM
+        # calls per /hint on average until the prompt is tuned further.
         start = time.perf_counter()
         output = await self.agent.generate(hint_input)
+        violations = _find_violations(output.hint_text, failed_test_inputs)
+        if violations:
+            logger.warning(
+                "Hint violations detected (attempt 1) for verifier_session %s: %s. Retrying once.",
+                verifier_session_id,
+                violations,
+            )
+            hint_input = hint_input.model_copy(
+                update={
+                    "regeneration_warning": (
+                        f"Previous attempt violated rules: {'; '.join(violations)}. "
+                        "Avoid mentioning input values OR algorithm-step language "
+                        "(loops, iteration, accumulation, applying operations to "
+                        "elements, etc). Stay at a conceptual level."
+                    )
+                }
+            )
+            output = await self.agent.generate(hint_input)
+            violations_retry = _find_violations(output.hint_text, failed_test_inputs)
+            if violations_retry:
+                logger.error(
+                    "Hint still violates rules after retry for verifier_session %s: %s. "
+                    "Shipping anyway.",
+                    verifier_session_id,
+                    violations_retry,
+                )
         total_latency_ms = int((time.perf_counter() - start) * 1000)
         # llm_prior_hints_count records what the LLM actually saw, including
         # the seeded diagnosis if any. Persisted alongside the hint as
@@ -191,6 +297,5 @@ class HintService:
 
         # Defensive — the loop body always returns or raises.
         raise HintConcurrencyError(
-            "Concurrent hint requests for verifier_session "
-            f"{verifier_session_id}; please retry"
+            f"Concurrent hint requests for verifier_session {verifier_session_id}; please retry"
         )

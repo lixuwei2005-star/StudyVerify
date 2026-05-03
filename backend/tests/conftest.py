@@ -28,6 +28,25 @@ from app.db import models as _models  # noqa: F401  — register metadata
 from app.db.base import Base
 
 
+def _test_database_url() -> str:
+    """Swap the database name in DATABASE_URL to `studyverify_test`.
+
+    PG-marked tests need an isolated database because the dev DB has tables
+    in `public` from compose-up alembic. With both `public` and the per-test
+    schema in search_path (required for vector type lookup), SQLAlchemy's
+    `create_all` sees the existing public tables and skips creation in the
+    per-test schema — queries then fall through to the polluted public
+    tables. The test database is created out-of-band by the operator
+    (one-time `CREATE DATABASE studyverify_test;`).
+    """
+    url = get_settings().DATABASE_URL
+    # Replace the path portion after the last '/' before any '?'.
+    if "?" in url:
+        base, q = url.rsplit("?", 1)
+        return base.rsplit("/", 1)[0] + "/studyverify_test?" + q
+    return url.rsplit("/", 1)[0] + "/studyverify_test"
+
+
 @pytest_asyncio.fixture
 async def sqlite_session() -> AsyncIterator[AsyncSession]:
     """Fresh in-memory SQLite session per test. Renamed from `session` to avoid
@@ -50,14 +69,27 @@ async def pg_schema() -> AsyncIterator[str]:
     `pg_session` below for direct-DB use, and the `app_with_overrides`
     fixture for the TestClient flow which builds a fresh engine per request.
     """
-    settings = get_settings()
-    if not settings.DATABASE_URL:
+    if not get_settings().DATABASE_URL:
         pytest.skip("DATABASE_URL not set")
 
+    test_url = _test_database_url()
     schema_name = f"test_{uuid.uuid4().hex}"
+    # Install pgvector at the database scope of studyverify_test BEFORE schema
+    # setup. The extension is DB-wide; first test creates it, rest no-op.
+    # Without this, `Base.metadata.create_all` fails on Vector(1536) columns.
+    base_engine = create_async_engine(test_url)
+    async with base_engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+    await base_engine.dispose()
+
+    # search_path includes 'public' so the vector type (installed by CREATE
+    # EXTENSION above into public schema) resolves when the test schema's
+    # tables reference Vector(1536) columns. Test runs against
+    # studyverify_test which has no leftover tables in public, so isolation
+    # holds (unlike the dev DB whose public has alembic-created tables).
     setup_engine = create_async_engine(
-        settings.DATABASE_URL,
-        connect_args={"server_settings": {"search_path": schema_name}},
+        test_url,
+        connect_args={"server_settings": {"search_path": f"{schema_name},public"}},
     )
     async with setup_engine.begin() as conn:
         await conn.execute(text(f'CREATE SCHEMA "{schema_name}"'))
@@ -67,7 +99,7 @@ async def pg_schema() -> AsyncIterator[str]:
     try:
         yield schema_name
     finally:
-        teardown_engine = create_async_engine(settings.DATABASE_URL)
+        teardown_engine = create_async_engine(test_url)
         async with teardown_engine.begin() as conn:
             await conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE'))
         await teardown_engine.dispose()
@@ -75,11 +107,10 @@ async def pg_schema() -> AsyncIterator[str]:
 
 @pytest_asyncio.fixture
 async def pg_session(pg_schema: str) -> AsyncIterator[AsyncSession]:
-    """Async session bound to the per-test PG schema."""
-    settings = get_settings()
+    """Async session bound to the per-test PG schema in studyverify_test."""
     engine = create_async_engine(
-        settings.DATABASE_URL,
-        connect_args={"server_settings": {"search_path": pg_schema}},
+        _test_database_url(),
+        connect_args={"server_settings": {"search_path": f"{pg_schema},public"}},
     )
     try:
         async with AsyncSession(engine, expire_on_commit=False) as s:
@@ -101,13 +132,12 @@ def app_with_overrides(pg_schema: str) -> Iterator[FastAPI]:
     from app.db.session import get_db_session
     from app.main import app
 
-    settings = get_settings()
     old_overrides = app.dependency_overrides.copy()
 
     async def override_get_session() -> AsyncIterator[AsyncSession]:
         engine = create_async_engine(
-            settings.DATABASE_URL,
-            connect_args={"server_settings": {"search_path": pg_schema}},
+            _test_database_url(),
+            connect_args={"server_settings": {"search_path": f"{pg_schema},public"}},
         )
         factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
         try:

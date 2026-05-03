@@ -24,9 +24,10 @@ import re
 import pytest
 
 from app.agents.hint.agent import HintAgent
-from app.agents.hint.schemas import HintInput
+from app.agents.hint.schemas import HintInput, RetrievedContext
 from app.core.config import get_settings
 from app.llm.client import DeepSeekClient
+from app.services.retrieval_service import FORBIDDEN_HINT_PHRASES
 
 pytestmark = [
     pytest.mark.integration,
@@ -91,9 +92,7 @@ def _assert_no_code_or_answer_leak(hint_text: str) -> None:
     assert "```" not in hint_text, f"hint contains a fenced code block: {hint_text!r}"
 
     for expected in EXPECTED_VALUES:
-        assert expected not in hint_text, (
-            f"hint leaks expected value {expected!r}: {hint_text!r}"
-        )
+        assert expected not in hint_text, f"hint leaks expected value {expected!r}: {hint_text!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -177,9 +176,7 @@ async def test_minimal_code_hint_no_algorithm_dictation(agent: HintAgent) -> Non
     assert re.search(r"\breturn\s+\S", output.hint_text) is None, (
         f"hint contains a return statement: {output.hint_text!r}"
     )
-    assert "```" not in output.hint_text, (
-        f"hint contains a fenced code block: {output.hint_text!r}"
-    )
+    assert "```" not in output.hint_text, f"hint contains a fenced code block: {output.hint_text!r}"
 
     # Anti-algorithm-dictation phrase check.
     hint_lower = output.hint_text.lower()
@@ -218,3 +215,94 @@ async def test_fourth_hint_or_out_of_hints_fallback(agent: HintAgent) -> None:
     is_fallback = any(marker in text_lower for marker in _OUT_OF_HINTS_MARKERS)
     is_specific_hint = bool(output.hint_text.strip())
     assert is_fallback or is_specific_hint
+
+
+# ---------------------------------------------------------------------------
+# 5. RAG drift regression — Step 6.2 Phase 7 surfaced LLM hints biased toward
+#    algorithm-specific English when retrieved_context contained 3 nearly-
+#    identical "always returns 0" diagnoses. The example leak:
+#      "What single arithmetic operation can you apply to each element to
+#       gradually build up the final total?"
+#
+#    Three-layer contract:
+#      (a) anti-code regex (def/return/fence) — same as test #1
+#      (b) 24-phrase forbidden list from retrieval_service.FORBIDDEN_HINT_PHRASES
+#      (c) no-input-value substring — hint must not mention any failed_test_input
+#          verbatim. This was added after smoke surfaced "the result should be 6
+#          for [1, 2, 3]" — a Rule-4 (no expected outputs) leak that the LLM
+#          smuggled through via mental computation. The prompt rule + service-
+#          layer regeneration guardrail are the primary fix; this test locks
+#          the contract.
+#    The earlier "?" requirement was dropped: it conflated "conceptual" with
+#    "ends in ?" and disagreed with the prompt's own GOOD examples that include
+#    "Walk through your code mentally..." (declarative).
+# ---------------------------------------------------------------------------
+async def test_rag_does_not_induce_algorithm_dictation(agent: HintAgent) -> None:
+    sum_list_problem = (
+        "Write a Python function `sum_list(nums)` that returns the sum of "
+        "all numbers in the input list of integers. Return 0 for an empty list."
+    )
+    # Three near-identical past-failure diagnoses — the exact corpus shape that
+    # induced drift in Phase 7. If the prompt holds, the agent treats them as
+    # inspiration only and stays at the conceptual level.
+    retrieved = [
+        RetrievedContext(
+            similarity=0.83,
+            past_diagnosis=(
+                "Your function always returns 0, but it should compute the sum "
+                "of the numbers in the list."
+            ),
+            past_hint_texts=[],
+        ),
+        RetrievedContext(
+            similarity=0.82,
+            past_diagnosis=(
+                "Your function returns 0 regardless of the input. It needs to "
+                "actually combine the elements."
+            ),
+            past_hint_texts=[],
+        ),
+        RetrievedContext(
+            similarity=0.81,
+            past_diagnosis=(
+                "Your function returns 0 for every input, not just empty lists. "
+                "The output must depend on the input."
+            ),
+            past_hint_texts=[],
+        ),
+    ]
+    hint_input = HintInput(
+        problem_text=sum_list_problem,
+        student_code="def sum_list(nums):\n    return 0\n",
+        failed_test_inputs=["[1, 2, 3]", "[5, 5, 5]", "[]"],
+        prior_hints=[],
+        retrieved_context=retrieved,
+    )
+
+    output = await agent.generate(hint_input)
+
+    print(f"\n=== RAG-bias hint ===\n{output.hint_text}\n=====================")
+
+    text = output.hint_text
+    # (a) Anti-code regex.
+    assert text.strip(), "expected non-empty hint text"
+    assert re.search(r"\bdef\s+\w+\s*\(", text) is None, (
+        f"hint contains a function definition: {text!r}"
+    )
+    assert re.search(r"\breturn\s+\S", text) is None, f"hint contains a return statement: {text!r}"
+    assert "```" not in text, f"hint contains a fenced code block: {text!r}"
+
+    # (b) All 24 forbidden phrases absent (case-insensitive).
+    text_lower = text.lower()
+    for phrase in FORBIDDEN_HINT_PHRASES:
+        assert phrase not in text_lower, (
+            f"hint contains forbidden phrase {phrase!r} (RAG-induced drift): {text!r}"
+        )
+
+    # (c) No failed-test-input value mentioned verbatim (Rule 5: anti-leak of
+    # specific inputs and computed answers).
+    for inp in hint_input.failed_test_inputs:
+        stripped = inp.strip()
+        if len(stripped) < 3:
+            continue
+        assert stripped not in text, f"hint mentions failed input value {stripped!r}: {text!r}"

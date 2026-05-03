@@ -1,9 +1,12 @@
+from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import VerifierSession
+
+EmbeddingStatus = Literal["pending", "success", "failed"]
 
 
 class VerifierRepository:
@@ -45,9 +48,7 @@ class VerifierRepository:
         await session.flush()
         return row
 
-    async def get_by_id(
-        self, session: AsyncSession, session_id: UUID
-    ) -> VerifierSession | None:
+    async def get_by_id(self, session: AsyncSession, session_id: UUID) -> VerifierSession | None:
         result = await session.execute(
             select(VerifierSession).where(VerifierSession.id == session_id)
         )
@@ -69,6 +70,23 @@ class VerifierRepository:
             .offset(offset)
         )
         return list(result.scalars().all())
+
+    async def update_embedding(
+        self,
+        session: AsyncSession,
+        *,
+        verifier_session_id: UUID,
+        failure_embedding: list[float] | None,
+        embedding_status: EmbeddingStatus,
+    ) -> None:
+        await session.execute(
+            update(VerifierSession)
+            .where(VerifierSession.id == verifier_session_id)
+            .values(
+                failure_embedding=failure_embedding,
+                embedding_status=embedding_status,
+            )
+        )
 
     async def count_by_solver_session(
         self,

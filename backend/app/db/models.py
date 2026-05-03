@@ -3,7 +3,19 @@ from datetime import datetime
 from decimal import Decimal
 
 import sqlalchemy as sa
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text, Uuid, false, func
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    Uuid,
+    false,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import JSON
@@ -72,18 +84,21 @@ class VerifierSession(Base):
     student_code: Mapped[str] = mapped_column(Text, nullable=False)
     verified: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False)
-    pass_count: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default=sa.text("0")
-    )
-    fail_count: Mapped[int] = mapped_column(
-        Integer, nullable=False, server_default=sa.text("0")
-    )
+    pass_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=sa.text("0"))
+    fail_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=sa.text("0"))
     test_results: Mapped[list] = mapped_column(JSONType, nullable=False)
-    diagnosis: Mapped[str] = mapped_column(
-        Text, nullable=False, server_default=sa.text("''")
-    )
+    diagnosis: Mapped[str] = mapped_column(Text, nullable=False, server_default=sa.text("''"))
     sandbox_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     total_latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
+    failure_embedding: Mapped[list[float] | None] = mapped_column(
+        Vector(1536),
+        nullable=True,
+    )
+    embedding_status: Mapped[str] = mapped_column(
+        String(16),
+        nullable=False,
+        server_default=sa.text("'pending'"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -91,8 +106,17 @@ class VerifierSession(Base):
         index=True,
     )
 
+    __table_args__ = (
+        sa.CheckConstraint(
+            "embedding_status IN ('pending', 'success', 'failed')",
+            name="embedding_status_valid",
+        ),
+    )
+
     def __repr__(self) -> str:
-        return f"<VerifierSession {self.id} solver={self.solver_session_id} verified={self.verified}>"
+        return (
+            f"<VerifierSession {self.id} solver={self.solver_session_id} verified={self.verified}>"
+        )
 
 
 class HintSession(Base):
@@ -129,4 +153,6 @@ class HintSession(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<HintSession {self.id} verifier={self.verifier_session_id} index={self.hint_index}>"
+        return (
+            f"<HintSession {self.id} verifier={self.verifier_session_id} index={self.hint_index}>"
+        )

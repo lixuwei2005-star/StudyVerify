@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     LLM_FALLBACK_ENABLED: bool = False
     LLM_FALLBACK_PROVIDER: str = "openai"
 
+    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    RAG_ENABLED: bool = True
+    RAG_TOP_K: int = 3
+    # Raised from 0.7 in Step 6.2 Phase 7 hardening: lower thresholds let the
+    # LLM see weakly-similar past diagnoses and biased hints toward algorithm
+    # specifics. Real fix is the prompt rule + forbidden-phrase filter; this
+    # is belt-and-suspenders to reduce noise.
+    RAG_MIN_SIMILARITY: float = 0.75
+
     SANDBOX_TIMEOUT_SECONDS: int = 5
     SANDBOX_MEMORY_MB: int = 128
     SANDBOX_PYTHON_PATH: str = ""  # empty = resolve to sys.executable at runtime
