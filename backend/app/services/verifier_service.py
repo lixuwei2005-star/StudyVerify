@@ -86,6 +86,16 @@ class VerifierService:
         )
         await session.commit()
         await session.refresh(row)
+        # Cache row.id before any subsequent commit/rollback that could expire
+        # ORM attributes. SQLAlchemy expires by default on both commit AND
+        # rollback; the rollback in the embed-failure branch below was
+        # triggering a sync lazy-reload of row.id, which asyncpg raises as
+        # MissingGreenlet. Step 7 Phase 7 production hit this with 100%
+        # reproduction when OPENAI_API_KEY was empty (every /verify entered
+        # the rollback branch). Mac dev had a real key so the path was never
+        # exercised. UUID is immutable for this row's lifetime, so caching
+        # is safe.
+        verifier_id = row.id
 
         # RAG hook: embed failed verifier sessions for similarity retrieval.
         # Embedding failure must NOT propagate — the verifier response is
@@ -103,7 +113,7 @@ class VerifierService:
                 embedding = await self.embedding_service.embed(failure_text)
                 await self.repository.update_embedding(
                     session,
-                    verifier_session_id=row.id,
+                    verifier_session_id=verifier_id,
                     failure_embedding=embedding,
                     embedding_status="success",
                 )
@@ -113,14 +123,14 @@ class VerifierService:
                 logger.warning(
                     "Embedding generation failed for verifier_session %s: %s. "
                     "Marking embedding_status=failed.",
-                    row.id,
+                    verifier_id,
                     exc,
                 )
                 try:
                     await session.rollback()
                     await self.repository.update_embedding(
                         session,
-                        verifier_session_id=row.id,
+                        verifier_session_id=verifier_id,
                         failure_embedding=None,
                         embedding_status="failed",
                     )
@@ -129,7 +139,7 @@ class VerifierService:
                 except Exception as exc2:
                     logger.error(
                         "Failed to mark embedding_status=failed for verifier_session %s: %s",
-                        row.id,
+                        verifier_id,
                         exc2,
                     )
                     # Swallow — the verifier response itself must still succeed.

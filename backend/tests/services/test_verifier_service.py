@@ -248,3 +248,43 @@ async def test_service_persists_only_redacted_results() -> None:
     kwargs = create.await_args.kwargs
     for item in kwargs["test_results"]:
         assert "expected" not in item, f"'expected' leaked into stored test result: {item}"
+
+
+# ---------- regression: embedding failure must not crash /verify ----------
+
+
+async def test_verify_and_persist_handles_embedding_failure() -> None:
+    """Embedding failure (e.g., missing OPENAI_API_KEY) must NOT propagate
+    as a 500 to the user. The verifier response is authoritative; embedding
+    failure only means the row is unavailable as a future RAG candidate.
+
+    Step 7 Phase 7 production deploy to Oracle Cloud surfaced this: prod
+    .env had empty OPENAI_API_KEY so embed() raised every time, and the
+    except branch did session.rollback() then accessed row.id, triggering
+    a sync lazy-reload that asyncpg raised as MissingGreenlet. Mac dev had
+    a real key so the rollback branch was never exercised. Fix caches
+    verifier_id before any commit/rollback that expires ORM attributes.
+    """
+    service, _, _, _, session = _service(agent_output=_verifier_output(verified=False))
+    service.embedding_service.embed = AsyncMock(
+        side_effect=Exception("OpenAI API key not configured")
+    )
+
+    # Must not raise — verify response should still reach the caller.
+    row, output = await service.verify_and_persist(
+        session, uuid.uuid4(), "def sum_list(nums): return 0"
+    )
+
+    assert output.verified is False
+    assert isinstance(row, VerifierSession)
+
+    # embed raised, so the success-path update_embedding was never called;
+    # the except branch ran update_embedding(embedding_status='failed') once.
+    update_embedding = service.repository.update_embedding
+    assert update_embedding.await_count == 1
+    failed_call_kwargs = update_embedding.await_args.kwargs
+    assert failed_call_kwargs["embedding_status"] == "failed"
+    assert failed_call_kwargs["failure_embedding"] is None
+
+    # Rollback fired before the failed-path update.
+    session.rollback.assert_awaited_once()
