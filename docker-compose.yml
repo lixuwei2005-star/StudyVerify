@@ -90,7 +90,13 @@ services:
     group_add:
       - "0"  # root group — grants access to /var/run/docker.sock (gid=0, mode=660)
     ports:
-      - "${API_PORT:-8000}:8000"
+      # Bind to loopback only so the FastAPI container is reachable solely via
+      # the same-host Nginx reverse proxy (Baota panel) on 127.0.0.1:8000.
+      # Defense-in-depth: even if a future cloud-firewall change opens 8000,
+      # the container itself never accepts connections from non-loopback
+      # interfaces. Local dev (compose up on Mac) hits localhost:8000 which
+      # resolves to 127.0.0.1, so dev workflow is unchanged.
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     command: >
       sh -c "alembic upgrade head &&
              exec uvicorn app.main:app --host 0.0.0.0 --port 8000"

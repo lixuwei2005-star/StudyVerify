@@ -48,6 +48,14 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 10
     DB_POOL_TIMEOUT_SECONDS: int = 30
 
+    # CORS — frontend browser origins allowed to call the API. Exact origins
+    # are a CSV list; allow_origin_regex covers Vercel preview deploys (one
+    # unique subdomain per PR). Starlette's CORSMiddleware does not treat
+    # `https://*.vercel.app` as a wildcard inside allow_origins — preview
+    # URLs must go through allow_origin_regex.
+    CORS_ALLOWED_ORIGINS: str = "http://localhost:3000,https://studyverify.vercel.app"
+    CORS_ALLOW_ORIGIN_REGEX: str = r"https://[a-zA-Z0-9-]+\.vercel\.app"
+
 
 @lru_cache
 def get_settings() -> Settings:
