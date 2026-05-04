@@ -6,6 +6,8 @@ These tests mock the Docker SDK and verify the runner's contract with it:
 - Payload reaches the container via a read-only bind-mounted JSON file
   (the bind-mount approach replaces stdin attach due to Docker Desktop
   macOS half-close issues; see docker_runner.py module docstring).
+- Tempfiles are world-readable (0o644) so the non-root sandbox user can
+  read them on strict Linux hosts (Step 7 Phase 7 production regression).
 - Timeout path triggers kill + cleanup.
 - Exceptions during create / start still trigger all relevant cleanup
   paths (both temp files unlinked, container.remove called when applicable).
@@ -19,6 +21,8 @@ integration suite's job.
 from __future__ import annotations
 
 import json
+import os
+import stat
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -199,6 +203,42 @@ async def test_runner_passes_payload_via_bind_mount(basic_request: SandboxRunReq
     # The file was bind-mounted read-only:
     input_mount = next(m for h, m in kwargs["volumes"].items() if Path(h).suffix == ".json")
     assert input_mount["mode"] == "ro"
+
+
+# ---------------------------------------------------------------------------
+# 3b. Tempfiles must be world-readable (0o644). The sandbox runs as
+# user="nobody" (Step 4 hardening). NamedTemporaryFile defaults to 0o600
+# (owner-only); on Linux hosts that means nobody can't read root-owned
+# tempfiles, manifesting as "[Errno 13] Permission denied" on /sandbox/code.py.
+# macOS Docker Desktop maps perms loosely via osxfs/VirtioFS so the bug
+# only surfaced on the first Oracle Cloud production deploy (Step 7 Phase 7).
+# ---------------------------------------------------------------------------
+async def test_runner_tempfiles_are_world_readable(
+    basic_request: SandboxRunRequest,
+) -> None:
+    client, _ = _make_client(stdout=_wrapper_success_stdout())
+    runner = DockerCodeRunner(client=client)
+
+    captured_modes: dict[str, int] = {}
+
+    def _capture_modes(*, image, **kwargs):
+        for host_path in kwargs["volumes"]:
+            mode = stat.S_IMODE(os.stat(host_path).st_mode)
+            captured_modes[Path(host_path).suffix] = mode
+        return client.containers.create.return_value
+
+    client.containers.create.side_effect = _capture_modes
+
+    await runner.run(basic_request)
+
+    assert captured_modes[".py"] == 0o644, (
+        f"code tempfile mode is {oct(captured_modes['.py'])}; "
+        "must be 0o644 so the sandbox's non-root user can read it"
+    )
+    assert captured_modes[".json"] == 0o644, (
+        f"input tempfile mode is {oct(captured_modes['.json'])}; "
+        "must be 0o644 so the sandbox's non-root user can read it"
+    )
 
 
 # ---------------------------------------------------------------------------

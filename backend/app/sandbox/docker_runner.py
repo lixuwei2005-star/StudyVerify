@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import tempfile
 import time
 from pathlib import Path
@@ -96,12 +97,22 @@ class DockerCodeRunner(TestRunner):
             ) as f:
                 f.write(code)
                 host_code_path = Path(f.name)
+            # NamedTemporaryFile defaults to 0600 (owner-only). The sandbox
+            # container runs as user="nobody" (uid 65534, Step 4 hardening),
+            # so on strict Linux hosts nobody cannot read root-owned 0600
+            # files mounted in. macOS Docker Desktop maps FS perms loosely
+            # via osxfs/VirtioFS so the bug never surfaced in dev. Production
+            # Oracle Cloud hit it as: "[Errno 13] Permission denied" on
+            # /sandbox/code.py. 0o644 is read-only for non-owners and the
+            # bind mount is ro anyway, so write access is impossible.
+            os.chmod(host_code_path, 0o644)
 
             with tempfile.NamedTemporaryFile(
                 mode="wb", suffix=".json", delete=False, prefix="studyverify-sbx-input-"
             ) as f:
                 f.write(payload)
                 host_input_path = Path(f.name)
+            os.chmod(host_input_path, 0o644)
 
             container = self._client.containers.create(
                 image=self.image,
