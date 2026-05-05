@@ -2,6 +2,26 @@
 
 Verification-driven AI learning companion.
 
+## Evaluation
+
+100-problem benchmark, 1,423 hints evaluated against production endpoints. Full report: [`backend/benchmark/results/2026-05-05_eval.md`](backend/benchmark/results/2026-05-05_eval.md).
+
+| Metric | Value |
+|---|---|
+| Verifier accuracy | 84.2% (320/380) |
+| Anti-leak success | 70.6% (1,004/1,423 hints) |
+| Helpfulness (hint 1 → hint 5) | 91.9% → 96.1% |
+| Latency p95 | solve 38s / verify 8s / hint 23s |
+| Production reliability | 99.6% (7 / 1,903 hard failures) |
+| Run cost | ~$1.50 (DeepSeek) |
+
+Notable findings:
+
+- **Asymmetric verifier calibration** — perfect bug detection (285/285 variants caught) paired with 37% true-pass recognition (35/95 references). The verifier knows what's wrong; it isn't sure what's right.
+- **Anti-leak varies by topic** — algorithmic-pattern problems (recursion, two-pointers) leak ~36–44% to syntax; data-shape problems (array, string) leak ~26–29%.
+
+See the [full report](backend/benchmark/results/2026-05-05_eval.md) for per-topic breakdowns, sampled hint examples, hypotheses, and P0/P1 future work.
+
 ## Status
 
 🚧 **Week 6 / 12 — RAG retrieval + corpus expansion shipped (Step 6.1 → 6.3)**
