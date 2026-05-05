@@ -14,12 +14,14 @@ from app.agents.solver.agent import SolverAgent, get_solver_agent
 from app.agents.verifier.agent import VerifierAgent, get_verifier_agent
 from app.core.config import get_settings
 from app.llm.embedding import EmbeddingService
+from app.llm.gateway import LLMGateway, get_llm_gateway
 from app.repositories.hint_repository import HintRepository
 from app.repositories.solver_repository import SolverRepository
 from app.repositories.verifier_repository import VerifierRepository
 from app.services.hint_service import HintService
 from app.services.retrieval_service import RetrievalService
 from app.services.solver_service import SolverService
+from app.services.test_case_generator import TestCaseGeneratorService
 from app.services.verifier_service import VerifierService
 
 
@@ -86,3 +88,9 @@ def get_hint_service(
         retrieval_service=retrieval_service,
         settings=get_settings(),
     )
+
+
+def get_test_case_generator_service(
+    llm: LLMGateway = Depends(get_llm_gateway),
+) -> TestCaseGeneratorService:
+    return TestCaseGeneratorService(llm=llm)
