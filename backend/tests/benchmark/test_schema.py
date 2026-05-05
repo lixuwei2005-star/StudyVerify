@@ -17,7 +17,9 @@ from pydantic import ValidationError
 
 from benchmark.schema import BenchmarkDataset, BenchmarkProblem, Variant
 
-DATASET_PATH = Path(__file__).resolve().parents[2] / "benchmark" / "problems_part_1.json"
+_BENCHMARK_DIR = Path(__file__).resolve().parents[2] / "benchmark"
+DATASET_PATH = _BENCHMARK_DIR / "problems_part_1.json"
+DATASET_PATHS = [_BENCHMARK_DIR / "problems_part_1.json", _BENCHMARK_DIR / "problems_part_2.json"]
 
 
 def _valid_problem_dict() -> dict:
@@ -52,13 +54,23 @@ def test_problem_validates() -> None:
     assert len(p.variants) == 1
 
 
-def test_dataset_file_parses() -> None:
-    raw = json.loads(DATASET_PATH.read_text())
+@pytest.mark.parametrize("path", DATASET_PATHS, ids=lambda p: p.name)
+def test_dataset_file_parses(path: Path) -> None:
+    raw = json.loads(path.read_text())
     dataset = BenchmarkDataset.model_validate(raw)
     assert len(dataset.problems) == 30
-    # Spot-check IDs are unique.
     ids = [p.id for p in dataset.problems]
     assert len(ids) == len(set(ids)), "duplicate problem IDs"
+
+
+def test_combined_datasets_have_unique_ids() -> None:
+    """Across part_1 + part_2, no problem id may collide."""
+    all_ids: list[str] = []
+    for path in DATASET_PATHS:
+        raw = json.loads(path.read_text())
+        all_ids.extend(p["id"] for p in raw["problems"])
+    dupes = {i for i in all_ids if all_ids.count(i) > 1}
+    assert not dupes, f"id collisions across datasets: {dupes}"
 
 
 # ---------- schema enforcement ----------
@@ -109,19 +121,21 @@ def test_variant_negative_failure_count_rejected() -> None:
 # ---------- dataset-wide invariants ----------
 
 
-def test_every_problem_has_at_least_three_variants() -> None:
+@pytest.mark.parametrize("path", DATASET_PATHS, ids=lambda p: p.name)
+def test_every_problem_has_at_least_three_variants(path: Path) -> None:
     """Quality bar from Step 9 spec: each problem ≥ 3 variants."""
-    raw = json.loads(DATASET_PATH.read_text())
+    raw = json.loads(path.read_text())
     dataset = BenchmarkDataset.model_validate(raw)
     short = [p.id for p in dataset.problems if len(p.variants) < 3]
     assert not short, f"problems with <3 variants: {short}"
 
 
-def test_every_variant_expects_at_least_one_failure() -> None:
+@pytest.mark.parametrize("path", DATASET_PATHS, ids=lambda p: p.name)
+def test_every_variant_expects_at_least_one_failure(path: Path) -> None:
     """A variant with expected_failure_count==0 wouldn't exercise the
-    verifier. The schema permits 0 (for future use cases like no-op
-    refactor variants), but the part-1 dataset bans it."""
-    raw = json.loads(DATASET_PATH.read_text())
+    verifier. The schema permits 0 (future use cases like no-op refactor
+    variants), but every shipped dataset bans it."""
+    raw = json.loads(path.read_text())
     dataset = BenchmarkDataset.model_validate(raw)
     zero_fail = [
         f"{p.id}::{v.name}"

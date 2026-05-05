@@ -1,0 +1,1814 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-05-05",
+  "_dogfood_metrics": {
+    "total_problems": 30,
+    "successful_generations": 29,
+    "api_failures": [
+      {
+        "id": "hr-013-tree-invert",
+        "error": "ReadTimeout: "
+      }
+    ],
+    "mean_latency_s": 11.24,
+    "max_latency_s": 60.01,
+    "problems_with_corrected_test_cases": 3,
+    "test_cases_corrected": 10,
+    "test_cases_dropped_unparseable": 1,
+    "variants_with_zero_failures": [
+      "hr-001-reverse-linked-list::sorts-instead",
+      "hr-012-tree-is-balanced::only-checks-root",
+      "hr-014-tree-count-leaves::off-by-one-leaf-def",
+      "edu-109-gcd::subtraction-bug",
+      "edu-111-perfect-square::no-rounding-margin"
+    ]
+  },
+  "problems": [
+    {
+      "id": "hr-001-reverse-linked-list",
+      "title": "Reverse Linked List",
+      "problem_text": "Given a list of integers nums representing a singly linked list (head first), return a list representing the same nodes in reverse order.",
+      "entry_function": "reverse_linked_list",
+      "reference_solution": "def reverse_linked_list(nums):\n    return list(nums)[::-1]\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "[5]",
+          "expected": "[5]",
+          "description": "single element"
+        },
+        {
+          "input": "[1,2]",
+          "expected": "[2, 1]",
+          "description": "two elements"
+        },
+        {
+          "input": "[1,2,3,4]",
+          "expected": "[4, 3, 2, 1]",
+          "description": "multiple elements"
+        },
+        {
+          "input": "[10,20,30,40,50]",
+          "expected": "[50, 40, 30, 20, 10]",
+          "description": "multiple elements large"
+        },
+        {
+          "input": "[3, 1, 2]",
+          "expected": "[2, 1, 3]",
+          "description": "unsorted (catches sort-instead-of-reverse)"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "linked-list",
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def reverse_linked_list(nums):\n    return list(nums)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "drops-head",
+          "code": "def reverse_linked_list(nums):\n    return list(nums)[1:][::-1]\n",
+          "expected_failure_count": 5,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "sorts-instead",
+          "code": "def reverse_linked_list(nums):\n    return sorted(nums, reverse=True)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "hr-002-palindrome-linked-list",
+      "title": "Palindrome Linked List",
+      "problem_text": "Given a list of integers nums representing a singly linked list, return True iff the values read the same forwards and backwards.",
+      "entry_function": "is_palindrome_list",
+      "reference_solution": "def is_palindrome_list(nums):\n    return list(nums) == list(nums)[::-1]\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "True",
+          "description": "empty list"
+        },
+        {
+          "input": "[1]",
+          "expected": "True",
+          "description": "single element"
+        },
+        {
+          "input": "[1,2,3,2,1]",
+          "expected": "True",
+          "description": "palindrome odd length"
+        },
+        {
+          "input": "[1,2,3]",
+          "expected": "False",
+          "description": "non-palindrome"
+        },
+        {
+          "input": "[1,2,2,1]",
+          "expected": "True",
+          "description": "palindrome even length"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "linked-list",
+        "two-pointers"
+      ],
+      "variants": [
+        {
+          "name": "returns-true",
+          "code": "def is_palindrome_list(nums):\n    return True\n",
+          "expected_failure_count": 1,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "returns-false",
+          "code": "def is_palindrome_list(nums):\n    return False\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "compares-with-sorted",
+          "code": "def is_palindrome_list(nums):\n    return list(nums) == sorted(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-comparison"
+        }
+      ]
+    },
+    {
+      "id": "hr-003-middle-of-linked-list",
+      "title": "Middle of Linked List",
+      "problem_text": "Given a list of integers nums representing a singly linked list, return the middle value. For even-length lists, return the second middle (e.g. for [1,2,3,4] return 3).",
+      "entry_function": "middle_value",
+      "reference_solution": "def middle_value(nums):\n    return nums[len(nums) // 2]\n",
+      "test_cases": [
+        {
+          "input": "[5]",
+          "expected": "5",
+          "description": "single element"
+        },
+        {
+          "input": "[1,2,3,4,5]",
+          "expected": "3",
+          "description": "odd length"
+        },
+        {
+          "input": "[1,2,3,4]",
+          "expected": "3",
+          "description": "even length"
+        },
+        {
+          "input": "[10,20,30,40,50,60]",
+          "expected": "40",
+          "description": "long even list"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "linked-list",
+        "two-pointers"
+      ],
+      "variants": [
+        {
+          "name": "returns-first",
+          "code": "def middle_value(nums):\n    return nums[0]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "off-by-one-middle",
+          "code": "def middle_value(nums):\n    return nums[(len(nums) - 1) // 2]\n",
+          "expected_failure_count": 2,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "returns-last",
+          "code": "def middle_value(nums):\n    return nums[-1]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-position"
+        }
+      ]
+    },
+    {
+      "id": "hr-004-find-kth-largest",
+      "title": "Find Kth Largest",
+      "problem_text": "Given a list of integers nums and an integer k (1-indexed), return the k-th largest element in nums. The list may contain duplicates and k is guaranteed to be valid (1 <= k <= len(nums)).",
+      "entry_function": "find_kth_largest",
+      "reference_solution": "def find_kth_largest(nums, k):\n    return sorted(nums, reverse=True)[k - 1]\n",
+      "test_cases": [
+        {
+          "input": "([5], 1)",
+          "expected": "5",
+          "description": "single element"
+        },
+        {
+          "input": "([3,2,3,1,2,4,5,5,6], 4)",
+          "expected": "4",
+          "description": "duplicates present"
+        },
+        {
+          "input": "([1,2,3,4,5], 1)",
+          "expected": "5",
+          "description": "k equals 1"
+        },
+        {
+          "input": "([1,2,3,4,5], 5)",
+          "expected": "1",
+          "description": "k equals length"
+        },
+        {
+          "input": "([-1,-2,-3,-4,-5], 3)",
+          "expected": "-3",
+          "description": "negative numbers"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "sorting"
+      ],
+      "variants": [
+        {
+          "name": "returns-max",
+          "code": "def find_kth_largest(nums, k):\n    return max(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "ignores-k"
+        },
+        {
+          "name": "zero-indexed",
+          "code": "def find_kth_largest(nums, k):\n    return sorted(nums, reverse=True)[k]\n",
+          "expected_failure_count": 5,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "kth-smallest",
+          "code": "def find_kth_largest(nums, k):\n    return sorted(nums)[k - 1]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-direction"
+        }
+      ]
+    },
+    {
+      "id": "hr-005-remove-element-by-value",
+      "title": "Remove Element by Value",
+      "problem_text": "Given a list of integers nums and a value v, return a new list with every occurrence of v removed, preserving the order of remaining elements.",
+      "entry_function": "remove_element",
+      "reference_solution": "def remove_element(nums, v):\n    return [n for n in nums if n != v]\n",
+      "test_cases": [
+        {
+          "input": "([1, 2, 3, 2, 4], 2)",
+          "expected": "[1, 3, 4]",
+          "description": "normal case"
+        },
+        {
+          "input": "([1, 2, 3], 4)",
+          "expected": "[1, 2, 3]",
+          "description": "no occurrence"
+        },
+        {
+          "input": "([2, 2, 2], 2)",
+          "expected": "[]",
+          "description": "all removal"
+        },
+        {
+          "input": "([], 1)",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "([5], 5)",
+          "expected": "[]",
+          "description": "single element removed"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def remove_element(nums, v):\n    return list(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "removes-first-only",
+          "code": "def remove_element(nums, v):\n    out = list(nums)\n    if v in out:\n        out.remove(v)\n    return out\n",
+          "expected_failure_count": 2,
+          "error_pattern": "incomplete-removal"
+        },
+        {
+          "name": "inverted-condition",
+          "code": "def remove_element(nums, v):\n    return [n for n in nums if n == v]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "inverted-condition"
+        }
+      ]
+    },
+    {
+      "id": "hr-006-rotate-array-by-k",
+      "title": "Rotate Array by K",
+      "problem_text": "Given a list of integers nums and a non-negative integer k, return a new list rotated to the right by k positions. For [1,2,3,4,5] with k=2, return [4,5,1,2,3]. k may be larger than len(nums).",
+      "entry_function": "rotate_array",
+      "reference_solution": "def rotate_array(nums, k):\n    if not nums:\n        return []\n    k = k % len(nums)\n    return list(nums[-k:]) + list(nums[:-k]) if k else list(nums)\n",
+      "test_cases": [
+        {
+          "input": "([1,2,3,4,5], 2)",
+          "expected": "[4, 5, 1, 2, 3]",
+          "description": "normal rotation"
+        },
+        {
+          "input": "([1,2,3], 5)",
+          "expected": "[2, 3, 1]",
+          "description": "k larger than length"
+        },
+        {
+          "input": "([], 10)",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "([7], 3)",
+          "expected": "[7]",
+          "description": "single element"
+        },
+        {
+          "input": "([1,2,3], 0)",
+          "expected": "[1, 2, 3]",
+          "description": "k equals zero"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "no-modulo",
+          "code": "def rotate_array(nums, k):\n    if not nums:\n        return []\n    return list(nums[-k:]) + list(nums[:-k]) if k else list(nums)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-modulo"
+        },
+        {
+          "name": "rotate-left",
+          "code": "def rotate_array(nums, k):\n    if not nums:\n        return []\n    k = k % len(nums)\n    return list(nums[k:]) + list(nums[:k])\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-direction"
+        },
+        {
+          "name": "returns-input",
+          "code": "def rotate_array(nums, k):\n    return list(nums)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "hr-007-intersection-arrays",
+      "title": "Intersection of Two Arrays",
+      "problem_text": "Given two lists of integers a and b, return a sorted list of distinct values that appear in both. The result must be sorted ascending and contain no duplicates.",
+      "entry_function": "intersect_arrays",
+      "reference_solution": "def intersect_arrays(a, b):\n    return sorted(set(a) & set(b))\n",
+      "test_cases": [
+        {
+          "input": "([], [])",
+          "expected": "[]",
+          "description": "both empty"
+        },
+        {
+          "input": "([1, 2, 3], [4, 5, 6])",
+          "expected": "[]",
+          "description": "no common elements"
+        },
+        {
+          "input": "([5], [5])",
+          "expected": "[5]",
+          "description": "single common element"
+        },
+        {
+          "input": "([1, 2, 2, 3], [2, 3, 3, 4])",
+          "expected": "[2, 3]",
+          "description": "duplicates in both lists"
+        },
+        {
+          "input": "([1, 2], [])",
+          "expected": "[]",
+          "description": "one empty list"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "hash-table",
+        "set"
+      ],
+      "variants": [
+        {
+          "name": "returns-empty",
+          "code": "def intersect_arrays(a, b):\n    return []\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "union-instead",
+          "code": "def intersect_arrays(a, b):\n    return sorted(set(a) | set(b))\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-set-op"
+        },
+        {
+          "name": "no-dedup",
+          "code": "def intersect_arrays(a, b):\n    return sorted(x for x in a if x in b)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-dedup"
+        }
+      ]
+    },
+    {
+      "id": "hr-008-symmetric-difference",
+      "title": "Symmetric Difference",
+      "problem_text": "Given two lists of integers a and b, return a sorted list of distinct values that appear in exactly one of the two lists (in a XOR b). Result is sorted ascending with no duplicates.",
+      "entry_function": "sym_diff",
+      "reference_solution": "def sym_diff(a, b):\n    return sorted(set(a) ^ set(b))\n",
+      "test_cases": [
+        {
+          "input": "([], [])",
+          "expected": "[]",
+          "description": "both empty"
+        },
+        {
+          "input": "([1, 2], [])",
+          "expected": "[1, 2]",
+          "description": "one empty"
+        },
+        {
+          "input": "([1, 2, 3], [2, 3, 4])",
+          "expected": "[1, 4]",
+          "description": "normal case"
+        },
+        {
+          "input": "([1, 1, 2], [2, 3, 3])",
+          "expected": "[1, 3]",
+          "description": "duplicates within lists"
+        },
+        {
+          "input": "([1, 2], [1, 2])",
+          "expected": "[]",
+          "description": "identical lists"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "set"
+      ],
+      "variants": [
+        {
+          "name": "intersection-not-xor",
+          "code": "def sym_diff(a, b):\n    return sorted(set(a) & set(b))\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-set-op"
+        },
+        {
+          "name": "union-not-xor",
+          "code": "def sym_diff(a, b):\n    return sorted(set(a) | set(b))\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-set-op"
+        },
+        {
+          "name": "diff-one-way",
+          "code": "def sym_diff(a, b):\n    return sorted(set(a) - set(b))\n",
+          "expected_failure_count": 2,
+          "error_pattern": "asymmetric"
+        }
+      ]
+    },
+    {
+      "id": "hr-009-flatten-nested",
+      "title": "Flatten Nested List (1-level)",
+      "problem_text": "Given a list of lists nested, return a flat list containing all elements in left-to-right, top-to-bottom order. Only one level of nesting is required.",
+      "entry_function": "flatten",
+      "reference_solution": "def flatten(nested):\n    return [x for inner in nested for x in inner]\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "[[1]]",
+          "expected": "[1]",
+          "description": "single sublist single element"
+        },
+        {
+          "input": "[[1,2,3]]",
+          "expected": "[1, 2, 3]",
+          "description": "single sublist multiple elements"
+        },
+        {
+          "input": "[[1,2],[3,4]]",
+          "expected": "[1, 2, 3, 4]",
+          "description": "two sublists"
+        },
+        {
+          "input": "[[1],[2,3],[4,5,6]]",
+          "expected": "[1, 2, 3, 4, 5, 6]",
+          "description": "varying lengths"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def flatten(nested):\n    return list(nested)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "first-row-only",
+          "code": "def flatten(nested):\n    return list(nested[0]) if nested else []\n",
+          "expected_failure_count": 2,
+          "error_pattern": "incomplete-traversal"
+        },
+        {
+          "name": "swapped-order",
+          "code": "def flatten(nested):\n    return [x for inner in reversed(nested) for x in inner]\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-order"
+        }
+      ]
+    },
+    {
+      "id": "hr-010-largest-window-sum",
+      "title": "Largest Sliding Window Sum",
+      "problem_text": "Given a list of integers nums and a window size k, return the maximum sum of any contiguous sublist of length k. Assume k <= len(nums) and len(nums) >= 1.",
+      "entry_function": "largest_window_sum",
+      "reference_solution": "def largest_window_sum(nums, k):\n    return max(sum(nums[i:i + k]) for i in range(len(nums) - k + 1))\n",
+      "test_cases": [
+        {
+          "input": "([1,2,3,4], 2)",
+          "expected": "7",
+          "description": "normal case"
+        },
+        {
+          "input": "([5, -1, 0, 2], 4)",
+          "expected": "6",
+          "description": "window equal to list length"
+        },
+        {
+          "input": "([-1, -2, -3], 2)",
+          "expected": "-3",
+          "description": "all negative numbers"
+        },
+        {
+          "input": "([10], 1)",
+          "expected": "10",
+          "description": "single element"
+        },
+        {
+          "input": "([1,2,3,4,5], 1)",
+          "expected": "5",
+          "description": "window size one"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "sliding-window"
+      ],
+      "variants": [
+        {
+          "name": "returns-total-sum",
+          "code": "def largest_window_sum(nums, k):\n    return sum(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "ignores-window"
+        },
+        {
+          "name": "off-by-one-window",
+          "code": "def largest_window_sum(nums, k):\n    return max(sum(nums[i:i + k]) for i in range(len(nums) - k))\n",
+          "expected_failure_count": 4,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "min-not-max",
+          "code": "def largest_window_sum(nums, k):\n    return min(sum(nums[i:i + k]) for i in range(len(nums) - k + 1))\n",
+          "expected_failure_count": 3,
+          "error_pattern": "inverted-comparison"
+        }
+      ]
+    },
+    {
+      "id": "hr-011-tree-max-depth",
+      "title": "Binary Tree Max Depth",
+      "problem_text": "Given a list `lst` representing a binary tree in level-order (with `None` placeholders for missing children, e.g. [3, 9, 20, None, None, 15, 7]), return the maximum depth (longest path from root to a leaf). An empty list returns 0.",
+      "entry_function": "max_depth",
+      "reference_solution": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef max_depth(lst):\n    root = _build(lst)\n    def depth(n):\n        if n is None: return 0\n        return 1 + max(depth(n.l), depth(n.r))\n    return depth(root)\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "0",
+          "description": "empty list"
+        },
+        {
+          "input": "[1]",
+          "expected": "1",
+          "description": "single element"
+        },
+        {
+          "input": "[1,2]",
+          "expected": "2",
+          "description": "two nodes left"
+        },
+        {
+          "input": "[3,9,20,None,None,15,7]",
+          "expected": "3",
+          "description": "balanced tree of depth 3"
+        },
+        {
+          "input": "[1,2,None,3]",
+          "expected": "3",
+          "description": "left-skewed tree"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "tree",
+        "binary-tree",
+        "recursion"
+      ],
+      "variants": [
+        {
+          "name": "returns-zero",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef max_depth(lst):\n    return 0\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "off-by-one-depth",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef max_depth(lst):\n    root = _build(lst)\n    def depth(n):\n        if n is None: return 0\n        return max(depth(n.l), depth(n.r))\n    return depth(root)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "uses-min-not-max",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef max_depth(lst):\n    root = _build(lst)\n    def depth(n):\n        if n is None: return 0\n        return 1 + min(depth(n.l), depth(n.r))\n    return depth(root)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "inverted-comparison"
+        }
+      ]
+    },
+    {
+      "id": "hr-012-tree-is-balanced",
+      "title": "Binary Tree Is Balanced",
+      "problem_text": "Given a list `lst` representing a binary tree in level-order (with `None` placeholders), return True iff the tree is height-balanced (the depths of every node's left and right subtrees differ by at most 1).",
+      "entry_function": "is_balanced",
+      "reference_solution": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef is_balanced(lst):\n    root = _build(lst)\n    def check(n):\n        if n is None: return 0, True\n        lh, lb = check(n.l)\n        rh, rb = check(n.r)\n        return 1 + max(lh, rh), lb and rb and abs(lh - rh) <= 1\n    _, b = check(root)\n    return b\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "True",
+          "description": "empty tree"
+        },
+        {
+          "input": "[1]",
+          "expected": "True",
+          "description": "single node"
+        },
+        {
+          "input": "[1,2,3,4,5,6,7]",
+          "expected": "True",
+          "description": "balanced complete tree"
+        },
+        {
+          "input": "[1,2,None,3]",
+          "expected": "False",
+          "description": "left skewed unbalanced"
+        },
+        {
+          "input": "[1,2,3,4,None,None,None]",
+          "expected": "True",
+          "description": "balanced but not complete"
+        },
+        {
+          "input": "[1, 2, 2, 3, None, None, 3, 4, None, None, 4]",
+          "expected": "False",
+          "description": "deep imbalance hidden under balanced root heights"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "tree",
+        "binary-tree",
+        "recursion"
+      ],
+      "variants": [
+        {
+          "name": "returns-true-always",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef is_balanced(lst):\n    return True\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "diff-too-strict",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef is_balanced(lst):\n    root = _build(lst)\n    def check(n):\n        if n is None: return 0, True\n        lh, lb = check(n.l)\n        rh, rb = check(n.r)\n        return 1 + max(lh, rh), lb and rb and lh == rh\n    _, b = check(root)\n    return b\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-tolerance"
+        },
+        {
+          "name": "only-checks-root",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef is_balanced(lst):\n    root = _build(lst)\n    def depth(n):\n        if n is None: return 0\n        return 1 + max(depth(n.l), depth(n.r))\n    if root is None: return True\n    return abs(depth(root.l) - depth(root.r)) <= 1\n",
+          "expected_failure_count": 1,
+          "error_pattern": "incomplete-check"
+        }
+      ]
+    },
+    {
+      "id": "hr-013-tree-invert",
+      "title": "Invert Binary Tree",
+      "problem_text": "Given a list `lst` representing a binary tree in level-order, return the level-order list of the tree with every node's left and right children swapped (mirror image). Trailing None values are stripped from the output.",
+      "entry_function": "invert_tree",
+      "reference_solution": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef invert_tree(lst):\n    root = _build(lst)\n    def inv(n):\n        if n is None: return\n        n.l, n.r = n.r, n.l\n        inv(n.l)\n        inv(n.r)\n    inv(root)\n    return _to_list(root)\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "[1]",
+          "expected": "[1]",
+          "description": "single element"
+        },
+        {
+          "input": "[1,2,3]",
+          "expected": "[1, 3, 2]",
+          "description": "two-level tree"
+        },
+        {
+          "input": "[1,None,2]",
+          "expected": "[1, 2]",
+          "description": "missing left child"
+        },
+        {
+          "input": "[1,2,3,4,5,None,6]",
+          "expected": "[1, 3, 2, 6, None, 5, 4]",
+          "description": "three-level tree with missing nodes"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "tree",
+        "binary-tree",
+        "recursion"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef invert_tree(lst):\n    return list(lst)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "only-root-swap",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef invert_tree(lst):\n    root = _build(lst)\n    if root is not None:\n        root.l, root.r = root.r, root.l\n    return _to_list(root)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "shallow-traversal"
+        },
+        {
+          "name": "swaps-values-not-subtrees",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef invert_tree(lst):\n    root = _build(lst)\n    def inv(n):\n        if n is None: return\n        if n.l and n.r:\n            n.l.v, n.r.v = n.r.v, n.l.v\n        inv(n.l)\n        inv(n.r)\n    inv(root)\n    return _to_list(root)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-swap-target"
+        }
+      ]
+    },
+    {
+      "id": "hr-014-tree-count-leaves",
+      "title": "Count Leaves in Binary Tree",
+      "problem_text": "Given a list `lst` representing a binary tree in level-order (None placeholders for missing children), return the number of leaf nodes (nodes with no children). An empty tree has 0 leaves.",
+      "entry_function": "count_leaves",
+      "reference_solution": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef count_leaves(lst):\n    root = _build(lst)\n    def cnt(n):\n        if n is None: return 0\n        if n.l is None and n.r is None: return 1\n        return cnt(n.l) + cnt(n.r)\n    return cnt(root)\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "0",
+          "description": "empty list"
+        },
+        {
+          "input": "[1]",
+          "expected": "1",
+          "description": "single element"
+        },
+        {
+          "input": "[1,2,3]",
+          "expected": "2",
+          "description": "full binary tree depth 1"
+        },
+        {
+          "input": "[1,2]",
+          "expected": "1",
+          "description": "only left child"
+        },
+        {
+          "input": "[1,None,3]",
+          "expected": "1",
+          "description": "missing left child"
+        },
+        {
+          "input": "[1, 2, None, 3, 4, None, None, 5, None]",
+          "expected": "2",
+          "description": "one-child node with deeper subtree"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "tree",
+        "binary-tree",
+        "recursion"
+      ],
+      "variants": [
+        {
+          "name": "returns-zero",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef count_leaves(lst):\n    return 0\n",
+          "expected_failure_count": 5,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "counts-all-nodes",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef count_leaves(lst):\n    root = _build(lst)\n    def cnt(n):\n        if n is None: return 0\n        return 1 + cnt(n.l) + cnt(n.r)\n    return cnt(root)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-target"
+        },
+        {
+          "name": "off-by-one-leaf-def",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef count_leaves(lst):\n    root = _build(lst)\n    def cnt(n):\n        if n is None: return 0\n        if n.l is None or n.r is None: return 1\n        return cnt(n.l) + cnt(n.r)\n    return cnt(root)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-leaf-condition"
+        }
+      ]
+    },
+    {
+      "id": "hr-015-tree-inorder",
+      "title": "Binary Tree Inorder Traversal",
+      "problem_text": "Given a list `lst` representing a binary tree in level-order, return a list of node values visited in inorder (left-subtree, node, right-subtree).",
+      "entry_function": "inorder",
+      "reference_solution": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef inorder(lst):\n    root = _build(lst)\n    out = []\n    def walk(n):\n        if n is None: return\n        walk(n.l)\n        out.append(n.v)\n        walk(n.r)\n    walk(root)\n    return out\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "[5]",
+          "expected": "[5]",
+          "description": "single element"
+        },
+        {
+          "input": "[1,2,3]",
+          "expected": "[2, 1, 3]",
+          "description": "three nodes complete"
+        },
+        {
+          "input": "[1,None,2,None,None,None,3]",
+          "expected": "[1, 2]",
+          "description": "right-skewed tree"
+        },
+        {
+          "input": "[1,2,3,4,5,6,7]",
+          "expected": "[4, 2, 5, 1, 6, 3, 7]",
+          "description": "full binary tree"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "tree",
+        "binary-tree",
+        "recursion"
+      ],
+      "variants": [
+        {
+          "name": "preorder-not-inorder",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef inorder(lst):\n    root = _build(lst)\n    out = []\n    def walk(n):\n        if n is None: return\n        out.append(n.v)\n        walk(n.l)\n        walk(n.r)\n    walk(root)\n    return out\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-traversal"
+        },
+        {
+          "name": "postorder-not-inorder",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef inorder(lst):\n    root = _build(lst)\n    out = []\n    def walk(n):\n        if n is None: return\n        walk(n.l)\n        walk(n.r)\n        out.append(n.v)\n    walk(root)\n    return out\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-traversal"
+        },
+        {
+          "name": "left-only",
+          "code": "\nclass _N:\n    def __init__(self, v):\n        self.v, self.l, self.r = v, None, None\n\ndef _build(lst):\n    if not lst or lst[0] is None:\n        return None\n    nodes = [None if v is None else _N(v) for v in lst]\n    queue = [nodes[0]]\n    i = 1\n    while queue and i < len(nodes):\n        node = queue.pop(0)\n        if i < len(nodes):\n            node.l = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n        if i < len(nodes):\n            node.r = nodes[i]\n            if nodes[i] is not None: queue.append(nodes[i])\n            i += 1\n    return nodes[0]\n\ndef _to_list(root):\n    if not root: return []\n    out = []\n    queue = [root]\n    while queue:\n        n = queue.pop(0)\n        if n is None:\n            out.append(None)\n        else:\n            out.append(n.v)\n            queue.append(n.l)\n            queue.append(n.r)\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\ndef inorder(lst):\n    root = _build(lst)\n    out = []\n    def walk(n):\n        if n is None: return\n        walk(n.l)\n        out.append(n.v)\n    walk(root)\n    return out\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-right-subtree"
+        }
+      ]
+    },
+    {
+      "id": "edu-101-count-consonants",
+      "title": "Count Consonants",
+      "problem_text": "Given a string s, return the number of consonant letters (alphabetic characters that are not in 'aeiou', case-insensitive).",
+      "entry_function": "count_consonants",
+      "reference_solution": "def count_consonants(s):\n    return sum(1 for c in s.lower() if c.isalpha() and c not in 'aeiou')\n",
+      "test_cases": [
+        {
+          "input": "''",
+          "expected": "0",
+          "description": "empty string"
+        },
+        {
+          "input": "'aeiouAEIOU'",
+          "expected": "0",
+          "description": "only vowels"
+        },
+        {
+          "input": "'bcdfg'",
+          "expected": "5",
+          "description": "only consonants lowercase"
+        },
+        {
+          "input": "'Hello World!'",
+          "expected": "7",
+          "description": "mixed with spaces and punctuation"
+        },
+        {
+          "input": "'BCDFG'",
+          "expected": "5",
+          "description": "only consonants uppercase"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "returns-zero",
+          "code": "def count_consonants(s):\n    return 0\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "counts-vowels-instead",
+          "code": "def count_consonants(s):\n    return sum(1 for c in s.lower() if c in 'aeiou')\n",
+          "expected_failure_count": 4,
+          "error_pattern": "inverted-condition"
+        },
+        {
+          "name": "counts-all-chars",
+          "code": "def count_consonants(s):\n    return len(s)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-filter"
+        }
+      ]
+    },
+    {
+      "id": "edu-102-count-distinct-chars",
+      "title": "Count Distinct Characters",
+      "problem_text": "Given a string s, return the number of distinct characters it contains (case-sensitive). Whitespace and punctuation count as characters.",
+      "entry_function": "count_distinct",
+      "reference_solution": "def count_distinct(s):\n    return len(set(s))\n",
+      "test_cases": [
+        {
+          "input": "''",
+          "expected": "0",
+          "description": "empty string"
+        },
+        {
+          "input": "'a'",
+          "expected": "1",
+          "description": "single character"
+        },
+        {
+          "input": "'aaa'",
+          "expected": "1",
+          "description": "all same characters"
+        },
+        {
+          "input": "'aA! '",
+          "expected": "4",
+          "description": "mixed case and special chars"
+        },
+        {
+          "input": "'hello world'",
+          "expected": "8",
+          "description": "normal sentence"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "returns-length",
+          "code": "def count_distinct(s):\n    return len(s)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-dedup"
+        },
+        {
+          "name": "returns-zero",
+          "code": "def count_distinct(s):\n    return 0\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "case-insensitive",
+          "code": "def count_distinct(s):\n    return len(set(s.lower()))\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-case-handling"
+        }
+      ]
+    },
+    {
+      "id": "edu-103-reverse-words",
+      "title": "Reverse Words in Sentence",
+      "problem_text": "Given a string s containing words separated by single spaces, return a new string with the words in reverse order. The string has no leading/trailing spaces and contains at least one word.",
+      "entry_function": "reverse_words",
+      "reference_solution": "def reverse_words(s):\n    return ' '.join(s.split(' ')[::-1])\n",
+      "test_cases": [
+        {
+          "input": "'hello'",
+          "expected": "'hello'",
+          "description": "single word"
+        },
+        {
+          "input": "'hello world'",
+          "expected": "'world hello'",
+          "description": "two words"
+        },
+        {
+          "input": "'the sky is blue'",
+          "expected": "'blue is sky the'",
+          "description": "multiple words"
+        },
+        {
+          "input": "'a b c d e'",
+          "expected": "'e d c b a'",
+          "description": "five single-letter words"
+        },
+        {
+          "input": "'Python is fun'",
+          "expected": "'fun is Python'",
+          "description": "three words"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "reverses-chars-not-words",
+          "code": "def reverse_words(s):\n    return s[::-1]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-granularity"
+        },
+        {
+          "name": "returns-input",
+          "code": "def reverse_words(s):\n    return s\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "joins-with-empty",
+          "code": "def reverse_words(s):\n    return ''.join(s.split(' ')[::-1])\n",
+          "expected_failure_count": 4,
+          "error_pattern": "missing-separator"
+        }
+      ]
+    },
+    {
+      "id": "edu-104-capitalize-each-word",
+      "title": "Capitalize Each Word",
+      "problem_text": "Given a string s of words separated by single spaces, return the string with each word's first letter uppercased and remaining letters lowercased. 'hELLO woRLD' becomes 'Hello World'.",
+      "entry_function": "capitalize_each",
+      "reference_solution": "def capitalize_each(s):\n    return ' '.join(w.capitalize() for w in s.split(' '))\n",
+      "test_cases": [
+        {
+          "input": "''",
+          "expected": "''",
+          "description": "empty string"
+        },
+        {
+          "input": "'hello'",
+          "expected": "'Hello'",
+          "description": "single word lowercase"
+        },
+        {
+          "input": "'HELLO'",
+          "expected": "'Hello'",
+          "description": "single word uppercase"
+        },
+        {
+          "input": "'hELLO woRLD'",
+          "expected": "'Hello World'",
+          "description": "mixed case words"
+        },
+        {
+          "input": "'this is a test'",
+          "expected": "'This Is A Test'",
+          "description": "normal phrase"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "lowercase-only",
+          "code": "def capitalize_each(s):\n    return s.lower()\n",
+          "expected_failure_count": 4,
+          "error_pattern": "missing-capitalize"
+        },
+        {
+          "name": "title-with-tail-untouched",
+          "code": "def capitalize_each(s):\n    return ' '.join(w[:1].upper() + w[1:] for w in s.split(' '))\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-tail-lower"
+        },
+        {
+          "name": "all-uppercase",
+          "code": "def capitalize_each(s):\n    return s.upper()\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-case"
+        }
+      ]
+    },
+    {
+      "id": "edu-105-remove-duplicate-chars",
+      "title": "Remove Duplicate Characters",
+      "problem_text": "Given a string s, return a new string with duplicate characters removed, preserving the order of first occurrence. 'banana' becomes 'ban'.",
+      "entry_function": "remove_duplicates_str",
+      "reference_solution": "def remove_duplicates_str(s):\n    seen = set()\n    out = []\n    for c in s:\n        if c not in seen:\n            seen.add(c)\n            out.append(c)\n    return ''.join(out)\n",
+      "test_cases": [
+        {
+          "input": "''",
+          "expected": "''",
+          "description": "empty string"
+        },
+        {
+          "input": "'a'",
+          "expected": "'a'",
+          "description": "single character"
+        },
+        {
+          "input": "'abc'",
+          "expected": "'abc'",
+          "description": "all unique"
+        },
+        {
+          "input": "'aaa'",
+          "expected": "'a'",
+          "description": "all duplicates"
+        },
+        {
+          "input": "'banana'",
+          "expected": "'ban'",
+          "description": "mixed duplicates"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def remove_duplicates_str(s):\n    return s\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "set-loses-order",
+          "code": "def remove_duplicates_str(s):\n    return ''.join(sorted(set(s)))\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-order"
+        },
+        {
+          "name": "removes-only-adjacent",
+          "code": "def remove_duplicates_str(s):\n    out = []\n    for c in s:\n        if not out or out[-1] != c:\n            out.append(c)\n    return ''.join(out)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "incomplete-dedup"
+        }
+      ]
+    },
+    {
+      "id": "edu-106-longest-substring-no-repeat",
+      "title": "Longest Substring Without Repeating Chars",
+      "problem_text": "Given a string s, return the length of the longest substring with all distinct characters.",
+      "entry_function": "longest_no_repeat",
+      "reference_solution": "def longest_no_repeat(s):\n    seen = {}\n    best = 0\n    start = 0\n    for i, c in enumerate(s):\n        if c in seen and seen[c] >= start:\n            start = seen[c] + 1\n        seen[c] = i\n        if i - start + 1 > best:\n            best = i - start + 1\n    return best\n",
+      "test_cases": [
+        {
+          "input": "\"\"",
+          "expected": "0",
+          "description": "empty string"
+        },
+        {
+          "input": "\"a\"",
+          "expected": "1",
+          "description": "single character"
+        },
+        {
+          "input": "\"abcde\"",
+          "expected": "5",
+          "description": "all distinct characters"
+        },
+        {
+          "input": "\"abca\"",
+          "expected": "3",
+          "description": "repeating character"
+        },
+        {
+          "input": "\"pwwkew\"",
+          "expected": "3",
+          "description": "typical case with repeats"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "sliding-window"
+      ],
+      "variants": [
+        {
+          "name": "returns-len",
+          "code": "def longest_no_repeat(s):\n    return len(s)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "ignores-repeats"
+        },
+        {
+          "name": "returns-distinct-count",
+          "code": "def longest_no_repeat(s):\n    return len(set(s))\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-aggregation"
+        },
+        {
+          "name": "returns-zero",
+          "code": "def longest_no_repeat(s):\n    return 0\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "edu-107-string-to-int",
+      "title": "String to Integer (atoi-lite)",
+      "problem_text": "Given a string s, return the integer it represents. Skip leading whitespace, support optional leading '+' or '-' sign, then read digit characters until a non-digit is found. Return 0 if no digits are found. Inputs fit in a regular Python int.",
+      "entry_function": "atoi",
+      "reference_solution": "def atoi(s):\n    s = s.lstrip()\n    if not s:\n        return 0\n    sign = 1\n    i = 0\n    if s[0] in '+-':\n        if s[0] == '-':\n            sign = -1\n        i = 1\n    n = 0\n    started = False\n    while i < len(s) and s[i].isdigit():\n        n = n * 10 + int(s[i])\n        started = True\n        i += 1\n    return sign * n if started else 0\n",
+      "test_cases": [
+        {
+          "input": "\"  42\"",
+          "expected": "42",
+          "description": "leading whitespace and positive number"
+        },
+        {
+          "input": "\"  -42\"",
+          "expected": "-42",
+          "description": "leading whitespace and negative number"
+        },
+        {
+          "input": "\"  00123\"",
+          "expected": "123",
+          "description": "leading zeros with whitespace"
+        },
+        {
+          "input": "\"abc\"",
+          "expected": "0",
+          "description": "no digits"
+        },
+        {
+          "input": "\"  4193 with words\"",
+          "expected": "4193",
+          "description": "trailing non-digits"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "no-sign-handling",
+          "code": "def atoi(s):\n    n = 0\n    for c in s.lstrip():\n        if c.isdigit():\n            n = n * 10 + int(c)\n        else:\n            break\n    return n\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-sign-handling"
+        },
+        {
+          "name": "ignores-whitespace-and-sign",
+          "code": "def atoi(s):\n    digits = ''.join(c for c in s if c.isdigit())\n    return int(digits) if digits else 0\n",
+          "expected_failure_count": 1,
+          "error_pattern": "incomplete-parsing"
+        },
+        {
+          "name": "returns-zero",
+          "code": "def atoi(s):\n    return 0\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "edu-108-int-to-binary",
+      "title": "Integer to Binary String",
+      "problem_text": "Given a non-negative integer n, return its binary representation as a string with no '0b' prefix. For 0 return '0'. For 5 return '101'.",
+      "entry_function": "to_binary",
+      "reference_solution": "def to_binary(n):\n    return bin(n)[2:] if n > 0 else '0'\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "'0'",
+          "description": "zero"
+        },
+        {
+          "input": "1",
+          "expected": "'1'",
+          "description": "one"
+        },
+        {
+          "input": "10",
+          "expected": "'1010'",
+          "description": "normal case"
+        },
+        {
+          "input": "16",
+          "expected": "'10000'",
+          "description": "power of two"
+        },
+        {
+          "input": "255",
+          "expected": "'11111111'",
+          "description": "large number"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "bit-manipulation"
+      ],
+      "variants": [
+        {
+          "name": "leaves-prefix",
+          "code": "def to_binary(n):\n    return bin(n)\n",
+          "expected_failure_count": 5,
+          "error_pattern": "extra-prefix"
+        },
+        {
+          "name": "returns-decimal-string",
+          "code": "def to_binary(n):\n    return str(n)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-base"
+        },
+        {
+          "name": "off-by-one-base",
+          "code": "def to_binary(n):\n    return bin(n + 1)[2:] if n >= 0 else '0'\n",
+          "expected_failure_count": 5,
+          "error_pattern": "off-by-one"
+        }
+      ]
+    },
+    {
+      "id": "edu-109-gcd",
+      "title": "Greatest Common Divisor",
+      "problem_text": "Given two non-negative integers a and b (not both zero), return their greatest common divisor (GCD). Use Euclidean algorithm. gcd(0, n) = n.",
+      "entry_function": "gcd",
+      "reference_solution": "def gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a\n",
+      "test_cases": [
+        {
+          "input": "(12, 8)",
+          "expected": "4",
+          "description": "normal case"
+        },
+        {
+          "input": "(0, 5)",
+          "expected": "5",
+          "description": "one zero"
+        },
+        {
+          "input": "(7, 7)",
+          "expected": "7",
+          "description": "both equal"
+        },
+        {
+          "input": "(17, 13)",
+          "expected": "1",
+          "description": "coprime numbers"
+        },
+        {
+          "input": "(123456789, 987654321)",
+          "expected": "9",
+          "description": "large numbers"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "returns-min",
+          "code": "def gcd(a, b):\n    return min(a, b)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "returns-product",
+          "code": "def gcd(a, b):\n    return a * b\n",
+          "expected_failure_count": 5,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "returns-first-arg",
+          "code": "def gcd(a, b):\n    return a\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "edu-110-lcm",
+      "title": "Least Common Multiple",
+      "problem_text": "Given two positive integers a and b, return their least common multiple (LCM). LCM(a, b) = a*b // gcd(a, b).",
+      "entry_function": "lcm",
+      "reference_solution": "def lcm(a, b):\n    def _gcd(x, y):\n        while y:\n            x, y = y, x % y\n        return x\n    return a * b // _gcd(a, b)\n",
+      "test_cases": [
+        {
+          "input": "(4, 6)",
+          "expected": "12",
+          "description": "normal case"
+        },
+        {
+          "input": "(3, 9)",
+          "expected": "9",
+          "description": "one is multiple of the other"
+        },
+        {
+          "input": "(5, 7)",
+          "expected": "35",
+          "description": "co-prime numbers"
+        },
+        {
+          "input": "(1, 8)",
+          "expected": "8",
+          "description": "one input is 1"
+        },
+        {
+          "input": "(123456, 789012)",
+          "expected": "8117355456",
+          "description": "large numbers"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "returns-product",
+          "code": "def lcm(a, b):\n    return a * b\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-divide-by-gcd"
+        },
+        {
+          "name": "returns-max",
+          "code": "def lcm(a, b):\n    return max(a, b)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "uses-gcd-not-lcm",
+          "code": "def lcm(a, b):\n    while b:\n        a, b = b, a % b\n    return a\n",
+          "expected_failure_count": 5,
+          "error_pattern": "wrong-target"
+        }
+      ]
+    },
+    {
+      "id": "edu-111-perfect-square",
+      "title": "Is Perfect Square",
+      "problem_text": "Given a non-negative integer n, return True iff n is a perfect square (the square of some integer). 0 and 1 are perfect squares.",
+      "entry_function": "is_perfect_square",
+      "reference_solution": "def is_perfect_square(n):\n    if n < 0:\n        return False\n    r = int(n ** 0.5)\n    for k in (r - 1, r, r + 1):\n        if k >= 0 and k * k == n:\n            return True\n    return False\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "True",
+          "description": "zero is perfect square"
+        },
+        {
+          "input": "1",
+          "expected": "True",
+          "description": "one is perfect square"
+        },
+        {
+          "input": "2",
+          "expected": "False",
+          "description": "non-square small number"
+        },
+        {
+          "input": "4",
+          "expected": "True",
+          "description": "small perfect square"
+        },
+        {
+          "input": "25",
+          "expected": "True",
+          "description": "larger perfect square"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "binary-search"
+      ],
+      "variants": [
+        {
+          "name": "returns-true",
+          "code": "def is_perfect_square(n):\n    return True\n",
+          "expected_failure_count": 1,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "compares-sqrt-to-n",
+          "code": "def is_perfect_square(n):\n    if n < 0:\n        return False\n    return int(n ** 0.5) == n\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-comparison-target"
+        },
+        {
+          "name": "missing-zero-case",
+          "code": "def is_perfect_square(n):\n    if n <= 0:\n        return False\n    r = int(n ** 0.5)\n    for k in (r - 1, r, r + 1):\n        if k > 0 and k * k == n:\n            return True\n    return False\n",
+          "expected_failure_count": 1,
+          "error_pattern": "off-by-one-on-boundary"
+        }
+      ]
+    },
+    {
+      "id": "edu-112-count-set-bits",
+      "title": "Count Set Bits",
+      "problem_text": "Given a non-negative integer n, return the number of 1-bits in its binary representation (also known as Hamming weight).",
+      "entry_function": "count_set_bits",
+      "reference_solution": "def count_set_bits(n):\n    return bin(n).count('1')\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "0",
+          "description": "zero"
+        },
+        {
+          "input": "1",
+          "expected": "1",
+          "description": "one"
+        },
+        {
+          "input": "3",
+          "expected": "2",
+          "description": "small number with multiple bits"
+        },
+        {
+          "input": "15",
+          "expected": "4",
+          "description": "all ones for 4 bits"
+        },
+        {
+          "input": "16",
+          "expected": "1",
+          "description": "power of two"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "bit-manipulation"
+      ],
+      "variants": [
+        {
+          "name": "returns-n",
+          "code": "def count_set_bits(n):\n    return n\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "counts-zero-bits",
+          "code": "def count_set_bits(n):\n    return bin(n).count('0') - 1\n",
+          "expected_failure_count": 5,
+          "error_pattern": "inverted-bit-count"
+        },
+        {
+          "name": "off-by-one",
+          "code": "def count_set_bits(n):\n    return bin(n).count('1') + 1\n",
+          "expected_failure_count": 5,
+          "error_pattern": "off-by-one"
+        }
+      ]
+    },
+    {
+      "id": "edu-113-fibonacci-recursive",
+      "title": "Fibonacci (Recursive)",
+      "problem_text": "Given a non-negative integer n, return the n-th Fibonacci number using a recursive definition: F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2). Inputs are small (n <= 12).",
+      "entry_function": "fib_rec",
+      "reference_solution": "def fib_rec(n):\n    if n <= 0:\n        return 0\n    if n == 1:\n        return 1\n    return fib_rec(n - 1) + fib_rec(n - 2)\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "0",
+          "description": "zero"
+        },
+        {
+          "input": "1",
+          "expected": "1",
+          "description": "one"
+        },
+        {
+          "input": "5",
+          "expected": "5",
+          "description": "normal case"
+        },
+        {
+          "input": "10",
+          "expected": "55",
+          "description": "medium input"
+        },
+        {
+          "input": "12",
+          "expected": "144",
+          "description": "maximum input"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "recursion"
+      ],
+      "variants": [
+        {
+          "name": "missing-base-case",
+          "code": "def fib_rec(n):\n    if n == 1:\n        return 1\n    return fib_rec(n - 1) + fib_rec(n - 2)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "missing-base-case"
+        },
+        {
+          "name": "wrong-base-value",
+          "code": "def fib_rec(n):\n    if n <= 0:\n        return 1\n    if n == 1:\n        return 1\n    return fib_rec(n - 1) + fib_rec(n - 2)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-base-value"
+        },
+        {
+          "name": "off-by-one-recursion",
+          "code": "def fib_rec(n):\n    if n <= 0:\n        return 0\n    if n == 1:\n        return 1\n    return fib_rec(n - 1) + fib_rec(n - 3)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-recurrence"
+        }
+      ]
+    },
+    {
+      "id": "edu-114-hanoi-moves",
+      "title": "Tower of Hanoi Move Count",
+      "problem_text": "Given a non-negative integer n (number of disks), return the minimum number of moves required to solve the Tower of Hanoi puzzle: 2^n - 1. n=0 returns 0.",
+      "entry_function": "hanoi_moves",
+      "reference_solution": "def hanoi_moves(n):\n    return (1 << n) - 1\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "0",
+          "description": "zero disks"
+        },
+        {
+          "input": "1",
+          "expected": "1",
+          "description": "single disk"
+        },
+        {
+          "input": "2",
+          "expected": "3",
+          "description": "two disks"
+        },
+        {
+          "input": "3",
+          "expected": "7",
+          "description": "three disks"
+        },
+        {
+          "input": "10",
+          "expected": "1023",
+          "description": "ten disks"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "recursion"
+      ],
+      "variants": [
+        {
+          "name": "returns-n",
+          "code": "def hanoi_moves(n):\n    return n\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "off-by-one-formula",
+          "code": "def hanoi_moves(n):\n    return (1 << n)\n",
+          "expected_failure_count": 5,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "linear-not-exponential",
+          "code": "def hanoi_moves(n):\n    return 2 * n - 1\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-growth"
+        }
+      ]
+    },
+    {
+      "id": "edu-115-matrix-transpose",
+      "title": "Matrix Transpose",
+      "problem_text": "Given a non-empty rectangular matrix as a list of lists of integers, return the transposed matrix (rows become columns).",
+      "entry_function": "transpose",
+      "reference_solution": "def transpose(m):\n    return [list(row) for row in zip(*m)]\n",
+      "test_cases": [
+        {
+          "input": "[[5]]",
+          "expected": "[[5]]",
+          "description": "single element"
+        },
+        {
+          "input": "[[1,2,3]]",
+          "expected": "[[1], [2], [3]]",
+          "description": "single row"
+        },
+        {
+          "input": "[[1],[2],[3]]",
+          "expected": "[[1, 2, 3]]",
+          "description": "single column"
+        },
+        {
+          "input": "[[1,2,3],[4,5,6]]",
+          "expected": "[[1, 4], [2, 5], [3, 6]]",
+          "description": "2 rows 3 columns"
+        },
+        {
+          "input": "[[1,4],[2,5],[3,6]]",
+          "expected": "[[1, 2, 3], [4, 5, 6]]",
+          "description": "3 rows 2 columns"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "matrix",
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def transpose(m):\n    return [list(row) for row in m]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "row-reverse-not-transpose",
+          "code": "def transpose(m):\n    return [list(reversed(row)) for row in m]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-operation"
+        },
+        {
+          "name": "transposes-then-reverses",
+          "code": "def transpose(m):\n    return [list(row)[::-1] for row in zip(*m)]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "extra-reverse"
+        }
+      ]
+    }
+  ],
+  "_post_patch_metrics": {
+    "hr_013_retry": {
+      "latency_s": 19.81,
+      "n_tests": 5
+    },
+    "discriminating_tests_added": 4,
+    "variants_replaced": 1
+  }
+}
