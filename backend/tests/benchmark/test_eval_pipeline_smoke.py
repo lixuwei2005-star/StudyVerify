@@ -10,6 +10,47 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from benchmark.eval_pipeline import evaluate_problem
+from benchmark.helpful_judge import quotes_hint
+
+
+# ---------- quotes_hint ----------
+
+
+def test_quotes_hint_exact_5_word_run() -> None:
+    assert quotes_hint(
+        proposed_change="I will check the relationship between the elements first.",
+        hint_text="Think about the relationship between the elements when summing.",
+    )
+
+
+def test_quotes_hint_below_threshold() -> None:
+    assert not quotes_hint(
+        proposed_change="Use a hash map to store seen numbers.",
+        hint_text="What relationship must exist between two numbers?",
+    )
+
+
+def test_quotes_hint_punctuation_insensitive() -> None:
+    # Punctuation between words shouldn't break the match.
+    assert quotes_hint(
+        proposed_change="...the relationship, between, the elements...",
+        hint_text="Think about the relationship between the elements when summing.",
+    )
+
+
+def test_quotes_hint_too_short_hint() -> None:
+    # Hint with fewer than 5 words can never be quoted at threshold 5.
+    assert not quotes_hint(
+        proposed_change="anything goes here",
+        hint_text="Try harder",
+    )
+
+
+def test_quotes_hint_case_insensitive() -> None:
+    assert quotes_hint(
+        proposed_change="THE RELATIONSHIP BETWEEN THE ELEMENTS",
+        hint_text="the relationship between the elements matters",
+    )
 
 
 def _problem() -> dict:

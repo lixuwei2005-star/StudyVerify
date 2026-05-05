@@ -29,6 +29,11 @@ _DEFAULT_DATASETS = [
     "benchmark/problems_part_3.json",
 ]
 
+_DEFAULT_CONCURRENCY = 3  # bounded parallelism over per-problem evaluations.
+# DeepSeek caps at 60 RPS; one problem's peak in-flight is ~2 (judge calls
+# pipelined with hint calls), so 3 concurrent problems stays comfortably
+# under the limit.
+
 
 def _git_sha() -> str:
     try:
@@ -79,18 +84,34 @@ async def _amain(args: argparse.Namespace) -> int:
     if args.max_problems:
         all_problems = all_problems[: args.max_problems]
 
-    print(f"Evaluating {len(all_problems)} problems against {args.api_base}...")
+    print(
+        f"Evaluating {len(all_problems)} problems against {args.api_base} "
+        f"(concurrency={args.concurrency})...",
+        flush=True,
+    )
     api = StudyVerifyAPI(base_url=args.api_base)
     llm = get_llm_gateway()
 
-    results: list[dict] = []
-    try:
-        for i, problem in enumerate(all_problems, start=1):
-            print(f"  [{i:3d}/{len(all_problems)}] {problem['id']}", flush=True)
+    n = len(all_problems)
+    sem = asyncio.Semaphore(args.concurrency)
+    completed = 0
+
+    async def _run_one(idx: int, problem: dict) -> dict:
+        nonlocal completed
+        async with sem:
+            print(f"  [{idx:3d}/{n}] {problem['id']} ...started", flush=True)
             r = await evaluate_problem(problem, api, llm)
-            results.append(r)
-            if i % 10 == 0:
-                print(f"    ...progress checkpoint at {i}/{len(all_problems)}", flush=True)
+            completed += 1
+            print(f"  [{idx:3d}/{n}] {problem['id']} ...done ({completed}/{n} complete)", flush=True)
+            if completed % 10 == 0:
+                print(f"    ...progress checkpoint at {completed}/{n}", flush=True)
+            return r
+
+    try:
+        results = await asyncio.gather(
+            *(_run_one(i, p) for i, p in enumerate(all_problems, start=1))
+        )
+        results = list(results)
     finally:
         await api.close()
 
@@ -122,6 +143,12 @@ def main() -> None:
     parser.add_argument("--max-problems", type=int, default=None)
     parser.add_argument("--output", default=None)
     parser.add_argument("--api-base", default="https://api.005917.xyz")
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=_DEFAULT_CONCURRENCY,
+        help="Max concurrent per-problem evaluations (default 3). DeepSeek caps at 60 RPS.",
+    )
     args = parser.parse_args()
     sys.exit(asyncio.run(_amain(args)))
 
