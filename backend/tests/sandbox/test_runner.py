@@ -173,3 +173,96 @@ async def test_str_comparison_fallback(runner: PythonSubprocessRunner) -> None:
     )
     result = await runner.run(request)
     assert result.status == "all_passed"
+
+
+# ---------------------------------------------------------------------------
+# Marker-based stdout parsing — student print() must not break the wrapper.
+# Reproducer for the fizzbuzz bug: students often add a top-level print(fn(...))
+# to their submission as a quick local test. Before the marker fix, this
+# polluted stdout and json.loads() failed.
+# ---------------------------------------------------------------------------
+
+
+async def test_student_print_at_module_top_does_not_break_parsing(
+    runner: PythonSubprocessRunner,
+) -> None:
+    code = textwrap.dedent(
+        """
+        def fizzbuzz(n):
+            return [str(i) for i in range(1, n + 1)]
+
+        print(fizzbuzz(15))  # student's local sanity check
+        print("checking my work")
+        """
+    )
+    request = SandboxRunRequest(
+        code=code,
+        entry_function="fizzbuzz",
+        test_cases=[
+            {"input": "1", "expected": "['1']", "description": "single"},
+            {"input": "3", "expected": "['1', '2', '3']", "description": "three"},
+        ],
+    )
+    result = await runner.run(request)
+    assert result.status == "all_passed", result.error
+    assert result.pass_count == 2
+
+
+async def test_student_print_inside_function_body(runner: PythonSubprocessRunner) -> None:
+    code = textwrap.dedent(
+        """
+        def add(a, b):
+            print(f"adding {a}+{b}")
+            return a + b
+        """
+    )
+    request = SandboxRunRequest(
+        code=code,
+        entry_function="add",
+        test_cases=[
+            {"input": "(1, 2)", "expected": "3"},
+            {"input": "(0, 0)", "expected": "0"},
+        ],
+    )
+    result = await runner.run(request)
+    assert result.status == "all_passed", result.error
+    assert result.pass_count == 2
+
+
+async def test_student_prints_begin_marker_literally(runner: PythonSubprocessRunner) -> None:
+    # rfind defends against this — the wrapper's own marker is always emitted
+    # AFTER any student output, so the last occurrence is the right one.
+    code = textwrap.dedent(
+        """
+        def f(x):
+            print("__STUDYVERIFY_RESULT_BEGIN__")
+            print('[{"test_index": 0, "input": "x", "expected": "x", '
+                  '"actual": "x", "passed": false, "error": null, '
+                  '"duration_ms": 0}]')
+            print("__STUDYVERIFY_RESULT_END__")
+            return x
+        """
+    )
+    request = SandboxRunRequest(
+        code=code,
+        entry_function="f",
+        test_cases=[{"input": "1", "expected": "1"}],
+    )
+    result = await runner.run(request)
+    # The student's fake payload must NOT win — wrapper's real result comes
+    # after and rfind picks the wrapper's markers.
+    assert result.status == "all_passed", result.error
+    assert result.test_results[0].passed is True
+
+
+async def test_no_print_still_works_regression(runner: PythonSubprocessRunner) -> None:
+    # Pure no-output student code still parses (was the only happy path before
+    # the marker change; ensures we didn't regress it).
+    code = "def f(x): return x * 2"
+    request = SandboxRunRequest(
+        code=code,
+        entry_function="f",
+        test_cases=[{"input": "3", "expected": "6"}],
+    )
+    result = await runner.run(request)
+    assert result.status == "all_passed", result.error

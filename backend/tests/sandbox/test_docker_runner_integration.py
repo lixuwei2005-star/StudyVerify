@@ -269,9 +269,14 @@ async def test_fork_bomb_caught_by_pids(runner: DockerCodeRunner) -> None:
 
 
 # ---------------------------------------------------------------------------
-# 11. Stdout flood: parser fails gracefully, error text is bounded.
+# 11. Stdout flood: marker-based parser tolerates large student output.
 # ---------------------------------------------------------------------------
-async def test_stdout_flood_truncated(runner: DockerCodeRunner) -> None:
+async def test_stdout_flood_tolerated(runner: DockerCodeRunner) -> None:
+    # Pre-marker behaviour: 5MB of student "a..." prefix made json.loads()
+    # fail and the run returned status=error. The marker fix (BEGIN/END
+    # bracketing the wrapper's JSON, parser uses rfind) now extracts the
+    # JSON correctly regardless of how noisy stdout is. Confirm the run
+    # succeeds and the test result flows through unchanged.
     code = "def flood(x):\n    print('a' * (5 * 1024 * 1024))\n    return 'ok'\n"
     request = SandboxRunRequest(
         code=code,
@@ -280,13 +285,9 @@ async def test_stdout_flood_truncated(runner: DockerCodeRunner) -> None:
         timeout_seconds=15,
     )
     result = await runner.run(request)
-    # 5MB of "a..." precedes the wrapper's JSON line; json.loads on the full
-    # stdout fails. The base class returns status=error with a truncated snippet.
-    # Cap location: app/sandbox/base_runner.py _STDOUT_TRUNC=500.
-    assert result.status == "error"
-    assert "failed to parse wrapper stdout as JSON" in (result.error or "")
-    # Error must be bounded: the 5MB stdout cannot have leaked into the result.
-    assert len(result.error or "") < 2000
+    assert result.status == "all_passed", result.error
+    assert result.pass_count == 1
+    assert result.test_results[0].actual == "'ok'"
 
 
 # ---------------------------------------------------------------------------

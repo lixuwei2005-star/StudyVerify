@@ -36,8 +36,13 @@ from app.sandbox.schemas import SandboxRunRequest
 
 
 def _wrapper_success_stdout() -> bytes:
-    """Stdout the wrapper would emit for one passing test case."""
-    return json.dumps(
+    """Stdout the wrapper would emit for one passing test case.
+
+    Wraps the JSON in the BEGIN/END markers that the parser now requires;
+    a hand-crafted "just JSON" stdout would no longer parse since the
+    marker-based fix shipped to base_runner.
+    """
+    payload = json.dumps(
         [
             {
                 "test_index": 0,
@@ -49,13 +54,16 @@ def _wrapper_success_stdout() -> bytes:
                 "duration_ms": 1,
             }
         ]
+    )
+    return (
+        f"__STUDYVERIFY_RESULT_BEGIN__\n{payload}\n__STUDYVERIFY_RESULT_END__\n"
     ).encode()
 
 
 def _make_client(
     *,
     exit_code: int = 0,
-    stdout: bytes = b"[]",
+    stdout: bytes = b"__STUDYVERIFY_RESULT_BEGIN__\n[]\n__STUDYVERIFY_RESULT_END__\n",
     stderr: bytes = b"",
     wait_exception: Exception | None = None,
     create_exception: Exception | None = None,

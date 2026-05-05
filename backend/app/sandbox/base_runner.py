@@ -33,6 +33,13 @@ _STDERR_TRUNC = 500
 _STDOUT_TRUNC = 500
 _FATAL_EXIT_CODE = 2
 
+# Markers bracket the wrapper's JSON output so student code's own print() calls
+# don't corrupt parsing. Strings are unlikely to appear in real Python source;
+# rfind() is used at parse time so a student who literally prints the BEGIN
+# marker still loses to the wrapper's marker (always emitted last).
+_RESULT_BEGIN_MARKER = "__STUDYVERIFY_RESULT_BEGIN__"
+_RESULT_END_MARKER = "__STUDYVERIFY_RESULT_END__"
+
 WRAPPER_SCRIPT = r"""
 import ast
 import json
@@ -96,7 +103,9 @@ def _main():
                 "duration_ms": int((time.perf_counter() - start) * 1000),
             })
 
+    print("__STUDYVERIFY_RESULT_BEGIN__")
     print(json.dumps(results))
+    print("__STUDYVERIFY_RESULT_END__")
 
 _main()
 """
@@ -197,10 +206,25 @@ class TestRunner(ABC):
                 ),
             )
 
-        try:
-            raw_results = json.loads(stdout_str)
-        except json.JSONDecodeError:
+        # rfind: if student code prints the marker literally, the wrapper's
+        # markers always come AFTER any student output, so rfind picks the
+        # right pair. find()'s left-bias would mis-route to the student's.
+        begin_idx = stdout_str.rfind(_RESULT_BEGIN_MARKER)
+        end_idx = stdout_str.rfind(_RESULT_END_MARKER)
+        if begin_idx == -1 or end_idx == -1 or end_idx < begin_idx:
             stdout_snippet = stdout_str[:_STDOUT_TRUNC]
+            return SandboxRunResult(
+                status="error",
+                test_results=[],
+                pass_count=0,
+                fail_count=0,
+                error=f"wrapper result markers missing in stdout: {stdout_snippet!r}",
+            )
+        json_str = stdout_str[begin_idx + len(_RESULT_BEGIN_MARKER) : end_idx].strip()
+        try:
+            raw_results = json.loads(json_str)
+        except json.JSONDecodeError:
+            stdout_snippet = json_str[:_STDOUT_TRUNC]
             return SandboxRunResult(
                 status="error",
                 test_results=[],
