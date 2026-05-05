@@ -19,7 +19,11 @@ from benchmark.schema import BenchmarkDataset, BenchmarkProblem, Variant
 
 _BENCHMARK_DIR = Path(__file__).resolve().parents[2] / "benchmark"
 DATASET_PATH = _BENCHMARK_DIR / "problems_part_1.json"
-DATASET_PATHS = [_BENCHMARK_DIR / "problems_part_1.json", _BENCHMARK_DIR / "problems_part_2.json"]
+DATASET_PATHS = [
+    _BENCHMARK_DIR / "problems_part_1.json",
+    _BENCHMARK_DIR / "problems_part_2.json",
+    _BENCHMARK_DIR / "problems_part_3.json",
+]
 
 
 def _valid_problem_dict() -> dict:
@@ -54,13 +58,29 @@ def test_problem_validates() -> None:
     assert len(p.variants) == 1
 
 
+_EXPECTED_COUNTS = {
+    "problems_part_1.json": 30,
+    "problems_part_2.json": 30,
+    "problems_part_3.json": 40,
+}
+
+
 @pytest.mark.parametrize("path", DATASET_PATHS, ids=lambda p: p.name)
 def test_dataset_file_parses(path: Path) -> None:
     raw = json.loads(path.read_text())
     dataset = BenchmarkDataset.model_validate(raw)
-    assert len(dataset.problems) == 30
+    assert len(dataset.problems) == _EXPECTED_COUNTS[path.name]
     ids = [p.id for p in dataset.problems]
     assert len(ids) == len(set(ids)), "duplicate problem IDs"
+
+
+def test_total_problem_count_is_100() -> None:
+    """Cumulative across all phases — the headline number for the dataset."""
+    total = 0
+    for path in DATASET_PATHS:
+        raw = json.loads(path.read_text())
+        total += len(raw["problems"])
+    assert total == 100, f"benchmark should be 100 problems, found {total}"
 
 
 def test_combined_datasets_have_unique_ids() -> None:

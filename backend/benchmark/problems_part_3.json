@@ -1,0 +1,2410 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-05-05",
+  "_dogfood_metrics": {
+    "total_problems": 40,
+    "dogfood_problems": 30,
+    "handcrafted_problems": 10,
+    "successful_generations": 40,
+    "api_failures": [],
+    "mean_latency_s": 9.32,
+    "max_latency_s": 54.3,
+    "problems_with_corrected_test_cases": 6,
+    "test_cases_corrected": 14,
+    "test_cases_dropped_unparseable": 1,
+    "variants_with_zero_failures": [
+      "p3-a-017-reverse-vowels::case-sensitive-vowels",
+      "p3-b-001-sigmoid::no-stability-overflows",
+      "p3-b-006-knn-majority-vote::wrong-distance",
+      "p3-c-007-balanced-parens-simple::count-only"
+    ],
+    "reference_failures_on_handcrafted": [
+      {
+        "id": "p3-b-008-logistic-regression-step",
+        "input": "([0, 0], 1, [1, 1], 0.5, 0.1)",
+        "ours": "([1.0, 1.0], 0.4378)",
+        "actual": "([1.0, 1.0], 0.537754)"
+      },
+      {
+        "id": "p3-b-008-logistic-regression-step",
+        "input": "([1, 1], 1, [0, 0], 0, 0.0)",
+        "ours": "([0, 0], 0)",
+        "actual": "([0.0, 0.0], 0.0)"
+      }
+    ]
+  },
+  "problems": [
+    {
+      "id": "p3-a-001-leap-year",
+      "title": "Is Leap Year",
+      "problem_text": "Given a year y as a positive integer, return True iff y is a Gregorian leap year (divisible by 4, except century years which must also be divisible by 400).",
+      "entry_function": "is_leap_year",
+      "reference_solution": "def is_leap_year(y):\n    return y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)\n",
+      "test_cases": [
+        {
+          "input": "2024",
+          "expected": "True",
+          "description": "typical leap year"
+        },
+        {
+          "input": "2023",
+          "expected": "False",
+          "description": "typical non-leap year"
+        },
+        {
+          "input": "1900",
+          "expected": "False",
+          "description": "non-leap century year"
+        },
+        {
+          "input": "2000",
+          "expected": "True",
+          "description": "leap century year"
+        },
+        {
+          "input": "1",
+          "expected": "False",
+          "description": "early year"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "logic"
+      ],
+      "variants": [
+        {
+          "name": "div-by-4-only",
+          "code": "def is_leap_year(y):\n    return y % 4 == 0\n",
+          "expected_failure_count": 1,
+          "error_pattern": "incomplete-rule"
+        },
+        {
+          "name": "returns-true",
+          "code": "def is_leap_year(y):\n    return True\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "missed-400-clause",
+          "code": "def is_leap_year(y):\n    return y % 4 == 0 and y % 100 != 0\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-edge-case"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-002-format-phone",
+      "title": "Format Phone Number",
+      "problem_text": "Given a 10-character string s of digits, return it formatted as a phone number: '(XXX) XXX-XXXX'. Input is guaranteed to be exactly 10 digits.",
+      "entry_function": "format_phone",
+      "reference_solution": "def format_phone(s):\n    return f'({s[:3]}) {s[3:6]}-{s[6:]}'\n",
+      "test_cases": [
+        {
+          "input": "'0000000000'",
+          "expected": "'(000) 000-0000'",
+          "description": "all zeros"
+        },
+        {
+          "input": "'1111111111'",
+          "expected": "'(111) 111-1111'",
+          "description": "all ones"
+        },
+        {
+          "input": "'1234567890'",
+          "expected": "'(123) 456-7890'",
+          "description": "sequential digits"
+        },
+        {
+          "input": "'9876543210'",
+          "expected": "'(987) 654-3210'",
+          "description": "descending digits"
+        },
+        {
+          "input": "'5551234567'",
+          "expected": "'(555) 123-4567'",
+          "description": "common pattern"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def format_phone(s):\n    return s\n",
+          "expected_failure_count": 5,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "wrong-spaces",
+          "code": "def format_phone(s):\n    return f'({s[:3]}){s[3:6]}-{s[6:]}'\n",
+          "expected_failure_count": 5,
+          "error_pattern": "missing-separator"
+        },
+        {
+          "name": "off-by-one-slices",
+          "code": "def format_phone(s):\n    return f'({s[:2]}) {s[2:6]}-{s[6:]}'\n",
+          "expected_failure_count": 5,
+          "error_pattern": "off-by-one"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-003-count-substring",
+      "title": "Count Non-Overlapping Substring",
+      "problem_text": "Given a string s and a non-empty substring sub, return the number of non-overlapping occurrences of sub in s.",
+      "entry_function": "count_substring",
+      "reference_solution": "def count_substring(s, sub):\n    return s.count(sub)\n",
+      "test_cases": [
+        {
+          "input": "('ababab', 'ab')",
+          "expected": "3",
+          "description": "multiple non-overlapping"
+        },
+        {
+          "input": "('hello', 'xyz')",
+          "expected": "0",
+          "description": "no occurrence"
+        },
+        {
+          "input": "('aaaa', 'aa')",
+          "expected": "2",
+          "description": "overlapping but not counted"
+        },
+        {
+          "input": "('', 'a')",
+          "expected": "0",
+          "description": "empty string"
+        },
+        {
+          "input": "('a', 'ab')",
+          "expected": "0",
+          "description": "sub longer than s"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "returns-zero",
+          "code": "def count_substring(s, sub):\n    return 0\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "counts-chars",
+          "code": "def count_substring(s, sub):\n    return len([c for c in s if c in sub])\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-granularity"
+        },
+        {
+          "name": "returns-len",
+          "code": "def count_substring(s, sub):\n    return len(s)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-formula"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-004-spiral-matrix",
+      "title": "Spiral Matrix Traversal",
+      "problem_text": "Given an m x n matrix as a list of lists of integers, return all elements visited in spiral order (right across top, down right side, left across bottom, up left side, repeating inward).",
+      "entry_function": "spiral_order",
+      "reference_solution": "def spiral_order(matrix):\n    if not matrix or not matrix[0]:\n        return []\n    out = []\n    top, bottom = 0, len(matrix) - 1\n    left, right = 0, len(matrix[0]) - 1\n    while top <= bottom and left <= right:\n        for j in range(left, right + 1):\n            out.append(matrix[top][j])\n        top += 1\n        for i in range(top, bottom + 1):\n            out.append(matrix[i][right])\n        right -= 1\n        if top <= bottom:\n            for j in range(right, left - 1, -1):\n                out.append(matrix[bottom][j])\n            bottom -= 1\n        if left <= right:\n            for i in range(bottom, top - 1, -1):\n                out.append(matrix[i][left])\n            left += 1\n    return out\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty matrix"
+        },
+        {
+          "input": "[[5]]",
+          "expected": "[5]",
+          "description": "single element"
+        },
+        {
+          "input": "[[1,2,3]]",
+          "expected": "[1, 2, 3]",
+          "description": "single row"
+        },
+        {
+          "input": "[[1],[2],[3]]",
+          "expected": "[1, 2, 3]",
+          "description": "single column"
+        },
+        {
+          "input": "[[1,2,3],[4,5,6],[7,8,9]]",
+          "expected": "[1, 2, 3, 6, 9, 8, 7, 4, 5]",
+          "description": "3x3 matrix"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "matrix",
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "row-major",
+          "code": "def spiral_order(matrix):\n    out = []\n    for row in matrix:\n        out.extend(row)\n    return out\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-traversal"
+        },
+        {
+          "name": "returns-empty",
+          "code": "def spiral_order(matrix):\n    return []\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "first-row-only",
+          "code": "def spiral_order(matrix):\n    return list(matrix[0]) if matrix else []\n",
+          "expected_failure_count": 2,
+          "error_pattern": "incomplete-traversal"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-005-min-coin-change",
+      "title": "Minimum Coin Change",
+      "problem_text": "Given a list of positive integer coin denominations and a non-negative target amount, return the minimum number of coins needed to make the amount, or -1 if impossible. You may use each coin denomination unlimited times.",
+      "entry_function": "min_coins",
+      "reference_solution": "def min_coins(coins, amount):\n    INF = amount + 1\n    dp = [0] + [INF] * amount\n    for a in range(1, amount + 1):\n        for c in coins:\n            if c <= a and dp[a - c] + 1 < dp[a]:\n                dp[a] = dp[a - c] + 1\n    return dp[amount] if dp[amount] != INF else -1\n",
+      "test_cases": [
+        {
+          "input": "([1, 2, 5], 11)",
+          "expected": "3",
+          "description": "normal case"
+        },
+        {
+          "input": "([1, 2, 5], 0)",
+          "expected": "0",
+          "description": "zero amount"
+        },
+        {
+          "input": "([2], 3)",
+          "expected": "-1",
+          "description": "impossible amount"
+        },
+        {
+          "input": "([1], 100)",
+          "expected": "100",
+          "description": "single coin"
+        },
+        {
+          "input": "([1, 3, 4], 6)",
+          "expected": "2",
+          "description": "multiple coins optimal"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "dynamic-programming"
+      ],
+      "variants": [
+        {
+          "name": "returns-amount",
+          "code": "def min_coins(coins, amount):\n    return amount\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "greedy-largest-first",
+          "code": "def min_coins(coins, amount):\n    coins = sorted(coins, reverse=True)\n    n = 0\n    for c in coins:\n        n += amount // c\n        amount = amount % c\n    return n if amount == 0 else -1\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-algorithm"
+        },
+        {
+          "name": "no-impossible-handling",
+          "code": "def min_coins(coins, amount):\n    INF = amount + 1\n    dp = [0] + [INF] * amount\n    for a in range(1, amount + 1):\n        for c in coins:\n            if c <= a and dp[a - c] + 1 < dp[a]:\n                dp[a] = dp[a - c] + 1\n    return dp[amount]\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-edge-case"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-006-max-subarray-sum",
+      "title": "Max Subarray Sum (Kadane)",
+      "problem_text": "Given a non-empty list of integers nums (may contain negatives), return the largest sum obtainable from any contiguous non-empty subarray.",
+      "entry_function": "max_subarray_sum",
+      "reference_solution": "def max_subarray_sum(nums):\n    best = cur = nums[0]\n    for n in nums[1:]:\n        cur = max(n, cur + n)\n        if cur > best:\n            best = cur\n    return best\n",
+      "test_cases": [
+        {
+          "input": "[5]",
+          "expected": "5",
+          "description": "single positive element"
+        },
+        {
+          "input": "[-1, -2, -3]",
+          "expected": "-1",
+          "description": "all negative elements"
+        },
+        {
+          "input": "[1, -2, 3, 4, -1, 2]",
+          "expected": "8",
+          "description": "mix of positive and negative"
+        },
+        {
+          "input": "[1, 2, 3, 4]",
+          "expected": "10",
+          "description": "all positive elements"
+        },
+        {
+          "input": "[0, -1, 2, -3, 5, -2, 3]",
+          "expected": "6",
+          "description": "includes zeros and negatives"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "dynamic-programming"
+      ],
+      "variants": [
+        {
+          "name": "returns-sum",
+          "code": "def max_subarray_sum(nums):\n    return sum(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "returns-max-element",
+          "code": "def max_subarray_sum(nums):\n    return max(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-aggregation"
+        },
+        {
+          "name": "no-reset-on-negative",
+          "code": "def max_subarray_sum(nums):\n    best = cur = nums[0]\n    for n in nums[1:]:\n        cur = cur + n\n        if cur > best:\n            best = cur\n    return best\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-reset"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-007-anagram-groups",
+      "title": "Group Anagrams",
+      "problem_text": "Given a list of lowercase strings words, return a list of groups (each group is a sorted list of mutually-anagram words). Groups themselves are sorted lexicographically by their first element.",
+      "entry_function": "group_anagrams",
+      "reference_solution": "def group_anagrams(words):\n    groups = {}\n    for w in words:\n        key = ''.join(sorted(w))\n        groups.setdefault(key, []).append(w)\n    out = [sorted(g) for g in groups.values()]\n    out.sort(key=lambda g: g[0])\n    return out\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "['a']",
+          "expected": "[['a']]",
+          "description": "single element"
+        },
+        {
+          "input": "['abc', 'def', 'ghi']",
+          "expected": "[['abc'], ['def'], ['ghi']]",
+          "description": "no anagrams"
+        },
+        {
+          "input": "['eat', 'tea', 'tan', 'ate', 'nat', 'bat']",
+          "expected": "[['ate', 'eat', 'tea'], ['bat'], ['nat', 'tan']]",
+          "description": "multiple anagram groups"
+        },
+        {
+          "input": "['abc', 'cba', 'bac', 'xyz', 'zyx']",
+          "expected": "[['abc', 'bac', 'cba'], ['xyz', 'zyx']]",
+          "description": "groups sorted by first element"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "string",
+        "hash-table",
+        "sorting"
+      ],
+      "variants": [
+        {
+          "name": "returns-input-as-one-group",
+          "code": "def group_anagrams(words):\n    return [list(words)]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "no-sort-within-group",
+          "code": "def group_anagrams(words):\n    groups = {}\n    for w in words:\n        key = ''.join(sorted(w))\n        groups.setdefault(key, []).append(w)\n    out = list(groups.values())\n    out.sort(key=lambda g: g[0])\n    return out\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-order"
+        },
+        {
+          "name": "single-word-groups",
+          "code": "def group_anagrams(words):\n    return sorted([[w] for w in words])\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-grouping"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-008-word-pattern",
+      "title": "Word Pattern Match",
+      "problem_text": "Given a pattern string of lowercase letters (e.g. 'abba') and a sentence of space-separated words (e.g. 'dog cat cat dog'), return True iff there is a one-to-one mapping from each pattern letter to each word that produces the sentence.",
+      "entry_function": "word_pattern",
+      "reference_solution": "def word_pattern(pattern, sentence):\n    words = sentence.split(' ')\n    if len(pattern) != len(words):\n        return False\n    p2w, w2p = {}, {}\n    for c, w in zip(pattern, words):\n        if c in p2w:\n            if p2w[c] != w: return False\n        elif w in w2p:\n            return False\n        else:\n            p2w[c] = w\n            w2p[w] = c\n    return True\n",
+      "test_cases": [
+        {
+          "input": "(\"\", \"\")",
+          "expected": "False",
+          "description": "empty pattern and empty sentence"
+        },
+        {
+          "input": "(\"a\", \"dog\")",
+          "expected": "True",
+          "description": "single character and single word"
+        },
+        {
+          "input": "(\"ab\", \"dog cat bird\")",
+          "expected": "False",
+          "description": "length mismatch"
+        },
+        {
+          "input": "(\"ab\", \"dog dog\")",
+          "expected": "False",
+          "description": "non-bijective mapping"
+        },
+        {
+          "input": "(\"abba\", \"dog cat cat dog\")",
+          "expected": "True",
+          "description": "valid mapping"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "length-only",
+          "code": "def word_pattern(pattern, sentence):\n    return len(pattern) == len(sentence.split(' '))\n",
+          "expected_failure_count": 1,
+          "error_pattern": "incomplete-check"
+        },
+        {
+          "name": "one-direction-map",
+          "code": "def word_pattern(pattern, sentence):\n    words = sentence.split(' ')\n    if len(pattern) != len(words): return False\n    p2w = {}\n    for c, w in zip(pattern, words):\n        if c in p2w:\n            if p2w[c] != w: return False\n        else:\n            p2w[c] = w\n    return True\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-bijection"
+        },
+        {
+          "name": "returns-true",
+          "code": "def word_pattern(pattern, sentence):\n    return True\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-009-longest-common-prefix",
+      "title": "Longest Common Prefix",
+      "problem_text": "Given a list of strings, return the longest string that is a prefix of every word. Return an empty string if there is no common prefix or the list is empty.",
+      "entry_function": "longest_common_prefix",
+      "reference_solution": "def longest_common_prefix(strs):\n    if not strs: return ''\n    pre = strs[0]\n    for s in strs[1:]:\n        while not s.startswith(pre):\n            pre = pre[:-1]\n            if not pre: return ''\n    return pre\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "''",
+          "description": "empty list"
+        },
+        {
+          "input": "['hello']",
+          "expected": "'hello'",
+          "description": "single element"
+        },
+        {
+          "input": "['flower', 'flow', 'flight']",
+          "expected": "'fl'",
+          "description": "common prefix"
+        },
+        {
+          "input": "['dog', 'racecar', 'car']",
+          "expected": "''",
+          "description": "no common prefix"
+        },
+        {
+          "input": "['', 'b']",
+          "expected": "''",
+          "description": "empty string in list"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "returns-first",
+          "code": "def longest_common_prefix(strs):\n    return strs[0] if strs else ''\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "returns-empty",
+          "code": "def longest_common_prefix(strs):\n    return ''\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "shortest-not-prefix",
+          "code": "def longest_common_prefix(strs):\n    return min(strs, key=len) if strs else ''\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-aggregation"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-010-detect-capital",
+      "title": "Detect Capital Use",
+      "problem_text": "Given a non-empty word, return True iff it uses capitals correctly: all uppercase, all lowercase, or only the first letter capitalized.",
+      "entry_function": "detect_capital",
+      "reference_solution": "def detect_capital(word):\n    return word.isupper() or word.islower() or word.istitle()\n",
+      "test_cases": [
+        {
+          "input": "\"USA\"",
+          "expected": "True",
+          "description": "all uppercase"
+        },
+        {
+          "input": "\"hello\"",
+          "expected": "True",
+          "description": "all lowercase"
+        },
+        {
+          "input": "\"Hello\"",
+          "expected": "True",
+          "description": "first letter capitalized"
+        },
+        {
+          "input": "\"HeLlo\"",
+          "expected": "False",
+          "description": "mixed case"
+        },
+        {
+          "input": "\"A\"",
+          "expected": "True",
+          "description": "single uppercase"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "returns-true",
+          "code": "def detect_capital(word):\n    return True\n",
+          "expected_failure_count": 1,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "missed-title-case",
+          "code": "def detect_capital(word):\n    return word.isupper() or word.islower()\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-rule"
+        },
+        {
+          "name": "all-or-nothing",
+          "code": "def detect_capital(word):\n    return word.isupper() or word.islower() or (word[0].isupper() and word[1:].isupper())\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-rule"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-011-summary-ranges",
+      "title": "Summary Ranges",
+      "problem_text": "Given a sorted list of distinct integers nums, return a list of strings describing each maximal contiguous range. Single-element ranges are 'n'; multi-element ranges are 'lo->hi'. Example: [0,1,2,4,5,7] returns ['0->2', '4->5', '7'].",
+      "entry_function": "summary_ranges",
+      "reference_solution": "def summary_ranges(nums):\n    if not nums: return []\n    out = []\n    start = nums[0]\n    prev = nums[0]\n    for n in nums[1:]:\n        if n == prev + 1:\n            prev = n\n        else:\n            out.append(str(start) if start == prev else f'{start}->{prev}')\n            start = n\n            prev = n\n    out.append(str(start) if start == prev else f'{start}->{prev}')\n    return out\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "[5]",
+          "expected": "['5']",
+          "description": "single element"
+        },
+        {
+          "input": "[1,2,3,4,5]",
+          "expected": "['1->5']",
+          "description": "all contiguous"
+        },
+        {
+          "input": "[1,3,5,7]",
+          "expected": "['1', '3', '5', '7']",
+          "description": "all isolated"
+        },
+        {
+          "input": "[-3,-2,-1,0,2,4,5,6]",
+          "expected": "['-3->0', '2', '4->6']",
+          "description": "mix of ranges and singles with negatives"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "single-elem-each",
+          "code": "def summary_ranges(nums):\n    return [str(n) for n in nums]\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-range-detection"
+        },
+        {
+          "name": "first-and-last-only",
+          "code": "def summary_ranges(nums):\n    if not nums: return []\n    return [f'{nums[0]}->{nums[-1]}']\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-grouping"
+        },
+        {
+          "name": "returns-empty",
+          "code": "def summary_ranges(nums):\n    return []\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-012-distribute-candies",
+      "title": "Distribute Candies",
+      "problem_text": "Given a list of integers candies (each integer is a candy type), return the maximum number of distinct types one sister can get if she takes exactly len(candies)/2 candies. The list length is even and >= 2.",
+      "entry_function": "distribute_candies",
+      "reference_solution": "def distribute_candies(candies):\n    return min(len(set(candies)), len(candies) // 2)\n",
+      "test_cases": [
+        {
+          "input": "[1,2,3,4]",
+          "expected": "2",
+          "description": "normal case"
+        },
+        {
+          "input": "[1,1,1,1]",
+          "expected": "1",
+          "description": "all same type"
+        },
+        {
+          "input": "[1,1,2,2,2,2]",
+          "expected": "2",
+          "description": "distinct less than half"
+        },
+        {
+          "input": "[1,2]",
+          "expected": "1",
+          "description": "minimum size"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "set"
+      ],
+      "variants": [
+        {
+          "name": "returns-distinct-count",
+          "code": "def distribute_candies(candies):\n    return len(set(candies))\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-cap"
+        },
+        {
+          "name": "returns-half",
+          "code": "def distribute_candies(candies):\n    return len(candies) // 2\n",
+          "expected_failure_count": 2,
+          "error_pattern": "ignores-distinct"
+        },
+        {
+          "name": "returns-len",
+          "code": "def distribute_candies(candies):\n    return len(candies)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-013-excel-column-to-index",
+      "title": "Excel Column Title to Index (0-based)",
+      "problem_text": "Given an Excel column title s (uppercase letters only), return its 0-based index. 'A'=0, 'B'=1, 'Z'=25, 'AA'=26, 'AB'=27.",
+      "entry_function": "excel_to_zero_index",
+      "reference_solution": "def excel_to_zero_index(s):\n    n = 0\n    for c in s:\n        n = n * 26 + (ord(c) - ord('A') + 1)\n    return n - 1\n",
+      "test_cases": [
+        {
+          "input": "'A'",
+          "expected": "0",
+          "description": "single letter A"
+        },
+        {
+          "input": "'Z'",
+          "expected": "25",
+          "description": "single letter Z"
+        },
+        {
+          "input": "'AA'",
+          "expected": "26",
+          "description": "two letters AA"
+        },
+        {
+          "input": "'AB'",
+          "expected": "27",
+          "description": "two letters AB"
+        },
+        {
+          "input": "'ZZ'",
+          "expected": "701",
+          "description": "two letters ZZ"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "off-by-one",
+          "code": "def excel_to_zero_index(s):\n    n = 0\n    for c in s:\n        n = n * 26 + (ord(c) - ord('A') + 1)\n    return n\n",
+          "expected_failure_count": 5,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "no-base-26",
+          "code": "def excel_to_zero_index(s):\n    return sum(ord(c) - ord('A') for c in s)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-base-26"
+        },
+        {
+          "name": "returns-zero",
+          "code": "def excel_to_zero_index(s):\n    return 0\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-014-integer-break",
+      "title": "Integer Break",
+      "problem_text": "Given an integer n (2 <= n <= 12), break it into a sum of at least two positive integers and return the maximum product of those integers.",
+      "entry_function": "integer_break",
+      "reference_solution": "def integer_break(n):\n    dp = [0] * (n + 1)\n    dp[1] = 1\n    for i in range(2, n + 1):\n        best = 0\n        for j in range(1, i):\n            best = max(best, j * (i - j), j * dp[i - j])\n        dp[i] = best\n    return dp[n]\n",
+      "test_cases": [
+        {
+          "input": "2",
+          "expected": "1",
+          "description": "minimum n"
+        },
+        {
+          "input": "4",
+          "expected": "4",
+          "description": "small n"
+        },
+        {
+          "input": "7",
+          "expected": "12",
+          "description": "medium n"
+        },
+        {
+          "input": "10",
+          "expected": "36",
+          "description": "larger n"
+        },
+        {
+          "input": "12",
+          "expected": "81",
+          "description": "maximum n"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "math",
+        "dynamic-programming"
+      ],
+      "variants": [
+        {
+          "name": "returns-n",
+          "code": "def integer_break(n):\n    return n\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "even-split-only",
+          "code": "def integer_break(n):\n    return (n // 2) * (n - n // 2)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-strategy"
+        },
+        {
+          "name": "returns-one",
+          "code": "def integer_break(n):\n    return 1\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-015-zigzag-string",
+      "title": "Zigzag String Conversion",
+      "problem_text": "Given a string s and an integer numRows >= 1, write the string in a zigzag pattern over numRows rows then return the string read row-by-row. For 'PAYPALISHIRING' with numRows=3 the result is 'PAHNAPLSIIGYIR'. If numRows == 1 return s unchanged.",
+      "entry_function": "zigzag_convert",
+      "reference_solution": "def zigzag_convert(s, numRows):\n    if numRows == 1 or numRows >= len(s):\n        return s\n    rows = [''] * numRows\n    cur = 0\n    going_down = False\n    for c in s:\n        rows[cur] += c\n        if cur == 0 or cur == numRows - 1:\n            going_down = not going_down\n        cur += 1 if going_down else -1\n    return ''.join(rows)\n",
+      "test_cases": [
+        {
+          "input": "('PAYPALISHIRING', 3)",
+          "expected": "'PAHNAPLSIIGYIR'",
+          "description": "normal case"
+        },
+        {
+          "input": "('ABC', 1)",
+          "expected": "'ABC'",
+          "description": "single row"
+        },
+        {
+          "input": "('ABC', 2)",
+          "expected": "'ACB'",
+          "description": "two rows"
+        },
+        {
+          "input": "('', 5)",
+          "expected": "''",
+          "description": "empty string"
+        },
+        {
+          "input": "('A', 3)",
+          "expected": "'A'",
+          "description": "single character"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def zigzag_convert(s, numRows):\n    return s\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "no-direction-flip",
+          "code": "def zigzag_convert(s, numRows):\n    if numRows == 1: return s\n    rows = [''] * numRows\n    for i, c in enumerate(s):\n        rows[i % numRows] += c\n    return ''.join(rows)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-pattern"
+        },
+        {
+          "name": "returns-reversed",
+          "code": "def zigzag_convert(s, numRows):\n    return s[::-1]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-016-pascals-triangle-row",
+      "title": "Pascal's Triangle Row",
+      "problem_text": "Given a non-negative integer rowIndex, return the rowIndex-th row of Pascal's triangle (0-indexed) as a list of integers. Row 0 is [1]; row 1 is [1, 1]; row 4 is [1, 4, 6, 4, 1].",
+      "entry_function": "pascals_row",
+      "reference_solution": "def pascals_row(rowIndex):\n    row = [1]\n    for _ in range(rowIndex):\n        row = [a + b for a, b in zip([0] + row, row + [0])]\n    return row\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "[1]",
+          "description": "row 0"
+        },
+        {
+          "input": "1",
+          "expected": "[1, 1]",
+          "description": "row 1"
+        },
+        {
+          "input": "2",
+          "expected": "[1, 2, 1]",
+          "description": "row 2"
+        },
+        {
+          "input": "4",
+          "expected": "[1, 4, 6, 4, 1]",
+          "description": "row 4"
+        },
+        {
+          "input": "5",
+          "expected": "[1, 5, 10, 10, 5, 1]",
+          "description": "row 5"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "math",
+        "dynamic-programming"
+      ],
+      "variants": [
+        {
+          "name": "returns-ones",
+          "code": "def pascals_row(rowIndex):\n    return [1] * (rowIndex + 1)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-computation"
+        },
+        {
+          "name": "off-by-one-length",
+          "code": "def pascals_row(rowIndex):\n    row = [1]\n    for _ in range(rowIndex - 1):\n        row = [a + b for a, b in zip([0] + row, row + [0])]\n    return row\n",
+          "expected_failure_count": 4,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "row-as-index",
+          "code": "def pascals_row(rowIndex):\n    return list(range(rowIndex + 1))\n",
+          "expected_failure_count": 5,
+          "error_pattern": "wrong-formula"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-017-reverse-vowels",
+      "title": "Reverse Vowels",
+      "problem_text": "Given a string s, return s with only the vowels reversed (in their positions). Vowels are 'a','e','i','o','u' (case-insensitive). Non-vowel characters keep their positions.",
+      "entry_function": "reverse_vowels",
+      "reference_solution": "def reverse_vowels(s):\n    chars = list(s)\n    vowels = set('aeiouAEIOU')\n    i, j = 0, len(chars) - 1\n    while i < j:\n        while i < j and chars[i] not in vowels:\n            i += 1\n        while i < j and chars[j] not in vowels:\n            j -= 1\n        chars[i], chars[j] = chars[j], chars[i]\n        i += 1\n        j -= 1\n    return ''.join(chars)\n",
+      "test_cases": [
+        {
+          "input": "''",
+          "expected": "''",
+          "description": "empty string"
+        },
+        {
+          "input": "'bcdfg'",
+          "expected": "'bcdfg'",
+          "description": "no vowels"
+        },
+        {
+          "input": "'a'",
+          "expected": "'a'",
+          "description": "single vowel"
+        },
+        {
+          "input": "'HELLO'",
+          "expected": "'HOLLE'",
+          "description": "all-uppercase vowels (catches case-sensitive variant)"
+        },
+        {
+          "input": "'leetcode'",
+          "expected": "'leotcede'",
+          "description": "multiple vowels"
+        },
+        {
+          "input": "'HELLO'",
+          "expected": "'HOLLE'",
+          "description": "all-uppercase vowels (catches case-sensitive variant)"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "two-pointers"
+      ],
+      "variants": [
+        {
+          "name": "reverses-whole-string",
+          "code": "def reverse_vowels(s):\n    return s[::-1]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-scope"
+        },
+        {
+          "name": "returns-input",
+          "code": "def reverse_vowels(s):\n    return s\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "case-sensitive-vowels",
+          "code": "def reverse_vowels(s):\n    chars = list(s)\n    vowels = set('aeiou')\n    i, j = 0, len(chars) - 1\n    while i < j:\n        while i < j and chars[i] not in vowels: i += 1\n        while i < j and chars[j] not in vowels: j -= 1\n        chars[i], chars[j] = chars[j], chars[i]\n        i += 1\n        j -= 1\n    return ''.join(chars)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "case-handling"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-018-array-partition",
+      "title": "Array Partition Sum",
+      "problem_text": "Given a list of 2n integers nums, partition into n pairs (a1,b1),(a2,b2),... such that the sum of min(ai,bi) over all pairs is maximized. Return the maximized sum.",
+      "entry_function": "array_partition",
+      "reference_solution": "def array_partition(nums):\n    return sum(sorted(nums)[::2])\n",
+      "test_cases": [
+        {
+          "input": "[1,4,3,2]",
+          "expected": "4",
+          "description": "normal case"
+        },
+        {
+          "input": "[1,1,1,1]",
+          "expected": "2",
+          "description": "all equal"
+        },
+        {
+          "input": "[-1,-2,0,1]",
+          "expected": "-2",
+          "description": "mixed signs"
+        },
+        {
+          "input": "[1000,2000,3000,4000]",
+          "expected": "4000",
+          "description": "large numbers"
+        },
+        {
+          "input": "[5,6]",
+          "expected": "5",
+          "description": "single pair"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "greedy",
+        "sorting"
+      ],
+      "variants": [
+        {
+          "name": "returns-sum",
+          "code": "def array_partition(nums):\n    return sum(nums)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "wrong-stride",
+          "code": "def array_partition(nums):\n    return sum(sorted(nums)[1::2])\n",
+          "expected_failure_count": 4,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "returns-half-sum",
+          "code": "def array_partition(nums):\n    return sum(nums) // 2\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-formula"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-019-third-max",
+      "title": "Third Maximum Number",
+      "problem_text": "Given a non-empty list of integers nums, return the third distinct maximum value. If fewer than three distinct values exist, return the maximum.",
+      "entry_function": "third_max",
+      "reference_solution": "def third_max(nums):\n    distinct = sorted(set(nums), reverse=True)\n    return distinct[2] if len(distinct) >= 3 else distinct[0]\n",
+      "test_cases": [
+        {
+          "input": "[3, 2, 1]",
+          "expected": "1",
+          "description": "three distinct values"
+        },
+        {
+          "input": "[2, 2, 1]",
+          "expected": "2",
+          "description": "two distinct values"
+        },
+        {
+          "input": "[5, 5, 5]",
+          "expected": "5",
+          "description": "one distinct value"
+        },
+        {
+          "input": "[1, 2, 2, 3, 3, 3]",
+          "expected": "1",
+          "description": "duplicates with multiple distinct"
+        },
+        {
+          "input": "[-1, -2, -3, -4]",
+          "expected": "-3",
+          "description": "negative numbers"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-max",
+          "code": "def third_max(nums):\n    return max(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "ignores-third"
+        },
+        {
+          "name": "no-dedup",
+          "code": "def third_max(nums):\n    s = sorted(nums, reverse=True)\n    return s[2] if len(s) >= 3 else s[0]\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-dedup"
+        },
+        {
+          "name": "third-min",
+          "code": "def third_max(nums):\n    s = sorted(set(nums))\n    return s[2] if len(s) >= 3 else s[-1]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-direction"
+        }
+      ]
+    },
+    {
+      "id": "p3-a-020-add-strings",
+      "title": "Add Strings",
+      "problem_text": "Given two non-negative integers represented as strings num1 and num2, return their sum as a string. You must not convert the inputs to integers directly.",
+      "entry_function": "add_strings",
+      "reference_solution": "def add_strings(num1, num2):\n    i, j = len(num1) - 1, len(num2) - 1\n    carry = 0\n    out = []\n    while i >= 0 or j >= 0 or carry:\n        a = int(num1[i]) if i >= 0 else 0\n        b = int(num2[j]) if j >= 0 else 0\n        s = a + b + carry\n        out.append(str(s % 10))\n        carry = s // 10\n        i -= 1\n        j -= 1\n    return ''.join(reversed(out))\n",
+      "test_cases": [
+        {
+          "input": "(\"12\", \"34\")",
+          "expected": "'46'",
+          "description": "normal case"
+        },
+        {
+          "input": "(\"0\", \"0\")",
+          "expected": "'0'",
+          "description": "both zeros"
+        },
+        {
+          "input": "(\"99\", \"1\")",
+          "expected": "'100'",
+          "description": "carry propagation"
+        },
+        {
+          "input": "(\"123\", \"45\")",
+          "expected": "'168'",
+          "description": "different lengths"
+        },
+        {
+          "input": "(\"999999999999999999\", \"1\")",
+          "expected": "'1000000000000000000'",
+          "description": "large numbers"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "no-carry",
+          "code": "def add_strings(num1, num2):\n    a = num1.zfill(max(len(num1), len(num2)))\n    b = num2.zfill(max(len(num1), len(num2)))\n    out = ''\n    for x, y in zip(a, b):\n        out += str(int(x) + int(y))\n    return out\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-carry"
+        },
+        {
+          "name": "concatenates",
+          "code": "def add_strings(num1, num2):\n    return num1 + num2\n",
+          "expected_failure_count": 5,
+          "error_pattern": "wrong-operation"
+        },
+        {
+          "name": "returns-first",
+          "code": "def add_strings(num1, num2):\n    return num1\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-001-sigmoid",
+      "title": "Sigmoid (Numerically Stable)",
+      "problem_text": "Given a real number x, return sigmoid(x) = 1 / (1 + exp(-x)) rounded to 6 decimal places. Implementation must avoid overflow for large negative x (where exp(-x) overflows). Use math.exp.",
+      "entry_function": "sigmoid",
+      "reference_solution": "def sigmoid(x):\n    import math\n    if x >= 0:\n        z = math.exp(-x)\n        return round(1 / (1 + z), 6)\n    z = math.exp(x)\n    return round(z / (1 + z), 6)\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "0.5",
+          "description": "midpoint"
+        },
+        {
+          "input": "1",
+          "expected": "0.731059",
+          "description": "positive"
+        },
+        {
+          "input": "-1",
+          "expected": "0.268941",
+          "description": "negative"
+        },
+        {
+          "input": "100",
+          "expected": "1.0",
+          "description": "saturation high"
+        },
+        {
+          "input": "-100",
+          "expected": "0.0",
+          "description": "saturation low (numerical stability)"
+        },
+        {
+          "input": "-1000",
+          "expected": "0.0",
+          "description": "extreme negative \u2014 naive form overflows on math.exp(1000)"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "math",
+        "ml",
+        "numerical-stability"
+      ],
+      "variants": [
+        {
+          "name": "no-stability-overflows",
+          "code": "def sigmoid(x):\n    import math\n    return round(1 / (1 + math.exp(-x)), 6)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-numerical-stability"
+        },
+        {
+          "name": "returns-x",
+          "code": "def sigmoid(x):\n    return round(float(x), 6)\n",
+          "expected_failure_count": 6,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "wrong-sign",
+          "code": "def sigmoid(x):\n    import math\n    if x <= 0:\n        z = math.exp(x)\n        return round(1 / (1 + z), 6)\n    z = math.exp(-x)\n    return round(z / (1 + z), 6)\n",
+          "expected_failure_count": 5,
+          "error_pattern": "inverted-formula"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-002-softmax",
+      "title": "Softmax (1D, Numerically Stable)",
+      "problem_text": "Given a list of real numbers xs (non-empty), return a list of the same length whose elements are softmax(xs) = exp(xs - max(xs)) / sum(exp(xs - max(xs))). Each output value rounded to 4 decimal places. Subtract max before exponentiating to avoid overflow.",
+      "entry_function": "softmax",
+      "reference_solution": "def softmax(xs):\n    import math\n    m = max(xs)\n    exps = [math.exp(x - m) for x in xs]\n    s = sum(exps)\n    return [round(e / s, 4) for e in exps]\n",
+      "test_cases": [
+        {
+          "input": "[0.0, 0.0, 0.0]",
+          "expected": "[0.3333, 0.3333, 0.3333]",
+          "description": "uniform"
+        },
+        {
+          "input": "[1.0, 2.0, 3.0]",
+          "expected": "[0.09, 0.2447, 0.6652]",
+          "description": "ascending"
+        },
+        {
+          "input": "[1000.0, 1001.0, 1002.0]",
+          "expected": "[0.09, 0.2447, 0.6652]",
+          "description": "large shifted (numerical stability)"
+        },
+        {
+          "input": "[0.0]",
+          "expected": "[1.0]",
+          "description": "single element"
+        },
+        {
+          "input": "[-1.0, 0.0, 1.0]",
+          "expected": "[0.09, 0.2447, 0.6652]",
+          "description": "centered"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "math",
+        "ml",
+        "numerical-stability"
+      ],
+      "variants": [
+        {
+          "name": "no-shift-overflows",
+          "code": "def softmax(xs):\n    import math\n    exps = [math.exp(x) for x in xs]\n    s = sum(exps)\n    return [round(e / s, 4) for e in exps]\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-numerical-stability"
+        },
+        {
+          "name": "no-normalize",
+          "code": "def softmax(xs):\n    import math\n    m = max(xs)\n    return [round(math.exp(x - m), 4) for x in xs]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "missing-normalize"
+        },
+        {
+          "name": "returns-input",
+          "code": "def softmax(xs):\n    return [round(x, 4) for x in xs]\n",
+          "expected_failure_count": 5,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-003-binary-cross-entropy",
+      "title": "Binary Cross-Entropy",
+      "problem_text": "Given a true label y (0 or 1) and a predicted probability p (in [0, 1]), return the binary cross-entropy: -y*log(p) - (1-y)*log(1-p), rounded to 6 decimals. Clamp p to [1e-15, 1 - 1e-15] before taking logs to avoid math domain errors.",
+      "entry_function": "binary_cross_entropy",
+      "reference_solution": "def binary_cross_entropy(y, p):\n    import math\n    eps = 1e-15\n    p = max(eps, min(1 - eps, p))\n    return round(-y * math.log(p) - (1 - y) * math.log(1 - p), 6)\n",
+      "test_cases": [
+        {
+          "input": "(1, 0.9)",
+          "expected": "0.105361",
+          "description": "good prediction"
+        },
+        {
+          "input": "(1, 0.5)",
+          "expected": "0.693147",
+          "description": "uncertain"
+        },
+        {
+          "input": "(0, 0.1)",
+          "expected": "0.105361",
+          "description": "good prediction zero"
+        },
+        {
+          "input": "(1, 1.0)",
+          "expected": "0.0",
+          "description": "perfect (clamp)"
+        },
+        {
+          "input": "(0, 0.0)",
+          "expected": "0.0",
+          "description": "perfect zero (clamp)"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "math",
+        "ml",
+        "numerical-stability"
+      ],
+      "variants": [
+        {
+          "name": "no-clamp-domain-error",
+          "code": "def binary_cross_entropy(y, p):\n    import math\n    return round(-y * math.log(p) - (1 - y) * math.log(1 - p), 6)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-numerical-stability"
+        },
+        {
+          "name": "swapped-y",
+          "code": "def binary_cross_entropy(y, p):\n    import math\n    eps = 1e-15\n    p = max(eps, min(1 - eps, p))\n    return round(-(1 - y) * math.log(p) - y * math.log(1 - p), 6)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "inverted-formula"
+        },
+        {
+          "name": "returns-p",
+          "code": "def binary_cross_entropy(y, p):\n    return round(float(p), 6)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-004-mean-squared-error",
+      "title": "Mean Squared Error",
+      "problem_text": "Given two lists of numbers y_true and y_pred (same length), return the mean squared error: average of (y_true[i] - y_pred[i])^2, rounded to 6 decimals. Empty lists return 0.0.",
+      "entry_function": "mean_squared_error",
+      "reference_solution": "def mean_squared_error(y_true, y_pred):\n    n = len(y_true)\n    if n == 0:\n        return 0.0\n    return round(sum((a - b) ** 2 for a, b in zip(y_true, y_pred)) / n, 6)\n",
+      "test_cases": [
+        {
+          "input": "([1, 2, 3], [1, 2, 3])",
+          "expected": "0.0",
+          "description": "perfect"
+        },
+        {
+          "input": "([1, 2, 3], [2, 3, 4])",
+          "expected": "1.0",
+          "description": "off by one each"
+        },
+        {
+          "input": "([0, 0], [1, -1])",
+          "expected": "1.0",
+          "description": "symmetric error"
+        },
+        {
+          "input": "([], [])",
+          "expected": "0.0",
+          "description": "empty"
+        },
+        {
+          "input": "([5.0], [3.0])",
+          "expected": "4.0",
+          "description": "single element"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "ml"
+      ],
+      "variants": [
+        {
+          "name": "missing-square",
+          "code": "def mean_squared_error(y_true, y_pred):\n    n = len(y_true)\n    if n == 0: return 0.0\n    return round(sum(a - b for a, b in zip(y_true, y_pred)) / n, 6)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-square"
+        },
+        {
+          "name": "sum-not-mean",
+          "code": "def mean_squared_error(y_true, y_pred):\n    return round(sum((a - b) ** 2 for a, b in zip(y_true, y_pred)), 6)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "missing-divide"
+        },
+        {
+          "name": "returns-zero",
+          "code": "def mean_squared_error(y_true, y_pred):\n    return 0.0\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-005-mean-absolute-error",
+      "title": "Mean Absolute Error",
+      "problem_text": "Given two lists of numbers y_true and y_pred (same length), return the mean absolute error: average of |y_true[i] - y_pred[i]|, rounded to 6 decimals. Empty lists return 0.0.",
+      "entry_function": "mean_absolute_error",
+      "reference_solution": "def mean_absolute_error(y_true, y_pred):\n    n = len(y_true)\n    if n == 0:\n        return 0.0\n    return round(sum(abs(a - b) for a, b in zip(y_true, y_pred)) / n, 6)\n",
+      "test_cases": [
+        {
+          "input": "([1, 2, 3], [1, 2, 3])",
+          "expected": "0.0",
+          "description": "perfect"
+        },
+        {
+          "input": "([1, 2, 3], [2, 3, 4])",
+          "expected": "1.0",
+          "description": "constant offset"
+        },
+        {
+          "input": "([0, 0], [1, -1])",
+          "expected": "1.0",
+          "description": "symmetric absolute"
+        },
+        {
+          "input": "([], [])",
+          "expected": "0.0",
+          "description": "empty"
+        },
+        {
+          "input": "([5.0], [3.0])",
+          "expected": "2.0",
+          "description": "single element"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "ml"
+      ],
+      "variants": [
+        {
+          "name": "missing-abs",
+          "code": "def mean_absolute_error(y_true, y_pred):\n    n = len(y_true)\n    if n == 0: return 0.0\n    return round(sum(a - b for a, b in zip(y_true, y_pred)) / n, 6)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-abs"
+        },
+        {
+          "name": "sum-not-mean",
+          "code": "def mean_absolute_error(y_true, y_pred):\n    return round(sum(abs(a - b) for a, b in zip(y_true, y_pred)), 6)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "missing-divide"
+        },
+        {
+          "name": "uses-square",
+          "code": "def mean_absolute_error(y_true, y_pred):\n    n = len(y_true)\n    if n == 0: return 0.0\n    return round(sum((a - b) ** 2 for a, b in zip(y_true, y_pred)) / n, 6)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-distance-metric"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-006-knn-majority-vote",
+      "title": "KNN Majority Vote",
+      "problem_text": "Given a list of training points (each a [point_features, label] pair where features is a list of floats and label is a string), a query point (list of floats), and an integer k, return the majority label among the k closest training points by Euclidean distance. Ties broken by first-seen-in-sorted-order.",
+      "entry_function": "knn_vote",
+      "reference_solution": "def knn_vote(training, query, k):\n    def dist(a, b):\n        return sum((x - y) ** 2 for x, y in zip(a, b)) ** 0.5\n    nearest = sorted(training, key=lambda t: dist(t[0], query))[:k]\n    counts = {}\n    for _, label in nearest:\n        counts[label] = counts.get(label, 0) + 1\n    return max(counts, key=lambda l: counts[l])\n",
+      "test_cases": [
+        {
+          "input": "([[[0,0],'A'],[[1,1],'A'],[[5,5],'B'],[[6,6],'B']], [0.5,0.5], 1)",
+          "expected": "'A'",
+          "description": "k=1 nearest"
+        },
+        {
+          "input": "([[[0,0],'A'],[[1,1],'A'],[[5,5],'B'],[[6,6],'B']], [0.5,0.5], 3)",
+          "expected": "'A'",
+          "description": "k=3 majority A"
+        },
+        {
+          "input": "([[[0,0],'A'],[[1,1],'A'],[[5,5],'B'],[[6,6],'B']], [5.5,5.5], 3)",
+          "expected": "'B'",
+          "description": "k=3 majority B"
+        },
+        {
+          "input": "([[[0,0],'A']], [10,10], 1)",
+          "expected": "'A'",
+          "description": "single training point"
+        },
+        {
+          "input": "([[[0,0],'A'],[[1,0],'B']], [0.5,0], 2)",
+          "expected": "'A'",
+          "description": "tied distances - first in sorted order"
+        },
+        {
+          "input": "([[[3,4],'A'],[[5,1],'B']], [0,0], 1)",
+          "expected": "'A'",
+          "description": "Manhattan vs Euclidean disagree (catches wrong-distance)"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "ml",
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "ignores-k",
+          "code": "def knn_vote(training, query, k):\n    counts = {}\n    for _, label in training:\n        counts[label] = counts.get(label, 0) + 1\n    return max(counts, key=lambda l: counts[l])\n",
+          "expected_failure_count": 1,
+          "error_pattern": "ignores-k"
+        },
+        {
+          "name": "wrong-distance",
+          "code": "def knn_vote(training, query, k):\n    def dist(a, b):\n        return sum(abs(x - y) for x, y in zip(a, b))\n    nearest = sorted(training, key=lambda t: dist(t[0], query))[:k]\n    counts = {}\n    for _, label in nearest:\n        counts[label] = counts.get(label, 0) + 1\n    return max(counts, key=lambda l: counts[l])\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-distance-metric"
+        },
+        {
+          "name": "first-label",
+          "code": "def knn_vote(training, query, k):\n    return training[0][1]\n",
+          "expected_failure_count": 1,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-007-linear-regression-1d",
+      "title": "Linear Regression (1D, Least Squares)",
+      "problem_text": "Given two lists xs and ys (same length, len >= 2) of floats, fit y = slope*x + intercept by least squares and return (slope, intercept) as a tuple, each rounded to 4 decimals.",
+      "entry_function": "linear_regression",
+      "reference_solution": "def linear_regression(xs, ys):\n    n = len(xs)\n    mx = sum(xs) / n\n    my = sum(ys) / n\n    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))\n    den = sum((x - mx) ** 2 for x in xs)\n    slope = num / den\n    intercept = my - slope * mx\n    return (round(slope, 4), round(intercept, 4))\n",
+      "test_cases": [
+        {
+          "input": "([1, 2, 3], [2, 4, 6])",
+          "expected": "(2.0, 0.0)",
+          "description": "perfect linear y=2x"
+        },
+        {
+          "input": "([0, 1, 2], [1, 3, 5])",
+          "expected": "(2.0, 1.0)",
+          "description": "y=2x+1"
+        },
+        {
+          "input": "([1, 2, 3], [1, 2, 3])",
+          "expected": "(1.0, 0.0)",
+          "description": "y=x"
+        },
+        {
+          "input": "([0, 1], [0, 0])",
+          "expected": "(0.0, 0.0)",
+          "description": "horizontal y=0"
+        },
+        {
+          "input": "([1, 2, 3, 4], [3, 5, 7, 9])",
+          "expected": "(2.0, 1.0)",
+          "description": "y=2x+1 longer"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "math",
+        "ml"
+      ],
+      "variants": [
+        {
+          "name": "no-mean-correction",
+          "code": "def linear_regression(xs, ys):\n    n = len(xs)\n    num = sum(x * y for x, y in zip(xs, ys))\n    den = sum(x * x for x in xs)\n    slope = num / den\n    intercept = sum(ys) / n - slope * sum(xs) / n\n    return (round(slope, 4), round(intercept, 4))\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "swapped-tuple",
+          "code": "def linear_regression(xs, ys):\n    n = len(xs)\n    mx = sum(xs) / n\n    my = sum(ys) / n\n    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))\n    den = sum((x - mx) ** 2 for x in xs)\n    slope = num / den\n    intercept = my - slope * mx\n    return (round(intercept, 4), round(slope, 4))\n",
+          "expected_failure_count": 4,
+          "error_pattern": "swapped-output"
+        },
+        {
+          "name": "returns-zero-zero",
+          "code": "def linear_regression(xs, ys):\n    return (0.0, 0.0)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-008-logistic-regression-step",
+      "title": "Logistic Regression Gradient Step",
+      "problem_text": "Given a single training example: feature vector x (list of floats), label y (0 or 1), current weights (list of floats, same length as x), bias (float), and learning rate lr (float), perform one gradient descent step on binary cross-entropy loss and return (new_weights, new_bias). Each weight rounded to 6 decimals. Hint: gradient is (sigmoid(z) - y) * x[i] where z = w\u00b7x + b.",
+      "entry_function": "lr_step",
+      "reference_solution": "def lr_step(x, y, weights, bias, lr):\n    import math\n    z = sum(w * xi for w, xi in zip(weights, x)) + bias\n    if z >= 0:\n        p = 1 / (1 + math.exp(-z))\n    else:\n        ez = math.exp(z)\n        p = ez / (1 + ez)\n    err = p - y\n    new_w = [round(w - lr * err * xi, 6) for w, xi in zip(weights, x)]\n    new_b = round(bias - lr * err, 6)\n    return (new_w, new_b)\n",
+      "test_cases": [
+        {
+          "input": "([1, 2], 1, [0, 0], 0, 0.1)",
+          "expected": "([0.05, 0.1], 0.05)",
+          "description": "zero init, label 1"
+        },
+        {
+          "input": "([1, 2], 0, [0, 0], 0, 0.1)",
+          "expected": "([-0.05, -0.1], -0.05)",
+          "description": "zero init, label 0"
+        },
+        {
+          "input": "([0, 0], 1, [1, 1], 0.5, 0.1)",
+          "expected": "([1.0, 1.0], 0.537754)",
+          "description": "no feature gradient, bias only"
+        },
+        {
+          "input": "([1.0], 1, [0.0], 0.0, 1.0)",
+          "expected": "([0.5], 0.5)",
+          "description": "single feature, lr=1"
+        },
+        {
+          "input": "([1, 1], 1, [0, 0], 0, 0.0)",
+          "expected": "([0.0, 0.0], 0.0)",
+          "description": "lr=0 noop"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "math",
+        "ml",
+        "gradient-descent"
+      ],
+      "variants": [
+        {
+          "name": "no-bias-update",
+          "code": "def lr_step(x, y, weights, bias, lr):\n    import math\n    z = sum(w * xi for w, xi in zip(weights, x)) + bias\n    if z >= 0:\n        p = 1 / (1 + math.exp(-z))\n    else:\n        ez = math.exp(z)\n        p = ez / (1 + ez)\n    err = p - y\n    new_w = [round(w - lr * err * xi, 6) for w, xi in zip(weights, x)]\n    return (new_w, round(bias, 6))\n",
+          "expected_failure_count": 5,
+          "error_pattern": "missing-bias-update"
+        },
+        {
+          "name": "wrong-sign",
+          "code": "def lr_step(x, y, weights, bias, lr):\n    import math\n    z = sum(w * xi for w, xi in zip(weights, x)) + bias\n    if z >= 0:\n        p = 1 / (1 + math.exp(-z))\n    else:\n        ez = math.exp(z)\n        p = ez / (1 + ez)\n    err = p - y\n    new_w = [round(w + lr * err * xi, 6) for w, xi in zip(weights, x)]\n    new_b = round(bias + lr * err, 6)\n    return (new_w, new_b)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-gradient-direction"
+        },
+        {
+          "name": "returns-input",
+          "code": "def lr_step(x, y, weights, bias, lr):\n    return (list(weights), bias)\n",
+          "expected_failure_count": 5,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-009-relu",
+      "title": "ReLU Activation",
+      "problem_text": "Given a list of floats xs, return a new list where each element is max(0, x).",
+      "entry_function": "relu",
+      "reference_solution": "def relu(xs):\n    return [max(0, x) for x in xs]\n",
+      "test_cases": [
+        {
+          "input": "[-1, 0, 1, -2, 3]",
+          "expected": "[0, 0, 1, 0, 3]",
+          "description": "mixed signs"
+        },
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty"
+        },
+        {
+          "input": "[-5]",
+          "expected": "[0]",
+          "description": "single negative"
+        },
+        {
+          "input": "[5]",
+          "expected": "[5]",
+          "description": "single positive"
+        },
+        {
+          "input": "[0]",
+          "expected": "[0]",
+          "description": "single zero"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "ml"
+      ],
+      "variants": [
+        {
+          "name": "identity",
+          "code": "def relu(xs):\n    return list(xs)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "abs-not-relu",
+          "code": "def relu(xs):\n    return [abs(x) for x in xs]\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "sign-not-clamp",
+          "code": "def relu(xs):\n    return [(1 if x > 0 else 0) for x in xs]\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-output"
+        }
+      ]
+    },
+    {
+      "id": "p3-b-010-tanh-derivative",
+      "title": "Tanh Derivative",
+      "problem_text": "Given a real number x, return d/dx tanh(x) = 1 - tanh(x)^2, rounded to 6 decimals. Use math.tanh.",
+      "entry_function": "tanh_derivative",
+      "reference_solution": "def tanh_derivative(x):\n    import math\n    t = math.tanh(x)\n    return round(1 - t * t, 6)\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "1.0",
+          "description": "tanh(0)=0, deriv=1"
+        },
+        {
+          "input": "1",
+          "expected": "0.419974",
+          "description": "positive"
+        },
+        {
+          "input": "-1",
+          "expected": "0.419974",
+          "description": "negative (symmetric)"
+        },
+        {
+          "input": "100",
+          "expected": "0.0",
+          "description": "saturation"
+        },
+        {
+          "input": "-100",
+          "expected": "0.0",
+          "description": "saturation negative"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "ml"
+      ],
+      "variants": [
+        {
+          "name": "returns-tanh-not-derivative",
+          "code": "def tanh_derivative(x):\n    import math\n    return round(math.tanh(x), 6)\n",
+          "expected_failure_count": 5,
+          "error_pattern": "wrong-target"
+        },
+        {
+          "name": "missing-1-minus",
+          "code": "def tanh_derivative(x):\n    import math\n    return round(math.tanh(x) ** 2, 6)\n",
+          "expected_failure_count": 5,
+          "error_pattern": "missing-formula-component"
+        },
+        {
+          "name": "wrong-power",
+          "code": "def tanh_derivative(x):\n    import math\n    t = math.tanh(x)\n    return round(1 - t, 6)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-formula"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-001-recursive-flatten",
+      "title": "Recursive Flatten (Multi-Level)",
+      "problem_text": "Given a possibly-nested list nested (any depth), return a flat list of all integer elements in left-to-right traversal order.",
+      "entry_function": "deep_flatten",
+      "reference_solution": "def deep_flatten(nested):\n    out = []\n    for item in nested:\n        if isinstance(item, list):\n            out.extend(deep_flatten(item))\n        else:\n            out.append(item)\n    return out\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "[5]",
+          "expected": "[5]",
+          "description": "single element"
+        },
+        {
+          "input": "[1,2,3]",
+          "expected": "[1, 2, 3]",
+          "description": "already flat"
+        },
+        {
+          "input": "[[1,[2,3]],4,[5,[6,7,8]]]",
+          "expected": "[1, 2, 3, 4, 5, 6, 7, 8]",
+          "description": "deeply nested"
+        },
+        {
+          "input": "[[],[1],[[2,[]],3]]",
+          "expected": "[1, 2, 3]",
+          "description": "mixed with empty sublists"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "recursion",
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "shallow-only",
+          "code": "def deep_flatten(nested):\n    return [x for inner in nested for x in (inner if isinstance(inner, list) else [inner])]\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-recursion"
+        },
+        {
+          "name": "returns-input",
+          "code": "def deep_flatten(nested):\n    return list(nested)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "missing-base-case",
+          "code": "def deep_flatten(nested):\n    out = []\n    for item in nested:\n        out.extend(deep_flatten(item) if isinstance(item, list) else item)\n    return out\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-base-case"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-002-cumulative-distinct",
+      "title": "Cumulative Distinct Count",
+      "problem_text": "Given a list of integers nums, return a list out where out[i] is the number of distinct values in nums[:i+1]. For [1,2,1,3] return [1,2,2,3].",
+      "entry_function": "cumulative_distinct",
+      "reference_solution": "def cumulative_distinct(nums):\n    seen = set()\n    out = []\n    for n in nums:\n        seen.add(n)\n        out.append(len(seen))\n    return out\n",
+      "test_cases": [
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty list"
+        },
+        {
+          "input": "[5]",
+          "expected": "[1]",
+          "description": "single element"
+        },
+        {
+          "input": "[7,7,7]",
+          "expected": "[1, 1, 1]",
+          "description": "all same elements"
+        },
+        {
+          "input": "[1,2,3,4]",
+          "expected": "[1, 2, 3, 4]",
+          "description": "strictly increasing distinct elements"
+        },
+        {
+          "input": "[1,2,1,3]",
+          "expected": "[1, 2, 2, 3]",
+          "description": "example case with repeats"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "set",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "returns-indices",
+          "code": "def cumulative_distinct(nums):\n    return list(range(1, len(nums) + 1))\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-distinct-tracking"
+        },
+        {
+          "name": "returns-distinct-total",
+          "code": "def cumulative_distinct(nums):\n    return [len(set(nums))] * len(nums)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-aggregation"
+        },
+        {
+          "name": "returns-empty",
+          "code": "def cumulative_distinct(nums):\n    return []\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-003-is-prime-naive",
+      "title": "Is Prime (Naive)",
+      "problem_text": "Given an integer n, return True iff n is a prime number (greater than 1 with no positive divisors other than 1 and itself).",
+      "entry_function": "is_prime_naive",
+      "reference_solution": "def is_prime_naive(n):\n    if n < 2:\n        return False\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0:\n            return False\n    return True\n",
+      "test_cases": [
+        {
+          "input": "2",
+          "expected": "True",
+          "description": "smallest prime"
+        },
+        {
+          "input": "1",
+          "expected": "False",
+          "description": "one not prime"
+        },
+        {
+          "input": "4",
+          "expected": "False",
+          "description": "composite number"
+        },
+        {
+          "input": "11",
+          "expected": "True",
+          "description": "prime number"
+        },
+        {
+          "input": "0",
+          "expected": "False",
+          "description": "zero not prime"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "returns-true",
+          "code": "def is_prime_naive(n):\n    return True\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "off-by-one-bound",
+          "code": "def is_prime_naive(n):\n    if n < 2: return False\n    for i in range(2, int(n ** 0.5)):\n        if n % i == 0: return False\n    return True\n",
+          "expected_failure_count": 1,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "missing-lt-2-check",
+          "code": "def is_prime_naive(n):\n    for i in range(2, int(n ** 0.5) + 1):\n        if n % i == 0: return False\n    return True\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-edge-case"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-004-count-occurrences-no-dict",
+      "title": "Count Occurrences (Without Dict)",
+      "problem_text": "Given a list nums and a value v, return the number of times v appears in nums. Implement without using dict, Counter, or imports.",
+      "entry_function": "count_occurrences",
+      "reference_solution": "def count_occurrences(nums, v):\n    n = 0\n    for x in nums:\n        if x == v:\n            n += 1\n    return n\n",
+      "test_cases": [
+        {
+          "input": "([], 1)",
+          "expected": "0",
+          "description": "empty list"
+        },
+        {
+          "input": "([5], 5)",
+          "expected": "1",
+          "description": "single element matching"
+        },
+        {
+          "input": "([5], 3)",
+          "expected": "0",
+          "description": "single element not matching"
+        },
+        {
+          "input": "([1,2,3,2,2,4], 2)",
+          "expected": "3",
+          "description": "normal case multiple matches"
+        },
+        {
+          "input": "([7,7,7], 7)",
+          "expected": "3",
+          "description": "all elements match"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-len",
+          "code": "def count_occurrences(nums, v):\n    return len(nums)\n",
+          "expected_failure_count": 2,
+          "error_pattern": "ignores-target"
+        },
+        {
+          "name": "returns-zero",
+          "code": "def count_occurrences(nums, v):\n    return 0\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "returns-first-index",
+          "code": "def count_occurrences(nums, v):\n    for i, x in enumerate(nums):\n        if x == v: return i\n    return -1\n",
+          "expected_failure_count": 5,
+          "error_pattern": "wrong-aggregation"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-005-transpose-no-zip",
+      "title": "Transpose Matrix (Without Zip)",
+      "problem_text": "Given a non-empty rectangular matrix m as a list of lists of integers, return its transpose. Implement using nested loops; do not use zip or numpy.",
+      "entry_function": "transpose_no_zip",
+      "reference_solution": "def transpose_no_zip(m):\n    rows = len(m)\n    cols = len(m[0])\n    out = [[0] * rows for _ in range(cols)]\n    for i in range(rows):\n        for j in range(cols):\n            out[j][i] = m[i][j]\n    return out\n",
+      "test_cases": [
+        {
+          "input": "[[5]]",
+          "expected": "[[5]]",
+          "description": "single element"
+        },
+        {
+          "input": "[[1, 2, 3]]",
+          "expected": "[[1], [2], [3]]",
+          "description": "1x3 matrix"
+        },
+        {
+          "input": "[[1], [2], [3]]",
+          "expected": "[[1, 2, 3]]",
+          "description": "3x1 matrix"
+        },
+        {
+          "input": "[[1, 2], [3, 4]]",
+          "expected": "[[1, 3], [2, 4]]",
+          "description": "2x2 matrix"
+        },
+        {
+          "input": "[[1, 2], [3, 4], [5, 6]]",
+          "expected": "[[1, 3, 5], [2, 4, 6]]",
+          "description": "3x2 matrix"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "matrix",
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def transpose_no_zip(m):\n    return [list(row) for row in m]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "indices-swapped",
+          "code": "def transpose_no_zip(m):\n    rows = len(m)\n    cols = len(m[0])\n    out = [[0] * rows for _ in range(cols)]\n    for i in range(rows):\n        for j in range(cols):\n            out[j][i] = m[j][i]\n    return out\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-indexing"
+        },
+        {
+          "name": "row-reverse",
+          "code": "def transpose_no_zip(m):\n    return [list(reversed(row)) for row in m]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-006-second-largest",
+      "title": "Find Second Largest",
+      "problem_text": "Given a non-empty list of integers nums, return the second-largest distinct value. If fewer than two distinct values exist, return the maximum.",
+      "entry_function": "second_largest",
+      "reference_solution": "def second_largest(nums):\n    distinct = sorted(set(nums), reverse=True)\n    return distinct[1] if len(distinct) >= 2 else distinct[0]\n",
+      "test_cases": [
+        {
+          "input": "[3, 1, 2]",
+          "expected": "2",
+          "description": "normal case with distinct values"
+        },
+        {
+          "input": "[5, 5, 4, 4, 3]",
+          "expected": "4",
+          "description": "duplicates present"
+        },
+        {
+          "input": "[7]",
+          "expected": "7",
+          "description": "single element"
+        },
+        {
+          "input": "[10, 5]",
+          "expected": "5",
+          "description": "two distinct values"
+        },
+        {
+          "input": "[2, 2, 2]",
+          "expected": "2",
+          "description": "all same values"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-max",
+          "code": "def second_largest(nums):\n    return max(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "ignores-second"
+        },
+        {
+          "name": "no-dedup",
+          "code": "def second_largest(nums):\n    s = sorted(nums, reverse=True)\n    return s[1] if len(s) >= 2 else s[0]\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-dedup"
+        },
+        {
+          "name": "second-smallest",
+          "code": "def second_largest(nums):\n    s = sorted(set(nums))\n    return s[1] if len(s) >= 2 else s[0]\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-direction"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-007-balanced-parens-simple",
+      "title": "Balanced Parens (Simple)",
+      "problem_text": "Given a string s containing only '(' and ')', return True iff every '(' has a matching ')' that follows it. The empty string is balanced.",
+      "entry_function": "balanced_parens",
+      "reference_solution": "def balanced_parens(s):\n    depth = 0\n    for c in s:\n        if c == '(':\n            depth += 1\n        else:\n            depth -= 1\n            if depth < 0:\n                return False\n    return depth == 0\n",
+      "test_cases": [
+        {
+          "input": "''",
+          "expected": "True",
+          "description": "empty string"
+        },
+        {
+          "input": "'('",
+          "expected": "False",
+          "description": "single open paren"
+        },
+        {
+          "input": "')'",
+          "expected": "False",
+          "description": "single close paren"
+        },
+        {
+          "input": "'()()'",
+          "expected": "True",
+          "description": "multiple balanced pairs"
+        },
+        {
+          "input": "'(())'",
+          "expected": "True",
+          "description": "nested balanced parens"
+        },
+        {
+          "input": "')('",
+          "expected": "False",
+          "description": "equal counts but unbalanced (catches count-only)"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "stack"
+      ],
+      "variants": [
+        {
+          "name": "count-only",
+          "code": "def balanced_parens(s):\n    return s.count('(') == s.count(')')\n",
+          "expected_failure_count": 1,
+          "error_pattern": "ignores-order"
+        },
+        {
+          "name": "returns-true",
+          "code": "def balanced_parens(s):\n    return True\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "missing-final-zero-check",
+          "code": "def balanced_parens(s):\n    depth = 0\n    for c in s:\n        if c == '(':\n            depth += 1\n        else:\n            depth -= 1\n            if depth < 0: return False\n    return True\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-end-check"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-008-roman-add",
+      "title": "Roman Numeral Add",
+      "problem_text": "Given two Roman numeral strings a and b, return their sum as a Roman numeral string. Inputs and result are valid Roman numerals from I to MMM (1 to 3000). Use only standard symbols I, V, X, L, C, D, M and the subtractive forms IV, IX, XL, XC, CD, CM.",
+      "entry_function": "roman_add",
+      "reference_solution": "def roman_add(a, b):\n    vals = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}\n    def to_int(s):\n        n = 0\n        for i, c in enumerate(s):\n            if i + 1 < len(s) and vals[c] < vals[s[i + 1]]:\n                n -= vals[c]\n            else:\n                n += vals[c]\n        return n\n    def to_roman(n):\n        order = [(1000,'M'),(900,'CM'),(500,'D'),(400,'CD'),(100,'C'),(90,'XC'),(50,'L'),(40,'XL'),(10,'X'),(9,'IX'),(5,'V'),(4,'IV'),(1,'I')]\n        out = []\n        for v, sym in order:\n            while n >= v:\n                out.append(sym)\n                n -= v\n        return ''.join(out)\n    return to_roman(to_int(a) + to_int(b))\n",
+      "test_cases": [
+        {
+          "input": "(\"I\", \"I\")",
+          "expected": "'II'",
+          "description": "simple addition"
+        },
+        {
+          "input": "(\"IV\", \"V\")",
+          "expected": "'IX'",
+          "description": "addition with subtractive form"
+        },
+        {
+          "input": "(\"IX\", \"I\")",
+          "expected": "'X'",
+          "description": "carry from subtractive"
+        },
+        {
+          "input": "(\"X\", \"X\")",
+          "expected": "'XX'",
+          "description": "identical tens"
+        },
+        {
+          "input": "(\"M\", \"M\")",
+          "expected": "'MM'",
+          "description": "identical thousands"
+        }
+      ],
+      "difficulty": "medium",
+      "topics": [
+        "string",
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "concatenates",
+          "code": "def roman_add(a, b):\n    return a + b\n",
+          "expected_failure_count": 2,
+          "error_pattern": "wrong-operation"
+        },
+        {
+          "name": "additive-only-no-subtractive-output",
+          "code": "def roman_add(a, b):\n    vals = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}\n    n = sum(vals[c] for c in a) + sum(vals[c] for c in b)\n    out = ''\n    for sym, v in [('M',1000),('D',500),('C',100),('L',50),('X',10),('V',5),('I',1)]:\n        while n >= v:\n            out += sym\n            n -= v\n    return out\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-subtractive-form"
+        },
+        {
+          "name": "returns-first",
+          "code": "def roman_add(a, b):\n    return a\n",
+          "expected_failure_count": 5,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-009-caesar-cipher",
+      "title": "Caesar Cipher",
+      "problem_text": "Given a string s of lowercase letters and an integer shift (>=0), return the string with each letter shifted forward by `shift` positions in the alphabet (wrapping around z->a). Non-alphabetic characters are left unchanged.",
+      "entry_function": "caesar_encrypt",
+      "reference_solution": "def caesar_encrypt(s, shift):\n    out = []\n    for c in s:\n        if 'a' <= c <= 'z':\n            out.append(chr((ord(c) - ord('a') + shift) % 26 + ord('a')))\n        else:\n            out.append(c)\n    return ''.join(out)\n",
+      "test_cases": [
+        {
+          "input": "('', 5)",
+          "expected": "''",
+          "description": "empty string"
+        },
+        {
+          "input": "('a', 0)",
+          "expected": "'a'",
+          "description": "zero shift"
+        },
+        {
+          "input": "('abc', 1)",
+          "expected": "'bcd'",
+          "description": "normal shift"
+        },
+        {
+          "input": "('xyz', 3)",
+          "expected": "'abc'",
+          "description": "wrap around"
+        },
+        {
+          "input": "('a1b!', 1)",
+          "expected": "'b1c!'",
+          "description": "non-alphabetic characters unchanged"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "no-wrap",
+          "code": "def caesar_encrypt(s, shift):\n    return ''.join(chr(ord(c) + shift) if 'a' <= c <= 'z' else c for c in s)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-modulo"
+        },
+        {
+          "name": "shifts-non-letters-too",
+          "code": "def caesar_encrypt(s, shift):\n    return ''.join(chr((ord(c) - ord('a') + shift) % 26 + ord('a')) for c in s)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-scope"
+        },
+        {
+          "name": "returns-input",
+          "code": "def caesar_encrypt(s, shift):\n    return s\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "p3-c-010-word-frequency-no-counter",
+      "title": "Word Frequency (Without Counter)",
+      "problem_text": "Given a string text of words separated by single spaces, return a dictionary mapping each lowercased word to its count. Implement without using collections.Counter or any external imports.",
+      "entry_function": "word_freq",
+      "reference_solution": "def word_freq(text):\n    counts = {}\n    for w in text.split(' '):\n        w = w.lower()\n        counts[w] = counts.get(w, 0) + 1\n    return counts\n",
+      "test_cases": [
+        {
+          "input": "\"\"",
+          "expected": "{'': 1}",
+          "description": "empty string"
+        },
+        {
+          "input": "\"hello\"",
+          "expected": "{'hello': 1}",
+          "description": "single word"
+        },
+        {
+          "input": "\"hello world\"",
+          "expected": "{'hello': 1, 'world': 1}",
+          "description": "two distinct words"
+        },
+        {
+          "input": "\"hello world hello\"",
+          "expected": "{'hello': 2, 'world': 1}",
+          "description": "repeated words"
+        },
+        {
+          "input": "\"Hello hello HELLO\"",
+          "expected": "{'hello': 3}",
+          "description": "case insensitivity"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "returns-empty",
+          "code": "def word_freq(text):\n    return {}\n",
+          "expected_failure_count": 5,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "case-sensitive",
+          "code": "def word_freq(text):\n    counts = {}\n    for w in text.split(' '):\n        counts[w] = counts.get(w, 0) + 1\n    return counts\n",
+          "expected_failure_count": 1,
+          "error_pattern": "case-handling"
+        },
+        {
+          "name": "all-ones",
+          "code": "def word_freq(text):\n    return {w.lower(): 1 for w in text.split(' ')}\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-aggregation"
+        }
+      ]
+    }
+  ]
+}
