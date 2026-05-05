@@ -1,0 +1,1783 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-05-05",
+  "problems": [
+    {
+      "id": "lc-001-two-sum",
+      "title": "Two Sum",
+      "problem_text": "Given an array of integers nums and an integer target, return indices of the two numbers that add up to target. Each input has at most one solution; return [] if none.",
+      "entry_function": "two_sum",
+      "reference_solution": "def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n    return []\n",
+      "test_cases": [
+        {
+          "input": "([2,7,11,15], 9)",
+          "expected": "[0, 1]",
+          "description": "basic"
+        },
+        {
+          "input": "([3,2,4], 6)",
+          "expected": "[1, 2]",
+          "description": "indices not 0,1"
+        },
+        {
+          "input": "([3,3], 6)",
+          "expected": "[0, 1]",
+          "description": "duplicates"
+        },
+        {
+          "input": "([1,2,3], 7)",
+          "expected": "[]",
+          "description": "no solution"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "returns-empty",
+          "code": "def two_sum(nums, target):\n    return []\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "subtraction-instead-of-addition",
+          "code": "def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if n - target in seen:\n            return [seen[n - target], i]\n        seen[n] = i\n    return []\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-operation"
+        },
+        {
+          "name": "first-pair-not-sum",
+          "code": "def two_sum(nums, target):\n    return [0, 1] if len(nums) >= 2 else []\n",
+          "expected_failure_count": 2,
+          "error_pattern": "ignores-target"
+        }
+      ]
+    },
+    {
+      "id": "lc-344-reverse-string",
+      "title": "Reverse String",
+      "problem_text": "Given a string s, return the string reversed.",
+      "entry_function": "reverse_string",
+      "reference_solution": "def reverse_string(s):\n    return s[::-1]\n",
+      "test_cases": [
+        {
+          "input": "'hello'",
+          "expected": "'olleh'",
+          "description": "basic"
+        },
+        {
+          "input": "''",
+          "expected": "''",
+          "description": "empty"
+        },
+        {
+          "input": "'a'",
+          "expected": "'a'",
+          "description": "single char"
+        },
+        {
+          "input": "'ab'",
+          "expected": "'ba'",
+          "description": "two chars"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "two-pointers"
+      ],
+      "variants": [
+        {
+          "name": "returns-input-unchanged",
+          "code": "def reverse_string(s):\n    return s\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-op"
+        },
+        {
+          "name": "drops-last-then-reverses",
+          "code": "def reverse_string(s):\n    return s[:-1][::-1]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "returns-empty",
+          "code": "def reverse_string(s):\n    return ''\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "lc-009-palindrome-number",
+      "title": "Palindrome Number",
+      "problem_text": "Given an integer x, return True if x is a palindrome (reads the same forwards and backwards). Negative numbers are never palindromes.",
+      "entry_function": "is_palindrome",
+      "reference_solution": "def is_palindrome(x):\n    if x < 0:\n        return False\n    return str(x) == str(x)[::-1]\n",
+      "test_cases": [
+        {
+          "input": "121",
+          "expected": "True",
+          "description": "basic palindrome"
+        },
+        {
+          "input": "-121",
+          "expected": "False",
+          "description": "negative not palindrome"
+        },
+        {
+          "input": "10",
+          "expected": "False",
+          "description": "non-palindrome"
+        },
+        {
+          "input": "0",
+          "expected": "True",
+          "description": "zero"
+        },
+        {
+          "input": "1221",
+          "expected": "True",
+          "description": "even length"
+        },
+        {
+          "input": "1",
+          "expected": "True",
+          "description": "single digit"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "returns-false-always",
+          "code": "def is_palindrome(x):\n    return False\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "treats-zero-as-non-palindrome",
+          "code": "def is_palindrome(x):\n    if x <= 0:\n        return False\n    return str(x) == str(x)[::-1]\n",
+          "expected_failure_count": 1,
+          "error_pattern": "off-by-one-on-boundary"
+        },
+        {
+          "name": "returns-true-always",
+          "code": "def is_palindrome(x):\n    return True\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "lc-412-fizz-buzz",
+      "title": "Fizz Buzz",
+      "problem_text": "Given an integer n, return a list of strings of length n where the i-th element (1-indexed) is 'FizzBuzz' if divisible by 15, 'Fizz' if divisible by 3, 'Buzz' if divisible by 5, otherwise the number as a string.",
+      "entry_function": "fizzbuzz",
+      "reference_solution": "def fizzbuzz(n):\n    out = []\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            out.append('FizzBuzz')\n        elif i % 3 == 0:\n            out.append('Fizz')\n        elif i % 5 == 0:\n            out.append('Buzz')\n        else:\n            out.append(str(i))\n    return out\n",
+      "test_cases": [
+        {
+          "input": "1",
+          "expected": "['1']",
+          "description": "single element"
+        },
+        {
+          "input": "3",
+          "expected": "['1', '2', 'Fizz']",
+          "description": "first Fizz"
+        },
+        {
+          "input": "5",
+          "expected": "['1', '2', 'Fizz', '4', 'Buzz']",
+          "description": "first Buzz"
+        },
+        {
+          "input": "15",
+          "expected": "['1', '2', 'Fizz', '4', 'Buzz', 'Fizz', '7', '8', 'Fizz', 'Buzz', '11', 'Fizz', '13', '14', 'FizzBuzz']",
+          "description": "first FizzBuzz"
+        },
+        {
+          "input": "0",
+          "expected": "[]",
+          "description": "zero"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "no-fizz-no-buzz",
+          "code": "def fizzbuzz(n):\n    return [str(i) for i in range(1, n + 1)]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-special-cases"
+        },
+        {
+          "name": "wrong-order-fizzbuzz-unreachable",
+          "code": "def fizzbuzz(n):\n    out = []\n    for i in range(1, n + 1):\n        if i % 3 == 0:\n            out.append('Fizz')\n        elif i % 5 == 0:\n            out.append('Buzz')\n        elif i % 15 == 0:\n            out.append('FizzBuzz')\n        else:\n            out.append(str(i))\n    return out\n",
+          "expected_failure_count": 1,
+          "error_pattern": "ordering-bug"
+        },
+        {
+          "name": "returns-empty",
+          "code": "def fizzbuzz(n):\n    return []\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "lc-509-fibonacci",
+      "title": "Fibonacci Number",
+      "problem_text": "Given n, return the n-th Fibonacci number where F(0)=0 and F(1)=1 and F(n)=F(n-1)+F(n-2).",
+      "entry_function": "fibonacci",
+      "reference_solution": "def fibonacci(n):\n    if n <= 0:\n        return 0\n    if n == 1:\n        return 1\n    a, b = 0, 1\n    for _ in range(n - 1):\n        a, b = b, a + b\n    return b\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "0",
+          "description": "F(0)"
+        },
+        {
+          "input": "1",
+          "expected": "1",
+          "description": "F(1)"
+        },
+        {
+          "input": "2",
+          "expected": "1",
+          "description": "F(2)"
+        },
+        {
+          "input": "5",
+          "expected": "5",
+          "description": "small n"
+        },
+        {
+          "input": "10",
+          "expected": "55",
+          "description": "double-digit"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "dynamic-programming"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def fibonacci(n):\n    return n\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "off-by-one-iterations",
+          "code": "def fibonacci(n):\n    if n <= 0:\n        return 0\n    if n == 1:\n        return 1\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return b\n",
+          "expected_failure_count": 3,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "returns-zero",
+          "code": "def fibonacci(n):\n    return 0\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "edu-001-factorial",
+      "title": "Factorial",
+      "problem_text": "Given a non-negative integer n, return n! (the product of integers 1 through n). Define 0! = 1.",
+      "entry_function": "factorial",
+      "reference_solution": "def factorial(n):\n    result = 1\n    for i in range(1, n + 1):\n        result *= i\n    return result\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "1",
+          "description": "zero"
+        },
+        {
+          "input": "1",
+          "expected": "1",
+          "description": "one"
+        },
+        {
+          "input": "5",
+          "expected": "120",
+          "description": "small"
+        },
+        {
+          "input": "10",
+          "expected": "3628800",
+          "description": "double-digit"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "recursion"
+      ],
+      "variants": [
+        {
+          "name": "returns-zero",
+          "code": "def factorial(n):\n    return 0\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "off-by-one-range",
+          "code": "def factorial(n):\n    result = 1\n    for i in range(1, n):\n        result *= i\n    return result\n",
+          "expected_failure_count": 2,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "addition-instead-of-multiply",
+          "code": "def factorial(n):\n    result = 0\n    for i in range(1, n + 1):\n        result += i\n    return result\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "edu-002-is-prime",
+      "title": "Is Prime",
+      "problem_text": "Given an integer n, return True iff n is prime (a natural number greater than 1 with no divisors other than 1 and itself).",
+      "entry_function": "is_prime",
+      "reference_solution": "def is_prime(n):\n    if n < 2:\n        return False\n    if n == 2:\n        return True\n    if n % 2 == 0:\n        return False\n    i = 3\n    while i * i <= n:\n        if n % i == 0:\n            return False\n        i += 2\n    return True\n",
+      "test_cases": [
+        {
+          "input": "1",
+          "expected": "False",
+          "description": "one is not prime"
+        },
+        {
+          "input": "2",
+          "expected": "True",
+          "description": "smallest prime"
+        },
+        {
+          "input": "3",
+          "expected": "True",
+          "description": "small prime"
+        },
+        {
+          "input": "4",
+          "expected": "False",
+          "description": "composite even"
+        },
+        {
+          "input": "17",
+          "expected": "True",
+          "description": "double-digit prime"
+        },
+        {
+          "input": "25",
+          "expected": "False",
+          "description": "perfect square"
+        },
+        {
+          "input": "0",
+          "expected": "False",
+          "description": "zero"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "returns-true-always",
+          "code": "def is_prime(n):\n    return True\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "treats-two-as-non-prime",
+          "code": "def is_prime(n):\n    if n < 3:\n        return False\n    if n % 2 == 0:\n        return False\n    i = 3\n    while i * i <= n:\n        if n % i == 0:\n            return False\n        i += 2\n    return True\n",
+          "expected_failure_count": 1,
+          "error_pattern": "off-by-one-on-boundary"
+        },
+        {
+          "name": "even-check-only",
+          "code": "def is_prime(n):\n    return n > 1 and n % 2 == 1\n",
+          "expected_failure_count": 2,
+          "error_pattern": "incomplete-check"
+        }
+      ]
+    },
+    {
+      "id": "edu-003-count-vowels",
+      "title": "Count Vowels",
+      "problem_text": "Given a string s, return the number of vowels (a, e, i, o, u, case-insensitive) it contains.",
+      "entry_function": "count_vowels",
+      "reference_solution": "def count_vowels(s):\n    return sum(1 for c in s.lower() if c in 'aeiou')\n",
+      "test_cases": [
+        {
+          "input": "'hello'",
+          "expected": "2",
+          "description": "basic"
+        },
+        {
+          "input": "''",
+          "expected": "0",
+          "description": "empty"
+        },
+        {
+          "input": "'AEIOU'",
+          "expected": "5",
+          "description": "all uppercase"
+        },
+        {
+          "input": "'bcdfg'",
+          "expected": "0",
+          "description": "no vowels"
+        },
+        {
+          "input": "'Programming'",
+          "expected": "3",
+          "description": "mixed case"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "returns-zero",
+          "code": "def count_vowels(s):\n    return 0\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "case-sensitive",
+          "code": "def count_vowels(s):\n    return sum(1 for c in s if c in 'aeiou')\n",
+          "expected_failure_count": 1,
+          "error_pattern": "case-handling"
+        },
+        {
+          "name": "counts-consonants",
+          "code": "def count_vowels(s):\n    return sum(1 for c in s.lower() if c.isalpha() and c not in 'aeiou')\n",
+          "expected_failure_count": 4,
+          "error_pattern": "inverted-condition"
+        }
+      ]
+    },
+    {
+      "id": "edu-004-find-max",
+      "title": "Find Max",
+      "problem_text": "Given a list of integers nums, return the largest element. Return None for an empty list.",
+      "entry_function": "find_max",
+      "reference_solution": "def find_max(nums):\n    if not nums:\n        return None\n    m = nums[0]\n    for n in nums[1:]:\n        if n > m:\n            m = n\n    return m\n",
+      "test_cases": [
+        {
+          "input": "[1, 2, 3]",
+          "expected": "3",
+          "description": "ascending"
+        },
+        {
+          "input": "[3, 2, 1]",
+          "expected": "3",
+          "description": "descending"
+        },
+        {
+          "input": "[-5, -1, -3]",
+          "expected": "-1",
+          "description": "all negative"
+        },
+        {
+          "input": "[42]",
+          "expected": "42",
+          "description": "single element"
+        },
+        {
+          "input": "[]",
+          "expected": "None",
+          "description": "empty"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-last-element",
+          "code": "def find_max(nums):\n    return nums[-1] if nums else None\n",
+          "expected_failure_count": 2,
+          "error_pattern": "ignores-comparison"
+        },
+        {
+          "name": "no-empty-guard",
+          "code": "def find_max(nums):\n    return nums[0]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-edge-case"
+        },
+        {
+          "name": "returns-min-not-max",
+          "code": "def find_max(nums):\n    if not nums:\n        return None\n    m = nums[0]\n    for n in nums[1:]:\n        if n < m:\n            m = n\n    return m\n",
+          "expected_failure_count": 3,
+          "error_pattern": "inverted-comparison"
+        }
+      ]
+    },
+    {
+      "id": "lc-206-reverse-list",
+      "title": "Reverse List",
+      "problem_text": "Given a list of integers nums, return a new list that is nums reversed.",
+      "entry_function": "reverse_list",
+      "reference_solution": "def reverse_list(nums):\n    return nums[::-1]\n",
+      "test_cases": [
+        {
+          "input": "[1, 2, 3]",
+          "expected": "[3, 2, 1]",
+          "description": "basic"
+        },
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty"
+        },
+        {
+          "input": "[1]",
+          "expected": "[1]",
+          "description": "single element"
+        },
+        {
+          "input": "[1, 2]",
+          "expected": "[2, 1]",
+          "description": "two elements"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "two-pointers"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def reverse_list(nums):\n    return nums\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-op"
+        },
+        {
+          "name": "drops-last-then-reverses",
+          "code": "def reverse_list(nums):\n    return list(reversed(nums[:-1]))\n",
+          "expected_failure_count": 3,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "doubles-reversed",
+          "code": "def reverse_list(nums):\n    return nums[::-1] + nums[::-1]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-output-shape"
+        }
+      ]
+    },
+    {
+      "id": "lc-977-squares-sorted-array",
+      "title": "Squares of a Sorted Array",
+      "problem_text": "Given a sorted list of integers nums (may contain negatives), return a sorted list of the squares of each element.",
+      "entry_function": "squares_of_sorted_array",
+      "reference_solution": "def squares_of_sorted_array(nums):\n    return sorted(n * n for n in nums)\n",
+      "test_cases": [
+        {
+          "input": "[-4, -1, 0, 3, 10]",
+          "expected": "[0, 1, 9, 16, 100]",
+          "description": "negatives mixed"
+        },
+        {
+          "input": "[-7, -3, 2, 3, 11]",
+          "expected": "[4, 9, 9, 49, 121]",
+          "description": "duplicates after square"
+        },
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty"
+        },
+        {
+          "input": "[5]",
+          "expected": "[25]",
+          "description": "single positive"
+        },
+        {
+          "input": "[-1]",
+          "expected": "[1]",
+          "description": "single negative"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "two-pointers",
+        "sorting"
+      ],
+      "variants": [
+        {
+          "name": "no-sort",
+          "code": "def squares_of_sorted_array(nums):\n    return [n * n for n in nums]\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-sort-step"
+        },
+        {
+          "name": "no-square",
+          "code": "def squares_of_sorted_array(nums):\n    return sorted(nums)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "missing-square-step"
+        },
+        {
+          "name": "negate-instead-of-square",
+          "code": "def squares_of_sorted_array(nums):\n    return sorted(-n for n in nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "lc-020-valid-parentheses",
+      "title": "Valid Parentheses",
+      "problem_text": "Given a string s of characters '()[]{}', return True iff every opening bracket is closed in correct order. The empty string is considered valid.",
+      "entry_function": "valid_parentheses",
+      "reference_solution": "def valid_parentheses(s):\n    stack = []\n    pairs = {')': '(', ']': '[', '}': '{'}\n    for c in s:\n        if c in '([{':\n            stack.append(c)\n        elif c in ')]}':\n            if not stack or stack.pop() != pairs[c]:\n                return False\n    return not stack\n",
+      "test_cases": [
+        {
+          "input": "'()'",
+          "expected": "True",
+          "description": "single pair"
+        },
+        {
+          "input": "'()[]{}'",
+          "expected": "True",
+          "description": "all kinds"
+        },
+        {
+          "input": "'(]'",
+          "expected": "False",
+          "description": "mismatch"
+        },
+        {
+          "input": "'([)]'",
+          "expected": "False",
+          "description": "interleaved"
+        },
+        {
+          "input": "''",
+          "expected": "True",
+          "description": "empty"
+        },
+        {
+          "input": "'((('",
+          "expected": "False",
+          "description": "unclosed"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "stack"
+      ],
+      "variants": [
+        {
+          "name": "returns-true-always",
+          "code": "def valid_parentheses(s):\n    return True\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "count-only",
+          "code": "def valid_parentheses(s):\n    return s.count('(') == s.count(')') and s.count('[') == s.count(']') and s.count('{') == s.count('}')\n",
+          "expected_failure_count": 1,
+          "error_pattern": "ignores-order"
+        },
+        {
+          "name": "skips-leftover-stack-check",
+          "code": "def valid_parentheses(s):\n    stack = []\n    pairs = {')': '(', ']': '[', '}': '{'}\n    for c in s:\n        if c in '([{':\n            stack.append(c)\n        elif c in ')]}':\n            if not stack or stack.pop() != pairs[c]:\n                return False\n    return True\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-end-check"
+        }
+      ]
+    },
+    {
+      "id": "edu-005-merge-two-sorted-arrays",
+      "title": "Merge Two Sorted Arrays",
+      "problem_text": "Given two sorted lists of integers a and b, return a single sorted list containing all elements of both.",
+      "entry_function": "merge_two_sorted_lists",
+      "reference_solution": "def merge_two_sorted_lists(a, b):\n    result = []\n    i = j = 0\n    while i < len(a) and j < len(b):\n        if a[i] <= b[j]:\n            result.append(a[i])\n            i += 1\n        else:\n            result.append(b[j])\n            j += 1\n    result.extend(a[i:])\n    result.extend(b[j:])\n    return result\n",
+      "test_cases": [
+        {
+          "input": "([1,2,4], [1,3,4])",
+          "expected": "[1, 1, 2, 3, 4, 4]",
+          "description": "interleaved"
+        },
+        {
+          "input": "([], [])",
+          "expected": "[]",
+          "description": "both empty"
+        },
+        {
+          "input": "([1], [])",
+          "expected": "[1]",
+          "description": "right empty"
+        },
+        {
+          "input": "([], [1])",
+          "expected": "[1]",
+          "description": "left empty"
+        },
+        {
+          "input": "([1,3,5], [2,4,6])",
+          "expected": "[1, 2, 3, 4, 5, 6]",
+          "description": "alternating"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "two-pointers"
+      ],
+      "variants": [
+        {
+          "name": "returns-first-only",
+          "code": "def merge_two_sorted_lists(a, b):\n    return a\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "concat-without-sort",
+          "code": "def merge_two_sorted_lists(a, b):\n    return a + b\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-sort"
+        },
+        {
+          "name": "skips-leftovers",
+          "code": "def merge_two_sorted_lists(a, b):\n    result = []\n    i = j = 0\n    while i < len(a) and j < len(b):\n        if a[i] <= b[j]:\n            result.append(a[i])\n            i += 1\n        else:\n            result.append(b[j])\n            j += 1\n    return result\n",
+          "expected_failure_count": 4,
+          "error_pattern": "missing-tail-merge"
+        }
+      ]
+    },
+    {
+      "id": "edu-006-remove-duplicates",
+      "title": "Remove Duplicates (Order-Preserving)",
+      "problem_text": "Given a list of integers nums, return a new list with duplicates removed, preserving the order of first occurrence.",
+      "entry_function": "remove_duplicates",
+      "reference_solution": "def remove_duplicates(nums):\n    seen = set()\n    out = []\n    for n in nums:\n        if n not in seen:\n            seen.add(n)\n            out.append(n)\n    return out\n",
+      "test_cases": [
+        {
+          "input": "[1, 1, 2]",
+          "expected": "[1, 2]",
+          "description": "trailing dupe"
+        },
+        {
+          "input": "[0, 0, 1, 1, 1, 2, 2, 3, 3, 4]",
+          "expected": "[0, 1, 2, 3, 4]",
+          "description": "many dupes"
+        },
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty"
+        },
+        {
+          "input": "[1, 2, 3]",
+          "expected": "[1, 2, 3]",
+          "description": "no dupes"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def remove_duplicates(nums):\n    return nums\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "sorted-set-reverse",
+          "code": "def remove_duplicates(nums):\n    return sorted(set(nums), reverse=True)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-order"
+        },
+        {
+          "name": "reverses-input",
+          "code": "def remove_duplicates(nums):\n    return nums[::-1]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "lc-066-plus-one",
+      "title": "Plus One",
+      "problem_text": "Given a non-empty list of digits representing a non-negative integer (most significant digit first), return the digits of the integer plus one.",
+      "entry_function": "plus_one",
+      "reference_solution": "def plus_one(digits):\n    digits = list(digits)\n    i = len(digits) - 1\n    while i >= 0:\n        if digits[i] < 9:\n            digits[i] += 1\n            return digits\n        digits[i] = 0\n        i -= 1\n    return [1] + digits\n",
+      "test_cases": [
+        {
+          "input": "[1, 2, 3]",
+          "expected": "[1, 2, 4]",
+          "description": "no carry"
+        },
+        {
+          "input": "[4, 3, 2, 1]",
+          "expected": "[4, 3, 2, 2]",
+          "description": "no carry long"
+        },
+        {
+          "input": "[9]",
+          "expected": "[1, 0]",
+          "description": "carry to new digit"
+        },
+        {
+          "input": "[9, 9, 9]",
+          "expected": "[1, 0, 0, 0]",
+          "description": "all-nines carry"
+        },
+        {
+          "input": "[0]",
+          "expected": "[1]",
+          "description": "zero base"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "no-carry-handling",
+          "code": "def plus_one(digits):\n    digits = list(digits)\n    digits[-1] += 1\n    return digits\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-carry-propagation"
+        },
+        {
+          "name": "increment-every-digit",
+          "code": "def plus_one(digits):\n    return [d + 1 for d in digits]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-scope"
+        },
+        {
+          "name": "appends-one-instead-of-incrementing",
+          "code": "def plus_one(digits):\n    return list(digits) + [1]\n",
+          "expected_failure_count": 5,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "lc-067-add-binary",
+      "title": "Add Binary",
+      "problem_text": "Given two binary strings a and b, return their sum as a binary string. Inputs are non-empty and contain only '0' and '1'.",
+      "entry_function": "add_binary",
+      "reference_solution": "def add_binary(a, b):\n    return bin(int(a, 2) + int(b, 2))[2:]\n",
+      "test_cases": [
+        {
+          "input": "('11', '1')",
+          "expected": "'100'",
+          "description": "carry"
+        },
+        {
+          "input": "('1010', '1011')",
+          "expected": "'10101'",
+          "description": "long"
+        },
+        {
+          "input": "('0', '0')",
+          "expected": "'0'",
+          "description": "zero"
+        },
+        {
+          "input": "('1', '1')",
+          "expected": "'10'",
+          "description": "smallest carry"
+        },
+        {
+          "input": "('100', '100')",
+          "expected": "'1000'",
+          "description": "no carry"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "returns-first",
+          "code": "def add_binary(a, b):\n    return a\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "decimal-addition",
+          "code": "def add_binary(a, b):\n    return str(int(a) + int(b))\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-base"
+        },
+        {
+          "name": "subtraction-instead-of-addition",
+          "code": "def add_binary(a, b):\n    return bin(int(a, 2) - int(b, 2))[2:] if int(a, 2) >= int(b, 2) else bin(int(b, 2) - int(a, 2))[2:]\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "lc-242-valid-anagram",
+      "title": "Valid Anagram",
+      "problem_text": "Given two strings s and t, return True iff t is an anagram of s (same characters, possibly rearranged).",
+      "entry_function": "valid_anagram",
+      "reference_solution": "def valid_anagram(s, t):\n    return sorted(s) == sorted(t)\n",
+      "test_cases": [
+        {
+          "input": "('anagram', 'nagaram')",
+          "expected": "True",
+          "description": "basic anagram"
+        },
+        {
+          "input": "('rat', 'car')",
+          "expected": "False",
+          "description": "not anagram"
+        },
+        {
+          "input": "('', '')",
+          "expected": "True",
+          "description": "both empty"
+        },
+        {
+          "input": "('a', 'a')",
+          "expected": "True",
+          "description": "single char"
+        },
+        {
+          "input": "('ab', 'ba')",
+          "expected": "True",
+          "description": "two-char anagram"
+        },
+        {
+          "input": "('ab', 'abc')",
+          "expected": "False",
+          "description": "different lengths"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "hash-table",
+        "sorting"
+      ],
+      "variants": [
+        {
+          "name": "exact-equality",
+          "code": "def valid_anagram(s, t):\n    return s == t\n",
+          "expected_failure_count": 2,
+          "error_pattern": "ignores-rearrangement"
+        },
+        {
+          "name": "length-only",
+          "code": "def valid_anagram(s, t):\n    return len(s) == len(t)\n",
+          "expected_failure_count": 1,
+          "error_pattern": "incomplete-check"
+        },
+        {
+          "name": "case-mismatch-bug",
+          "code": "def valid_anagram(s, t):\n    return sorted(s.lower()) == sorted(t.upper())\n",
+          "expected_failure_count": 3,
+          "error_pattern": "case-handling"
+        }
+      ]
+    },
+    {
+      "id": "lc-125-valid-palindrome",
+      "title": "Valid Palindrome",
+      "problem_text": "Given a string s, return True iff it is a palindrome considering only alphanumeric characters and ignoring case.",
+      "entry_function": "valid_palindrome",
+      "reference_solution": "def valid_palindrome(s):\n    cleaned = ''.join(c.lower() for c in s if c.isalnum())\n    return cleaned == cleaned[::-1]\n",
+      "test_cases": [
+        {
+          "input": "'A man, a plan, a canal: Panama'",
+          "expected": "True",
+          "description": "classic with punctuation"
+        },
+        {
+          "input": "'race a car'",
+          "expected": "False",
+          "description": "not palindrome"
+        },
+        {
+          "input": "''",
+          "expected": "True",
+          "description": "empty"
+        },
+        {
+          "input": "' '",
+          "expected": "True",
+          "description": "whitespace only"
+        },
+        {
+          "input": "'ab_a'",
+          "expected": "True",
+          "description": "underscore stripped"
+        },
+        {
+          "input": "'0P'",
+          "expected": "False",
+          "description": "alphanumeric mismatch"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "two-pointers"
+      ],
+      "variants": [
+        {
+          "name": "raw-string-compare",
+          "code": "def valid_palindrome(s):\n    return s == s[::-1]\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-cleaning"
+        },
+        {
+          "name": "no-lowercase",
+          "code": "def valid_palindrome(s):\n    cleaned = ''.join(c for c in s if c.isalnum())\n    return cleaned == cleaned[::-1]\n",
+          "expected_failure_count": 1,
+          "error_pattern": "case-handling"
+        },
+        {
+          "name": "returns-true-always",
+          "code": "def valid_palindrome(s):\n    return True\n",
+          "expected_failure_count": 2,
+          "error_pattern": "no-implementation"
+        }
+      ]
+    },
+    {
+      "id": "lc-387-first-unique-character",
+      "title": "First Unique Character",
+      "problem_text": "Given a string s, return the index of the first non-repeating character. Return -1 if no such character exists.",
+      "entry_function": "first_unique_character",
+      "reference_solution": "def first_unique_character(s):\n    counts = {}\n    for c in s:\n        counts[c] = counts.get(c, 0) + 1\n    for i, c in enumerate(s):\n        if counts[c] == 1:\n            return i\n    return -1\n",
+      "test_cases": [
+        {
+          "input": "'leetcode'",
+          "expected": "0",
+          "description": "first char unique"
+        },
+        {
+          "input": "'loveleetcode'",
+          "expected": "2",
+          "description": "deeper match"
+        },
+        {
+          "input": "'aabb'",
+          "expected": "-1",
+          "description": "no unique"
+        },
+        {
+          "input": "''",
+          "expected": "-1",
+          "description": "empty"
+        },
+        {
+          "input": "'z'",
+          "expected": "0",
+          "description": "single char"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "returns-minus-one",
+          "code": "def first_unique_character(s):\n    return -1\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "always-zero",
+          "code": "def first_unique_character(s):\n    return 0\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-empty-or-no-unique-handling"
+        },
+        {
+          "name": "returns-len",
+          "code": "def first_unique_character(s):\n    return len(s)\n",
+          "expected_failure_count": 5,
+          "error_pattern": "wrong-formula"
+        }
+      ]
+    },
+    {
+      "id": "lc-1480-running-sum",
+      "title": "Running Sum of 1d Array",
+      "problem_text": "Given a list of integers nums, return its running sum: a list where the i-th element is the sum of nums[0..i].",
+      "entry_function": "running_sum",
+      "reference_solution": "def running_sum(nums):\n    out = []\n    total = 0\n    for n in nums:\n        total += n\n        out.append(total)\n    return out\n",
+      "test_cases": [
+        {
+          "input": "[1, 2, 3, 4]",
+          "expected": "[1, 3, 6, 10]",
+          "description": "basic"
+        },
+        {
+          "input": "[1, 1, 1, 1, 1]",
+          "expected": "[1, 2, 3, 4, 5]",
+          "description": "all ones"
+        },
+        {
+          "input": "[3]",
+          "expected": "[3]",
+          "description": "single element"
+        },
+        {
+          "input": "[]",
+          "expected": "[]",
+          "description": "empty"
+        },
+        {
+          "input": "[-1, 1, -1, 1]",
+          "expected": "[-1, 0, -1, 0]",
+          "description": "alternating sign"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "prefix-sum"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def running_sum(nums):\n    return list(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "running-product",
+          "code": "def running_sum(nums):\n    out = []\n    total = 1\n    for n in nums:\n        total *= n\n        out.append(total)\n    return out\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-operation"
+        },
+        {
+          "name": "reversed-running-sum",
+          "code": "def running_sum(nums):\n    out = []\n    total = 0\n    for n in nums:\n        total += n\n        out.append(total)\n    return out[::-1]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-direction"
+        }
+      ]
+    },
+    {
+      "id": "lc-1470-shuffle-array",
+      "title": "Shuffle the Array",
+      "problem_text": "Given a list nums = [x1, x2, ..., xn, y1, y2, ..., yn] of length 2n, return [x1, y1, x2, y2, ..., xn, yn].",
+      "entry_function": "shuffle_array",
+      "reference_solution": "def shuffle_array(nums, n):\n    out = []\n    for i in range(n):\n        out.append(nums[i])\n        out.append(nums[i + n])\n    return out\n",
+      "test_cases": [
+        {
+          "input": "([2, 5, 1, 3, 4, 7], 3)",
+          "expected": "[2, 3, 5, 4, 1, 7]",
+          "description": "basic"
+        },
+        {
+          "input": "([1, 2, 3, 4, 4, 3, 2, 1], 4)",
+          "expected": "[1, 4, 2, 3, 3, 2, 4, 1]",
+          "description": "longer"
+        },
+        {
+          "input": "([1, 1, 2, 2], 2)",
+          "expected": "[1, 2, 1, 2]",
+          "description": "with dupes"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array"
+      ],
+      "variants": [
+        {
+          "name": "returns-input",
+          "code": "def shuffle_array(nums, n):\n    return list(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "first-half-only",
+          "code": "def shuffle_array(nums, n):\n    return nums[: 2 * n]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-interleave"
+        },
+        {
+          "name": "interleave-swapped",
+          "code": "def shuffle_array(nums, n):\n    out = []\n    for i in range(n):\n        out.append(nums[i + n])\n        out.append(nums[i])\n    return out\n",
+          "expected_failure_count": 3,
+          "error_pattern": "swapped-pairs"
+        }
+      ]
+    },
+    {
+      "id": "lc-1672-richest-customer-wealth",
+      "title": "Richest Customer Wealth",
+      "problem_text": "Given accounts: list of lists where accounts[i][j] is wealth of customer i in bank j. Return the wealth of the richest customer (max sum across rows).",
+      "entry_function": "richest_customer_wealth",
+      "reference_solution": "def richest_customer_wealth(accounts):\n    return max(sum(row) for row in accounts)\n",
+      "test_cases": [
+        {
+          "input": "[[1, 2, 3], [3, 2, 1]]",
+          "expected": "6",
+          "description": "tie at top"
+        },
+        {
+          "input": "[[1, 5], [7, 3], [3, 5]]",
+          "expected": "10",
+          "description": "middle wins"
+        },
+        {
+          "input": "[[2, 8, 7], [7, 1, 3], [1, 9, 5]]",
+          "expected": "17",
+          "description": "first row wins"
+        },
+        {
+          "input": "[[1]]",
+          "expected": "1",
+          "description": "single customer single bank"
+        },
+        {
+          "input": "[[0, 0]]",
+          "expected": "0",
+          "description": "all zeros"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "matrix"
+      ],
+      "variants": [
+        {
+          "name": "returns-zero",
+          "code": "def richest_customer_wealth(accounts):\n    return 0\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "max-of-cells-not-rows",
+          "code": "def richest_customer_wealth(accounts):\n    return max(max(row) for row in accounts)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-aggregation"
+        },
+        {
+          "name": "sums-everything",
+          "code": "def richest_customer_wealth(accounts):\n    return sum(sum(row) for row in accounts)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-aggregation"
+        }
+      ]
+    },
+    {
+      "id": "lc-231-power-of-two",
+      "title": "Power of Two",
+      "problem_text": "Given an integer n, return True iff n is a power of two (1, 2, 4, 8, 16, ...).",
+      "entry_function": "is_power_of_two",
+      "reference_solution": "def is_power_of_two(n):\n    return n > 0 and (n & (n - 1)) == 0\n",
+      "test_cases": [
+        {
+          "input": "1",
+          "expected": "True",
+          "description": "2^0"
+        },
+        {
+          "input": "2",
+          "expected": "True",
+          "description": "2^1"
+        },
+        {
+          "input": "3",
+          "expected": "False",
+          "description": "non-power"
+        },
+        {
+          "input": "4",
+          "expected": "True",
+          "description": "2^2"
+        },
+        {
+          "input": "16",
+          "expected": "True",
+          "description": "2^4"
+        },
+        {
+          "input": "0",
+          "expected": "False",
+          "description": "zero"
+        },
+        {
+          "input": "-1",
+          "expected": "False",
+          "description": "negative"
+        },
+        {
+          "input": "17",
+          "expected": "False",
+          "description": "off-by-one"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "bit-manipulation"
+      ],
+      "variants": [
+        {
+          "name": "returns-true",
+          "code": "def is_power_of_two(n):\n    return True\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "missing-positive-check",
+          "code": "def is_power_of_two(n):\n    return (n & (n - 1)) == 0\n",
+          "expected_failure_count": 1,
+          "error_pattern": "missing-edge-case"
+        },
+        {
+          "name": "even-check-only",
+          "code": "def is_power_of_two(n):\n    return n > 0 and n % 2 == 0\n",
+          "expected_failure_count": 1,
+          "error_pattern": "incomplete-check"
+        }
+      ]
+    },
+    {
+      "id": "lc-167-two-sum-sorted",
+      "title": "Two Sum (Sorted)",
+      "problem_text": "Given a sorted list of integers nums and a target, return the 0-indexed positions of two numbers summing to target as [i, j] with i < j. Return [] if none.",
+      "entry_function": "two_sum_sorted",
+      "reference_solution": "def two_sum_sorted(nums, target):\n    i, j = 0, len(nums) - 1\n    while i < j:\n        s = nums[i] + nums[j]\n        if s == target:\n            return [i, j]\n        if s < target:\n            i += 1\n        else:\n            j -= 1\n    return []\n",
+      "test_cases": [
+        {
+          "input": "([1, 2, 3, 4, 5], 6)",
+          "expected": "[0, 4]",
+          "description": "ends-pair"
+        },
+        {
+          "input": "([2, 3, 4], 6)",
+          "expected": "[0, 2]",
+          "description": "skip-middle"
+        },
+        {
+          "input": "([1, 1], 2)",
+          "expected": "[0, 1]",
+          "description": "duplicates"
+        },
+        {
+          "input": "([1, 2, 3], 10)",
+          "expected": "[]",
+          "description": "no solution"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "two-pointers"
+      ],
+      "variants": [
+        {
+          "name": "returns-empty",
+          "code": "def two_sum_sorted(nums, target):\n    return []\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "one-indexed",
+          "code": "def two_sum_sorted(nums, target):\n    i, j = 0, len(nums) - 1\n    while i < j:\n        s = nums[i] + nums[j]\n        if s == target:\n            return [i + 1, j + 1]\n        if s < target:\n            i += 1\n        else:\n            j -= 1\n    return []\n",
+          "expected_failure_count": 3,
+          "error_pattern": "off-by-one"
+        },
+        {
+          "name": "single-pointer-doubled",
+          "code": "def two_sum_sorted(nums, target):\n    for i, n in enumerate(nums):\n        if n + n == target:\n            return [i, i]\n    return []\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-algorithm"
+        }
+      ]
+    },
+    {
+      "id": "lc-338-counting-bits",
+      "title": "Counting Bits",
+      "problem_text": "Given an integer n, return a list ans of length n+1 where ans[i] is the number of 1's in the binary representation of i.",
+      "entry_function": "counting_bits",
+      "reference_solution": "def counting_bits(n):\n    return [bin(i).count('1') for i in range(n + 1)]\n",
+      "test_cases": [
+        {
+          "input": "0",
+          "expected": "[0]",
+          "description": "zero only"
+        },
+        {
+          "input": "1",
+          "expected": "[0, 1]",
+          "description": "two values"
+        },
+        {
+          "input": "2",
+          "expected": "[0, 1, 1]",
+          "description": "small"
+        },
+        {
+          "input": "5",
+          "expected": "[0, 1, 1, 2, 1, 2]",
+          "description": "five"
+        },
+        {
+          "input": "8",
+          "expected": "[0, 1, 1, 2, 1, 2, 2, 3, 1]",
+          "description": "eight"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "dynamic-programming",
+        "bit-manipulation"
+      ],
+      "variants": [
+        {
+          "name": "returns-range",
+          "code": "def counting_bits(n):\n    return list(range(n + 1))\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-formula"
+        },
+        {
+          "name": "returns-zeros",
+          "code": "def counting_bits(n):\n    return [0] * (n + 1)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "skips-zero",
+          "code": "def counting_bits(n):\n    return [bin(i).count('1') for i in range(1, n + 1)]\n",
+          "expected_failure_count": 5,
+          "error_pattern": "off-by-one"
+        }
+      ]
+    },
+    {
+      "id": "lc-448-find-disappeared-numbers",
+      "title": "Find All Numbers Disappeared in an Array",
+      "problem_text": "Given a list nums of n integers in the range [1, n], return all integers in [1, n] not present in nums (in ascending order).",
+      "entry_function": "find_disappeared_numbers",
+      "reference_solution": "def find_disappeared_numbers(nums):\n    s = set(nums)\n    return [i for i in range(1, len(nums) + 1) if i not in s]\n",
+      "test_cases": [
+        {
+          "input": "[4, 3, 2, 7, 8, 2, 3, 1]",
+          "expected": "[5, 6]",
+          "description": "two missing"
+        },
+        {
+          "input": "[1, 1]",
+          "expected": "[2]",
+          "description": "single missing"
+        },
+        {
+          "input": "[1, 2, 3]",
+          "expected": "[]",
+          "description": "none missing"
+        },
+        {
+          "input": "[2, 2]",
+          "expected": "[1]",
+          "description": "boundary"
+        },
+        {
+          "input": "[3, 1, 3, 1]",
+          "expected": "[2, 4]",
+          "description": "multiple"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "returns-empty",
+          "code": "def find_disappeared_numbers(nums):\n    return []\n",
+          "expected_failure_count": 4,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "returns-input",
+          "code": "def find_disappeared_numbers(nums):\n    return list(nums)\n",
+          "expected_failure_count": 5,
+          "error_pattern": "wrong-output"
+        },
+        {
+          "name": "zero-indexed-range",
+          "code": "def find_disappeared_numbers(nums):\n    s = set(nums)\n    return [i for i in range(len(nums)) if i not in s]\n",
+          "expected_failure_count": 5,
+          "error_pattern": "off-by-one"
+        }
+      ]
+    },
+    {
+      "id": "lc-136-single-number",
+      "title": "Single Number",
+      "problem_text": "Given a non-empty list of integers nums where every element appears exactly twice except for one, return that single element.",
+      "entry_function": "single_number",
+      "reference_solution": "def single_number(nums):\n    result = 0\n    for n in nums:\n        result ^= n\n    return result\n",
+      "test_cases": [
+        {
+          "input": "[2, 2, 1]",
+          "expected": "1",
+          "description": "small"
+        },
+        {
+          "input": "[4, 1, 2, 1, 2]",
+          "expected": "4",
+          "description": "front"
+        },
+        {
+          "input": "[1]",
+          "expected": "1",
+          "description": "trivial"
+        },
+        {
+          "input": "[-1, -1, 2]",
+          "expected": "2",
+          "description": "negatives"
+        },
+        {
+          "input": "[0, 0, 17]",
+          "expected": "17",
+          "description": "with zero pair"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "array",
+        "bit-manipulation"
+      ],
+      "variants": [
+        {
+          "name": "returns-first",
+          "code": "def single_number(nums):\n    return nums[0]\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "returns-min",
+          "code": "def single_number(nums):\n    return min(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-aggregation"
+        },
+        {
+          "name": "returns-sum",
+          "code": "def single_number(nums):\n    return sum(nums)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "lc-202-happy-number",
+      "title": "Happy Number",
+      "problem_text": "Given an integer n, return True iff n is a 'happy number'. A happy number eventually reaches 1 by repeatedly replacing it with the sum of the squares of its digits.",
+      "entry_function": "happy_number",
+      "reference_solution": "def happy_number(n):\n    seen = set()\n    while n != 1 and n not in seen:\n        seen.add(n)\n        n = sum(int(d) ** 2 for d in str(n))\n    return n == 1\n",
+      "test_cases": [
+        {
+          "input": "19",
+          "expected": "True",
+          "description": "happy double-digit"
+        },
+        {
+          "input": "2",
+          "expected": "False",
+          "description": "small unhappy"
+        },
+        {
+          "input": "1",
+          "expected": "True",
+          "description": "trivially happy"
+        },
+        {
+          "input": "7",
+          "expected": "True",
+          "description": "single-digit happy"
+        },
+        {
+          "input": "4",
+          "expected": "False",
+          "description": "small unhappy"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "hash-table"
+      ],
+      "variants": [
+        {
+          "name": "returns-false",
+          "code": "def happy_number(n):\n    return False\n",
+          "expected_failure_count": 3,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "no-loop",
+          "code": "def happy_number(n):\n    return n == 1\n",
+          "expected_failure_count": 2,
+          "error_pattern": "missing-iteration"
+        },
+        {
+          "name": "sum-not-squares",
+          "code": "def happy_number(n):\n    seen = set()\n    while n != 1 and n not in seen:\n        seen.add(n)\n        n = sum(int(d) for d in str(n))\n    return n == 1\n",
+          "expected_failure_count": 1,
+          "error_pattern": "wrong-operation"
+        }
+      ]
+    },
+    {
+      "id": "lc-171-excel-column-number",
+      "title": "Excel Sheet Column Number",
+      "problem_text": "Given a string s representing an Excel column title, return its column number. A=1, B=2, ..., Z=26, AA=27, AB=28, ZZ=702, ...",
+      "entry_function": "excel_sheet_column_number",
+      "reference_solution": "def excel_sheet_column_number(s):\n    result = 0\n    for c in s:\n        result = result * 26 + (ord(c) - ord('A') + 1)\n    return result\n",
+      "test_cases": [
+        {
+          "input": "'A'",
+          "expected": "1",
+          "description": "first column"
+        },
+        {
+          "input": "'B'",
+          "expected": "2",
+          "description": "second"
+        },
+        {
+          "input": "'Z'",
+          "expected": "26",
+          "description": "last single"
+        },
+        {
+          "input": "'AA'",
+          "expected": "27",
+          "description": "first double"
+        },
+        {
+          "input": "'AB'",
+          "expected": "28",
+          "description": "second double"
+        },
+        {
+          "input": "'ZY'",
+          "expected": "701",
+          "description": "near max double"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "math",
+        "string"
+      ],
+      "variants": [
+        {
+          "name": "returns-zero",
+          "code": "def excel_sheet_column_number(s):\n    return 0\n",
+          "expected_failure_count": 6,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "no-base-26",
+          "code": "def excel_sheet_column_number(s):\n    return sum(ord(c) - ord('A') + 1 for c in s)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-base-26"
+        },
+        {
+          "name": "zero-indexed",
+          "code": "def excel_sheet_column_number(s):\n    result = 0\n    for c in s:\n        result = result * 26 + (ord(c) - ord('A'))\n    return result\n",
+          "expected_failure_count": 6,
+          "error_pattern": "off-by-one"
+        }
+      ]
+    },
+    {
+      "id": "lc-013-roman-to-integer",
+      "title": "Roman to Integer",
+      "problem_text": "Given a Roman numeral string s, return its integer value. Symbols: I=1, V=5, X=10, L=50, C=100, D=500, M=1000. Subtractive forms (IV, IX, XL, XC, CD, CM) reduce the next symbol's value.",
+      "entry_function": "roman_to_integer",
+      "reference_solution": "def roman_to_integer(s):\n    vals = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}\n    result = 0\n    for i, c in enumerate(s):\n        if i + 1 < len(s) and vals[c] < vals[s[i + 1]]:\n            result -= vals[c]\n        else:\n            result += vals[c]\n    return result\n",
+      "test_cases": [
+        {
+          "input": "'III'",
+          "expected": "3",
+          "description": "additive"
+        },
+        {
+          "input": "'IV'",
+          "expected": "4",
+          "description": "subtractive small"
+        },
+        {
+          "input": "'IX'",
+          "expected": "9",
+          "description": "subtractive nine"
+        },
+        {
+          "input": "'LVIII'",
+          "expected": "58",
+          "description": "mixed additive"
+        },
+        {
+          "input": "'MCMXCIV'",
+          "expected": "1994",
+          "description": "complex"
+        }
+      ],
+      "difficulty": "easy",
+      "topics": [
+        "string",
+        "math"
+      ],
+      "variants": [
+        {
+          "name": "returns-zero",
+          "code": "def roman_to_integer(s):\n    return 0\n",
+          "expected_failure_count": 5,
+          "error_pattern": "no-implementation"
+        },
+        {
+          "name": "naive-sum",
+          "code": "def roman_to_integer(s):\n    vals = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}\n    return sum(vals[c] for c in s)\n",
+          "expected_failure_count": 3,
+          "error_pattern": "missing-subtractive-rule"
+        },
+        {
+          "name": "returns-length",
+          "code": "def roman_to_integer(s):\n    return len(s)\n",
+          "expected_failure_count": 4,
+          "error_pattern": "wrong-formula"
+        }
+      ]
+    }
+  ]
+}
