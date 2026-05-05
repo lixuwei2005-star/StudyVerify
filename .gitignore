@@ -43,3 +43,6 @@ docker-compose.override.yml
 
 # Operator scratch from Step 6.3 (raw LLM-generated variants, curation script)
 backend/tmp/
+
+# Eval pipeline raw results (commit specific files via git add -f)
+backend/benchmark/results/
