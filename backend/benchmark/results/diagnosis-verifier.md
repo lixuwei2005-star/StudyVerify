@@ -1,92 +1,41 @@
 # Verifier False-Reject Diagnosis
 
-- Source eval: `benchmark/results/2026-05-05_14-08-23_eval.json`
-- False-rejected references inspected: 60
+- Source eval: `benchmark/results/2026-05-10_step10_targeted_eval.json`
+- Reference checks inspected: 69
+- False-rejected references inspected: 56
+- Reference checks with `raw_output`: 69/69
 
 ## Summary by category
 
 | Category | Count | Description |
 |---|---:|---|
-| 1 | 0 | sandbox couldn't run code |
+| 1 | 56 | sandbox couldn't run code |
 | 2 | 0 | tests reported some failures |
 | 3 | 0 | tests passed but verifier rejected |
-| 4 | 60 | unknown / missing data |
+| 4 | 0 | unknown / missing data |
 
 ## Data availability check
 
-The persisted false-reject records contain only the eval summary fields `success`, `latency_ms`, `verifier_judged_pass`, `expected_pass`, `verifier_correct`, and `error`. They do not include the raw `/verify` payload needed to inspect sandbox errors, per-test outcomes, or LLM diagnosis text.
+`raw_output` is present in this eval artifact.
 
-## Category 1 - sandbox issues (0 problems)
+Sample `raw_output` keys: `diagnosis, fail_count, pass_count, problem_id, sandbox_error, status, test_results, verified`
 
-_No problems in this category._
+## Targeted rerun sanity
 
-## Category 2 - test failures (0 problems)
+- Targeted original false-reject problem records in this eval: 60
+- Targeted references with verifier result: 59
+- Targeted references missing/skipped before verify: 1
+- Targeted IDs now verifier-correct: 6
+- Targeted IDs still false-rejected: 53
+- Targeted missing/skipped IDs: `p3-a-014-integer-break`
+- Control problem records in this eval: 10
+- Control references with verifier result: 10
+- Control references missing/skipped before verify: 0
+- Control references verifier-correct: 7
+- Control references false-rejected: 3
+- Control failure IDs: `edu-109-gcd`, `p3-a-011-summary-ranges`, `hr-003-middle-of-linked-list`
 
-_No problems in this category._
-
-## Category 3 - anti-leak over-rejection (0 problems)
-
-_No problems in this category._
-
-## Category 4 - unknown / missing data (60 problems)
-
-These records have `reference_check.verifier_correct=False`, but the eval artifact does not include `sandbox_error`, `test_results`, or `diagnosis`. That means the original rejection reason cannot be recovered from `2026-05-05_14-08-23_eval.json` alone.
-
-### `lc-001-two-sum`
-
-- `verifier_judged_pass`: `False`
-- `reference_solution` snippet:
-
-```python
-def two_sum(nums, target):
-    seen = {}
-    for i, n in enumerate(nums):
-        if target - n in seen:
-            return [seen[target - n], i]
-```
-
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
-
-### `lc-009-palindrome-number`
-
-- `verifier_judged_pass`: `False`
-- `reference_solution` snippet:
-
-```python
-def is_palindrome(x):
-    if x < 0:
-        return False
-    return str(x) == str(x)[::-1]
-```
-
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
-
-### `lc-412-fizz-buzz`
-
-- `verifier_judged_pass`: `False`
-- `reference_solution` snippet:
-
-```python
-def fizzbuzz(n):
-    out = []
-    for i in range(1, n + 1):
-        if i % 15 == 0:
-            out.append('FizzBuzz')
-```
-
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+## Category 1 - sandbox issues (56 problems)
 
 ### `lc-509-fibonacci`
 
@@ -101,11 +50,8 @@ def fibonacci(n):
         return 1
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function fib_n not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-004-find-max`
 
@@ -120,11 +66,8 @@ def find_max(nums):
     for n in nums[1:]:
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function find_largest not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-977-squares-sorted-array`
 
@@ -136,11 +79,8 @@ def squares_of_sorted_array(nums):
     return sorted(n * n for n in nums)
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function sorted_squares not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-020-valid-parentheses`
 
@@ -155,11 +95,8 @@ def valid_parentheses(s):
         if c in '([{':
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function is_valid not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-005-merge-two-sorted-arrays`
 
@@ -174,11 +111,8 @@ def merge_two_sorted_lists(a, b):
         if a[i] <= b[j]:
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function merge_sorted_lists not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-066-plus-one`
 
@@ -193,11 +127,8 @@ def plus_one(digits):
         if digits[i] < 9:
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function plusOne not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-067-add-binary`
 
@@ -209,11 +140,8 @@ def add_binary(a, b):
     return bin(int(a, 2) + int(b, 2))[2:]
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function addBinary not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-242-valid-anagram`
 
@@ -225,11 +153,8 @@ def valid_anagram(s, t):
     return sorted(s) == sorted(t)
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function is_anagram not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-125-valid-palindrome`
 
@@ -242,11 +167,8 @@ def valid_palindrome(s):
     return cleaned == cleaned[::-1]
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function isPalindrome not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-387-first-unique-character`
 
@@ -261,11 +183,8 @@ def first_unique_character(s):
     for i, c in enumerate(s):
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function firstUniqChar not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-1470-shuffle-array`
 
@@ -280,11 +199,8 @@ def shuffle_array(nums, n):
         out.append(nums[i + n])
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function shuffle not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-1672-richest-customer-wealth`
 
@@ -296,11 +212,8 @@ def richest_customer_wealth(accounts):
     return max(sum(row) for row in accounts)
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function maximumWealth not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-338-counting-bits`
 
@@ -312,47 +225,8 @@ def counting_bits(n):
     return [bin(i).count('1') for i in range(n + 1)]
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
-
-### `lc-448-find-disappeared-numbers`
-
-- `verifier_judged_pass`: `False`
-- `reference_solution` snippet:
-
-```python
-def find_disappeared_numbers(nums):
-    s = set(nums)
-    return [i for i in range(1, len(nums) + 1) if i not in s]
-```
-
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
-
-### `lc-136-single-number`
-
-- `verifier_judged_pass`: `False`
-- `reference_solution` snippet:
-
-```python
-def single_number(nums):
-    result = 0
-    for n in nums:
-        result ^= n
-    return result
-```
-
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function countBits not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-202-happy-number`
 
@@ -367,11 +241,8 @@ def happy_number(n):
         n = sum(int(d) ** 2 for d in str(n))
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function is_happy not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-171-excel-column-number`
 
@@ -386,11 +257,8 @@ def excel_sheet_column_number(s):
     return result
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function titleToNumber not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `lc-013-roman-to-integer`
 
@@ -405,11 +273,8 @@ def roman_to_integer(s):
         if i + 1 < len(s) and vals[c] < vals[s[i + 1]]:
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function romanToInt not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `hr-002-palindrome-linked-list`
 
@@ -421,11 +286,8 @@ def is_palindrome_list(nums):
     return list(nums) == list(nums)[::-1]
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function is_palindrome not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `hr-004-find-kth-largest`
 
@@ -437,11 +299,8 @@ def find_kth_largest(nums, k):
     return sorted(nums, reverse=True)[k - 1]
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function kth_largest not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `hr-005-remove-element-by-value`
 
@@ -453,11 +312,8 @@ def remove_element(nums, v):
     return [n for n in nums if n != v]
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function remove_all_occurrences not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `hr-006-rotate-array-by-k`
 
@@ -472,11 +328,8 @@ def rotate_array(nums, k):
     return list(nums[-k:]) + list(nums[:-k]) if k else list(nums)
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function rotate not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `hr-007-intersection-arrays`
 
@@ -488,11 +341,8 @@ def intersect_arrays(a, b):
     return sorted(set(a) & set(b))
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function common_elements not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `hr-008-symmetric-difference`
 
@@ -504,11 +354,8 @@ def sym_diff(a, b):
     return sorted(set(a) ^ set(b))
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function xor_lists not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `hr-010-largest-window-sum`
 
@@ -520,30 +367,8 @@ def largest_window_sum(nums, k):
     return max(sum(nums[i:i + k]) for i in range(len(nums) - k + 1))
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
-
-### `hr-012-tree-is-balanced`
-
-- `verifier_judged_pass`: `False`
-- `reference_solution` snippet:
-
-```python
-class _N:
-    def __init__(self, v):
-        self.v, self.l, self.r = v, None, None
-
-def _build(lst):
-```
-
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function max_sum_sublist not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-102-count-distinct-chars`
 
@@ -555,11 +380,8 @@ def count_distinct(s):
     return len(set(s))
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function count_distinct_characters not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-104-capitalize-each-word`
 
@@ -571,11 +393,8 @@ def capitalize_each(s):
     return ' '.join(w.capitalize() for w in s.split(' '))
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function cap_first not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-105-remove-duplicate-chars`
 
@@ -590,11 +409,8 @@ def remove_duplicates_str(s):
         if c not in seen:
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function remove_duplicates not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-106-longest-substring-no-repeat`
 
@@ -609,11 +425,8 @@ def longest_no_repeat(s):
     for i, c in enumerate(s):
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function longest_substring_distinct not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-107-string-to-int`
 
@@ -628,11 +441,8 @@ def atoi(s):
     sign = 1
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function myAtoi not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-108-int-to-binary`
 
@@ -644,11 +454,8 @@ def to_binary(n):
     return bin(n)[2:] if n > 0 else '0'
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function binary_conversion not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-112-count-set-bits`
 
@@ -660,11 +467,8 @@ def count_set_bits(n):
     return bin(n).count('1')
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function hamming_weight not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `edu-113-fibonacci-recursive`
 
@@ -679,11 +483,8 @@ def fib_rec(n):
         return 1
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function fib not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-002-format-phone`
 
@@ -695,11 +496,8 @@ def format_phone(s):
     return f'({s[:3]}) {s[3:6]}-{s[6:]}'
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function format_phone_number not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-003-count-substring`
 
@@ -711,11 +509,8 @@ def count_substring(s, sub):
     return s.count(sub)
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function count_non_overlapping not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-004-spiral-matrix`
 
@@ -730,11 +525,8 @@ def spiral_order(matrix):
     top, bottom = 0, len(matrix) - 1
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function spiralOrder not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-008-word-pattern`
 
@@ -749,11 +541,8 @@ def word_pattern(pattern, sentence):
     p2w, w2p = {}, {}
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function wordPattern not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-010-detect-capital`
 
@@ -765,11 +554,8 @@ def detect_capital(word):
     return word.isupper() or word.islower() or word.istitle()
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function detectCapitalUse not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-012-distribute-candies`
 
@@ -781,30 +567,8 @@ def distribute_candies(candies):
     return min(len(set(candies)), len(candies) // 2)
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
-
-### `p3-a-014-integer-break`
-
-- `verifier_judged_pass`: `False`
-- `reference_solution` snippet:
-
-```python
-def integer_break(n):
-    dp = [0] * (n + 1)
-    dp[1] = 1
-    for i in range(2, n + 1):
-        best = 0
-```
-
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function distributeCandies not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-015-zigzag-string`
 
@@ -819,11 +583,8 @@ def zigzag_convert(s, numRows):
     cur = 0
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function convert not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-016-pascals-triangle-row`
 
@@ -838,11 +599,8 @@ def pascals_row(rowIndex):
     return row
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function getRow not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-017-reverse-vowels`
 
@@ -857,11 +615,8 @@ def reverse_vowels(s):
     while i < j:
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function reverseVowels not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-018-array-partition`
 
@@ -873,11 +628,8 @@ def array_partition(nums):
     return sum(sorted(nums)[::2])
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function arrayPairSum not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-019-third-max`
 
@@ -890,11 +642,8 @@ def third_max(nums):
     return distinct[2] if len(distinct) >= 3 else distinct[0]
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function thirdMax not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-a-020-add-strings`
 
@@ -909,11 +658,8 @@ def add_strings(num1, num2):
     while i >= 0 or j >= 0 or carry:
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function addStrings not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-b-006-knn-majority-vote`
 
@@ -928,11 +674,8 @@ def knn_vote(training, query, k):
     counts = {}
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function k_nn not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-b-008-logistic-regression-step`
 
@@ -947,11 +690,8 @@ def lr_step(x, y, weights, bias, lr):
         p = 1 / (1 + math.exp(-z))
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function gradient_descent_step not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-b-009-relu`
 
@@ -963,11 +703,8 @@ def relu(xs):
     return [max(0, x) for x in xs]
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function clamp_nonneg not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-c-001-recursive-flatten`
 
@@ -982,11 +719,8 @@ def deep_flatten(nested):
             out.extend(deep_flatten(item))
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function flatten not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-c-002-cumulative-distinct`
 
@@ -1001,11 +735,8 @@ def cumulative_distinct(nums):
         seen.add(n)
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function distinct_counts not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-c-003-is-prime-naive`
 
@@ -1020,11 +751,8 @@ def is_prime_naive(n):
         if n % i == 0:
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function is_prime not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-c-005-transpose-no-zip`
 
@@ -1039,11 +767,8 @@ def transpose_no_zip(m):
     for i in range(rows):
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function transpose not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-c-007-balanced-parens-simple`
 
@@ -1058,11 +783,8 @@ def balanced_parens(s):
             depth += 1
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function is_balanced not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-c-009-caesar-cipher`
 
@@ -1077,11 +799,8 @@ def caesar_encrypt(s, shift):
             out.append(chr((ord(c) - ord('a') + shift) % 26 + ord('a')))
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function caesar_cipher not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
 
 ### `p3-c-010-word-frequency-no-counter`
 
@@ -1096,21 +815,74 @@ def word_freq(text):
         counts[w] = counts.get(w, 0) + 1
 ```
 
-- `reference_check` fields present: `error, expected_pass, latency_ms, success, verifier_correct, verifier_judged_pass`
-- `sandbox_error`: _not present_
-- `test_results`: _not present_
-- `diagnosis`: _not present_
-- Hypothesis: Missing instrumentation in the eval artifact, not enough evidence to tell whether sandbox, dataset tests, or the LLM judge caused this rejection.
+- `sandbox_error`: FATAL: function count_words not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
+
+### `edu-109-gcd`
+
+- `verifier_judged_pass`: `False`
+- `reference_solution` snippet:
+
+```python
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+```
+
+- `sandbox_error`: FATAL: function gcd_from_string not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
+
+### `p3-a-011-summary-ranges`
+
+- `verifier_judged_pass`: `False`
+- `reference_solution` snippet:
+
+```python
+def summary_ranges(nums):
+    if not nums: return []
+    out = []
+    start = nums[0]
+    prev = nums[0]
+```
+
+- `sandbox_error`: FATAL: function find_ranges not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
+
+### `hr-003-middle-of-linked-list`
+
+- `verifier_judged_pass`: `False`
+- `reference_solution` snippet:
+
+```python
+def middle_value(nums):
+    return nums[len(nums) // 2]
+```
+
+- `sandbox_error`: FATAL: function middle_of_linked_list not defined or not callable
+- Hypothesis: Function detection likely failed: expected entry function was not found or could not be imported.
+
+## Category 2 - test failures (0 problems)
+
+_No problems in this category._
+
+## Category 3 - anti-leak over-rejection (0 problems)
+
+_No problems in this category._
+
+## Category 4 - unknown / missing data (0 problems)
+
+_No problems in this category._
 
 ## Conclusions
 
 Hypothesis ranking:
-1. Category 4 (60 problems): eval artifact omitted raw verify details
-2. Category 1 (0 problems): sandbox bridge / function detection / import failure
-3. Category 2 (0 problems): dataset reference or test-case mismatch
-4. Category 3 (0 problems): LLM judge over-rejection after passing tests
+1. Category 1 (56 problems): sandbox bridge / function detection / import failure
+2. Category 2 (0 problems): dataset reference or test-case mismatch
+3. Category 3 (0 problems): LLM judge over-rejection after passing tests
+4. Category 4 (0 problems): eval artifact omitted or failed to produce raw verify details
 
-Top data-backed hypothesis: the Step 9 eval pipeline discarded the raw `/verify` output for reference checks. Every false reject in this artifact has only the summary fields, so the immediate root cause is not identifiable from the saved JSON. A follow-up diagnostic run must persist `output.test_results`, `output.diagnosis`, and any `sandbox_error` before deciding between sandbox, dataset, or LLM-judge fixes.
+Top data-backed hypothesis: sandbox execution/function detection is the dominant false-reject source.
 
 ## P0 fix paths
 
@@ -1118,7 +890,3 @@ Top data-backed hypothesis: the Step 9 eval pipeline discarded the raw `/verify`
 - For category 2: re-validate dataset references
 - For category 3: tune LLM judge prompt or relax retry conditions
 - For category 4: improve eval pipeline error logging
-
-## Instrumentation gap to close before fixing
-
-Because this artifact places all 60 failures in Category 4, the safest next step is not a verifier behavior change. First, run or patch a diagnostic capture that persists the full reference `/verify` output for these same problem IDs, including `output.verified`, `output.test_results`, `output.diagnosis`, and any sandbox error. Only then can Step 10 choose between sandbox, dataset, and LLM-judge fixes without guessing.

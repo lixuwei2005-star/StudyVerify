@@ -12,6 +12,7 @@ import argparse
 import asyncio
 import json
 import os
+import random
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -81,6 +82,18 @@ async def _amain(args: argparse.Namespace) -> int:
             data = json.load(f)
             all_problems.extend(data["problems"])
 
+    if args.problem_ids:
+        requested_ids = set(args.problem_ids)
+        targeted = [p for p in all_problems if p["id"] in requested_ids]
+        missing_ids = sorted(requested_ids - {p["id"] for p in targeted})
+        if missing_ids:
+            print(f"Warning: problem IDs not found: {', '.join(missing_ids)}", flush=True)
+        if args.sample_controls:
+            pool = [p for p in all_problems if p["id"] not in requested_ids]
+            n_controls = min(args.sample_controls, len(pool))
+            targeted.extend(random.sample(pool, n_controls))
+        all_problems = targeted
+
     if args.max_problems:
         all_problems = all_problems[: args.max_problems]
 
@@ -143,6 +156,18 @@ def main() -> None:
     parser.add_argument("--max-problems", type=int, default=None)
     parser.add_argument("--output", default=None)
     parser.add_argument("--api-base", default="https://api.005917.xyz")
+    parser.add_argument(
+        "--problem-ids",
+        nargs="+",
+        default=None,
+        help="Only evaluate these problem IDs",
+    )
+    parser.add_argument(
+        "--sample-controls",
+        type=int,
+        default=10,
+        help="When --problem-ids is set, also add this many random outside-filter controls",
+    )
     parser.add_argument(
         "--concurrency",
         type=int,

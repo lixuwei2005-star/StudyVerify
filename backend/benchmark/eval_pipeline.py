@@ -60,6 +60,7 @@ async def evaluate_problem(
             "verifier_judged_pass": verified,
             "expected_pass": True,
             "verifier_correct": verified is True,
+            "raw_output": ref_v["data"]["output"],
             "error": None,
         }
     else:
@@ -69,6 +70,7 @@ async def evaluate_problem(
             "verifier_judged_pass": None,
             "expected_pass": True,
             "verifier_correct": False,
+            "raw_output": None,
             "error": ref_v["error"],
         }
         result["errors"].append(f"reference verify failed: {ref_v['error']}")
@@ -91,6 +93,7 @@ async def evaluate_problem(
                 "verifier_judged_pass": v_verified,
                 "expected_pass": False,
                 "verifier_correct": v_verified is False,
+                "raw_output": v["data"]["output"],
                 "error": None,
             }
         else:
@@ -100,6 +103,7 @@ async def evaluate_problem(
                 "verifier_judged_pass": None,
                 "expected_pass": False,
                 "verifier_correct": False,
+                "raw_output": None,
                 "error": v["error"],
             }
             result["variants"].append(v_record)
