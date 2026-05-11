@@ -57,8 +57,8 @@ class SolverAgent:
         code, explanation = await self._code(request, plan_steps)
 
         test_payload = [tc.model_dump() for tc in request.test_cases]
-        entry_function = self._extract_entry_function(code, pid)
-        sandbox_result = await self._run_sandbox(code, entry_function, test_payload)
+        self._extract_entry_function(code, pid)
+        sandbox_result = await self._run_sandbox(code, request.entry_function, test_payload)
 
         retry_used = False
         if self._should_retry(sandbox_result):
@@ -67,8 +67,8 @@ class SolverAgent:
             )
             retry_used = True
             code, explanation = await self._code_retry(request, plan_steps, code, sandbox_result)
-            entry_function = self._extract_entry_function(code, pid)
-            sandbox_result = await self._run_sandbox(code, entry_function, test_payload)
+            self._extract_entry_function(code, pid)
+            sandbox_result = await self._run_sandbox(code, request.entry_function, test_payload)
 
         verified = sandbox_result.status == "all_passed"
         confidence = self._compute_confidence(
@@ -76,7 +76,7 @@ class SolverAgent:
         )
         output = SolverOutput(
             problem_id=pid,
-            entry_function=entry_function,
+            entry_function=request.entry_function,
             analysis=analysis,
             plan_steps=plan_steps,
             code=code,
@@ -118,7 +118,12 @@ class SolverAgent:
         return self._parse_plan(raw, request.problem_id)
 
     async def _code(self, request: SolverInput, plan_steps: list[PlanStep]) -> tuple[str, str]:
-        messages = prompts.build_code_messages(request.problem_text, plan_steps, request.test_cases)
+        messages = prompts.build_code_messages(
+            request.problem_text,
+            request.entry_function,
+            plan_steps,
+            request.test_cases,
+        )
         try:
             raw = await self._client.chat(messages, temperature=0.1, json_mode=True)
         except LLMError as exc:
@@ -134,6 +139,7 @@ class SolverAgent:
     ) -> tuple[str, str]:
         messages = prompts.build_code_retry_messages(
             request.problem_text,
+            request.entry_function,
             plan_steps,
             request.test_cases,
             previous_code,

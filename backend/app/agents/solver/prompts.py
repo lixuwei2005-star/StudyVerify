@@ -20,6 +20,25 @@ def _format_test_cases(test_cases: list[TestCase]) -> str:
     return "\n".join(lines)
 
 
+def _entry_function_constraint(entry_function: str) -> str:
+    return (
+        "## CRITICAL CONSTRAINT\n\n"
+        f"The function you generate MUST be named EXACTLY: `{entry_function}`\n\n"
+        "Do NOT rename, abbreviate, or change the case of this function name. "
+        "The function signature must start with:\n\n"
+        f"    def {entry_function}(...):\n\n"
+        "Examples of CORRECT vs WRONG:\n"
+        "- entry_function='fibonacci' -> CORRECT: def fibonacci(n)\n"
+        "- entry_function='fibonacci' -> WRONG: def fib_n(n)\n"
+        "- entry_function='fibonacci' -> WRONG: def fibonacciNumber(n)\n"
+        "- entry_function='find_max' -> CORRECT: def find_max(nums)\n"
+        "- entry_function='find_max' -> WRONG: def find_largest(nums)\n"
+        "- entry_function='find_max' -> WRONG: def findMax(nums)\n\n"
+        "Do not import or define any other top-level function with the same body "
+        "- only one function with the entry_function name."
+    )
+
+
 def build_analyze_messages(problem_text: str, test_cases: list[TestCase]) -> list[dict[str, Any]]:
     user = (
         "Problem:\n"
@@ -56,11 +75,13 @@ def build_plan_messages(problem_text: str, analysis: str) -> list[dict[str, Any]
 
 def build_code_messages(
     problem_text: str,
+    entry_function: str,
     plan_steps: list[PlanStep],
     test_cases: list[TestCase],
 ) -> list[dict[str, Any]]:
     plan_str = "\n".join(f"  {s.step_number}. {s.action} — {s.rationale}" for s in plan_steps)
     user = (
+        f"{_entry_function_constraint(entry_function)}\n\n"
         "Problem:\n"
         f"{problem_text}\n\n"
         "Plan:\n"
@@ -96,6 +117,7 @@ def _format_failures(test_results: list[TestExecutionResult]) -> str:
 
 def build_code_retry_messages(
     problem_text: str,
+    entry_function: str,
     plan_steps: list[PlanStep],
     test_cases: list[TestCase],
     previous_code: str,
@@ -106,6 +128,7 @@ def build_code_retry_messages(
     failure_block = _format_failures(test_results)
     sandbox_note = f"\n\nSandbox-level error: {sandbox_error}" if sandbox_error else ""
     user = (
+        f"{_entry_function_constraint(entry_function)}\n\n"
         "Problem:\n"
         f"{problem_text}\n\n"
         "Plan:\n"

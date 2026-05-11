@@ -30,6 +30,7 @@ pytestmark = pytest.mark.integration
 SAMPLE_INPUT = {
     "problem_id": "py-001-sum-list",
     "problem_text": "Write sum_list(nums) returning the sum, or 0 if empty.",
+    "entry_function": "sum_list",
     "test_cases": [
         {"input": "[1,2,3]", "expected": "6", "description": "basic"},
         {"input": "[]", "expected": "0", "description": "empty"},

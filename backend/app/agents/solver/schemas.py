@@ -14,6 +14,7 @@ class TestCase(BaseModel):
 class SolverInput(BaseModel):
     problem_id: str
     problem_text: str
+    entry_function: str = Field(description="Exact Python function name students must implement")
     test_cases: list[TestCase]
 
 
