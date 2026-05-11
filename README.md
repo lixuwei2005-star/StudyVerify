@@ -4,23 +4,25 @@ Verification-driven AI learning companion.
 
 ## Evaluation
 
-100-problem benchmark, 1,423 hints evaluated against production endpoints. Full report: [`backend/benchmark/results/2026-05-05_eval.md`](backend/benchmark/results/2026-05-05_eval.md).
+Step 10 full 100-problem production re-eval after the Solver `entry_function` fix. Full report: [`backend/benchmark/results/2026-05-11_eval.md`](backend/benchmark/results/2026-05-11_eval.md). Baseline report: [`backend/benchmark/results/2026-05-05_eval.md`](backend/benchmark/results/2026-05-05_eval.md).
 
-| Metric | Value |
-|---|---|
-| Verifier accuracy | 84.2% (320/380) |
-| Anti-leak success | 70.6% (1,004/1,423 hints) |
-| Helpfulness (hint 1 → hint 5) | 91.9% → 96.1% |
-| Latency p95 | solve 38s / verify 8s / hint 23s |
-| Production reliability | 99.6% (7 / 1,903 hard failures) |
-| Run cost | ~$1.50 (DeepSeek) |
+| Metric | Step 9 baseline | Step 10 full re-eval |
+|---|---:|---:|
+| Verifier accuracy | 84.2% (320/380) | **100.0% (380/380)** |
+| Anti-leak success | 70.6% (1,004/1,423 hints) | **60.0% (829/1,381 hints)** |
+| Helpfulness (hint 1 -> hint 5) | 91.9% -> 96.1% | **97.2% -> 98.1%** |
+| Latency p95 | solve 38s / verify 8s / hint 23s | solve 40s / verify 14s / hint 46s |
+| Production reliability | 99.6% (7 / 1,903 hard failures) | 97.4% (49 / 1,861 hard failures) |
+| Run cost | ~$1.50 (DeepSeek) | ~$1.50 (DeepSeek) |
 
 Notable findings:
 
-- **Asymmetric verifier calibration** — perfect bug detection (285/285 variants caught) paired with 37% true-pass recognition (35/95 references). The verifier knows what's wrong; it isn't sure what's right.
-- **Anti-leak varies by topic** — algorithmic-pattern problems (recursion, two-pointers) leak ~36–44% to syntax; data-shape problems (array, string) leak ~26–29%.
+- **Verifier false-reject issue fixed** — Step 9's 60 false-rejected references were traced to Solver-generated function-name drift. The targeted Step 10 production re-eval confirmed all 60 now pass after the `entry_function` fix (60/60 verifier_correct).
+- **Full-run verifier accuracy is now clean** — every reference and variant that reached verification was classified correctly (380/380). The full run still had 5 solve-time HTTP 504s before verifier execution.
+- **Hint safety is now the main quality frontier** — anti-leak combined dropped from 70.6% to 60.0%. The Step 9 number was likely inflated by subset bias: the `entry_function` bug changed the effective hint mix and produced less representative verifier/hint contexts for many harder algorithmic-pattern problems. Step 10's full pipeline is the more representative baseline.
+- **Hint reliability needs a follow-up check** — `/hint` hard failures spiked to 2.93% (44/1500) in this run versus 0.13% (2/1500) in Step 9. This is likely a production transient or DeepSeek timeout cluster, but it is worth re-checking in a future run.
 
-See the [full report](backend/benchmark/results/2026-05-05_eval.md) for per-topic breakdowns, sampled hint examples, hypotheses, and P0/P1 future work.
+See the [full Step 10 report](backend/benchmark/results/2026-05-11_eval.md) for per-topic breakdowns, sampled hint examples, and latency/reliability details.
 
 ## Status
 
