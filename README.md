@@ -26,7 +26,10 @@ See the [full Step 10 report](backend/benchmark/results/2026-05-11_eval.md) for 
 
 ## Status
 
-🚧 **Week 6 / 12 — RAG retrieval + corpus expansion shipped (Step 6.1 → 6.3)**
+✅ **Production deployed — Step 10/12 complete**
+
+Live demo: https://studyverify.vercel.app  
+100-problem benchmark · Verifier 100% accuracy · 60% anti-leak baseline (primary frontier)
 
 ### What works
 - ✅ FastAPI backend with `/health`, `/health/db`,
@@ -69,8 +72,36 @@ See the [full Step 10 report](backend/benchmark/results/2026-05-11_eval.md) for 
   SQLite, real Postgres, real DeepSeek, and real Docker layers
 - ✅ End-to-end smoke (`make smoke-stack`) covers full
   /solve → /verify → /hint chain
+- ✅ Frontend (Next.js 14 + TypeScript + Monaco editor)
+  deployed to Vercel at https://studyverify.vercel.app —
+  3/3 Playwright smoke stable; loading UX with stage timers;
+  TypeScript schema enforces anti-leak redaction at compile time
+- ✅ User-uploaded custom Python problems with AI-assisted
+  test case generation (Step 8 Phase A): inline modal upload +
+  silent backend test case generation + sandbox-validated
+  execution; localStorage persistence + sidebar problem
+  switching
+- ✅ 100-problem evaluation benchmark across 23 topics +
+  300 student bug variants; 4 metrics quantified: verifier
+  accuracy 100%, anti-leak 60%, hint helpfulness progression
+  91.9% → 96.1%, latency P95 solve 40s / verify 14s / hint 46s
+- ✅ Verifier asymmetric calibration bug surfaced by own
+  eval, root-caused via re-instrumented diagnostic pipeline,
+  fixed via one-line prompt constraint — verifier accuracy
+  lifted 84.2% → 100% (380/380); 60/60 false-rejected
+  references resolved
+- ✅ Sandbox wrapper marker fix for student print() pollution
+  (__STUDYVERIFY_RESULT_BEGIN__ / END markers)
+- ✅ 5 production-only deployment fixes surfaced by Mac →
+  Linux deploy (docker.sock GID, sandbox image distribution,
+  Linux strict permissions, async SQLAlchemy lazy-load,
+  student print stdout pollution)
 
 ## Quick Start with Docker
+
+**Try the public demo**: https://studyverify.vercel.app
+
+For local development:
 
 Get the full stack (FastAPI + Postgres + Redis) running in three
 commands.
@@ -183,10 +214,12 @@ uv run pytest -v -m slow
 uv run pytest -v -m "not slow"
 ```
 
-Test counts (Week 6):
-- Unit: 200+ (mocked LLM, in-memory SQLite)
-- Integration: 90+ (real Postgres, real DeepSeek API, real Docker,
-  pgvector retrieval-quality)
+Test counts (Step 10):
+- Unit: 280+ (mocked LLM, in-memory SQLite, benchmark
+  schema/aggregate/judges)
+- Integration: 90+ (real Postgres, real DeepSeek API, real
+  Docker, pgvector retrieval-quality)
+- E2E: 3/3 Playwright smoke stable on production frontend
 
 ## Architecture
 
@@ -233,28 +266,53 @@ Layered architecture with clear separation of concerns:
   /solve → /verify against the local stack with sha256-based
   idempotency, --dry-run, and a localhost-gated destructive
   reseed flow
+- **Frontend** (Next.js 14 + TypeScript + Tailwind + Monaco) —
+  TypeScript schema enforces anti-leak: `RedactedTestResult`
+  interface has no `expected` field, compile-time type safety
+  transports the schema contract from backend to frontend;
+  Playwright smoke (3/3 stable); production deployed to Vercel
+- **Benchmark layer** (`backend/benchmark/`) — 100-problem
+  dataset with 300 student bug variants; `eval_pipeline.py`
+  orchestrates /solve → /verify → /hint × 5 with anti-leak
+  judge (33-phrase + LLM judge) and helpful judge (LLM-student
+  quote-gated simulation); `aggregate.py` computes verifier
+  accuracy / anti-leak success / helpfulness progression /
+  latency P50/P95; `_make_report.py` generates per-run markdown
+- **Sandbox wrapper markers** (`backend/app/sandbox/base_runner.py`)
+  — `__STUDYVERIFY_RESULT_BEGIN__` / `__STUDYVERIFY_RESULT_END__`
+  bracketing in stdout to isolate wrapper JSON from student
+  print() pollution; production-surfaced in Step 8 Phase A
 
 ## Roadmap
 
 ### Completed
 - ✅ Step 0-2: Environment, FastAPI skeleton, Solver Agent + sandbox
-- ✅ Step 3: Persistence layer (Postgres + Alembic + Service/Repo +
-  full Docker Compose stack)
-- ✅ Step 4: Verifier Agent (Docker sandbox + diagnostic feedback +
-  persistence + REST endpoints)
+- ✅ Step 3: Persistence layer (Postgres + Alembic + Service/Repo + full Docker Compose stack)
+- ✅ Step 4: Verifier Agent (Docker sandbox + diagnostic feedback + persistence + REST endpoints)
 - ✅ Step 5: Hint Agent + verifier prompt tightening
 - ✅ Step 6.1: Multi-provider LLM gateway (DeepSeek + OpenAI fallback)
 - ✅ Step 6.2: pgvector RAG retrieval over failed verifier sessions
-- ✅ Step 6.3: RAG corpus expansion (10 problems × 5 buggy variants),
-  cross-problem retrieval-quality tests, and `RetrievedFailure.problem_id`
-  threading
+- ✅ Step 6.3: RAG corpus expansion (10 problems × 5 buggy variants), cross-problem retrieval-quality tests, and `RetrievedFailure.problem_id` threading
+- ✅ Step 6.4: Anti-leak 3-layer defense (Pydantic schema + service-level retry + 33-phrase forbidden filter); TypeScript type system enforces redaction on frontend
+- ✅ Step 7: Frontend (Next.js 14 + Monaco) deployed to Vercel. Live at https://studyverify.vercel.app · 3/3 Playwright smoke stable · loading UX with stage timers
+- ✅ Step 8 Phase A: User-uploaded custom Python problems with AI-assisted test case generation. Modal upload → /api/v1/generate-test-cases → sandbox-validated execution. localStorage persistence + sidebar switching
+- ✅ Step 9: 100-problem evaluation benchmark across 23 topics with 300 student bug variants. 4 metrics: verifier accuracy, anti-leak success, hint helpfulness (quote-gated LLM-student simulation), latency P50/P95. Full report: [`backend/benchmark/results/2026-05-05_eval.md`](backend/benchmark/results/2026-05-05_eval.md)
+- ✅ Step 10: Verifier asymmetric calibration fix. Step 9 eval surfaced 60 false-rejected references on classic problems; root-caused via re-instrumented diagnostic pipeline as Solver LLM renaming `entry_function` during reference generation (56/56 false-rejects were sandbox `function not found` errors, not LLM judgment). One-line prompt constraint + schema source-of-truth lifted verifier accuracy 84.2% → 100% (380/380) on full re-eval. Report: [`backend/benchmark/results/2026-05-11_eval.md`](backend/benchmark/results/2026-05-11_eval.md)
 
-### Upcoming
-- ⬜ Step 7: Frontend (Next.js + Monaco)
-- ⬜ Step 8: LangGraph orchestration (deferred from Step 6 until
-  Step 7 frontend UX clarifies the agent state machine)
-- ⬜ Step 9-12: RAG quality evaluation / ML problems / knowledge
-  graph / blog / MCP
+### Future work
+
+**P0 (current quality frontier)**
+- Topic-specific anti-leak prompts (anti-leak combined 60% in Step 10 — primary quality frontier; recursion / two-pointers leak most)
+- `/hint` hard fail rate investigation (44/1500 in Step 10 vs 2/1500 in Step 9; likely production transient or DeepSeek timeout cluster)
+- Helpfulness quote-gate tightening to 10 consecutive words for sharper progression signal
+
+**P1**
+- RAG corpus expansion (currently 50 examples; aim 200+)
+- Solver caching for cold-start failures
+- Multi-language sandbox (Step 8 Phase B): Java support alongside Python
+
+**Deferred**
+- LangGraph orchestration: current explicit Python control flow is simpler and observable; revisit if state machine complexity warrants
 
 ## License
 
