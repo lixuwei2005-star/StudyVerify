@@ -38,6 +38,23 @@ FORBIDDEN_PHRASES: list[str] = [
     "i+1", "i-1", "[i:]", "[:i]",
     # Recursion
     "recursive call", "base case", "recursion",
+    # --- Step 11 Day 1 additions (evidence from Step 10 LLM-judge catches) ---
+    # Algorithmic structure / named data structures
+    "dictionary lookup", "hash table", "hash map", "lookup table",
+    "data structure", "complement",
+    # Slicing / indexing syntax
+    "slice syntax", "slice notation", "slice operation",
+    "step value", "negative step", "[::-1]", "[:-1]",
+    # Conditional structure constructs
+    "if-else chain", "if-elif chain", "elif branch",
+    "ternary expression", "conditional expression",
+    # Comprehensions / generator constructs
+    "list comprehension", "generator expression",
+    # Named method / built-in categories
+    "string method", "built-in function", "built-in tool",
+    ".lower()", ".upper()", ".split()", ".join()",
+    # Named operators
+    "comparison operator",
 ]
 
 

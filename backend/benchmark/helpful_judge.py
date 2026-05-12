@@ -9,6 +9,12 @@ from the hint text in `proposed_change`. If they cannot, would_fix is
 forced to False — this discounts the case where the LLM-student brings
 its own training-data knowledge instead of actually using the hint, which
 saturated the metric at 100% across all hint levels in the Phase A smoke.
+
+Step 11 Day 1: raised threshold from 5 to 10. Step 10 eval showed the
+5-word gate was still too generous — hint_1 helpfulness saturated at 97.2%
+and hint_5 at 98.1%, because a 5-word run can come from generic Socratic
+framing ("the relationship between the elements") rather than the hint's
+actual content.
 """
 
 from __future__ import annotations
@@ -19,7 +25,7 @@ from typing import Any
 
 from app.llm.gateway import LLMGateway
 
-QUOTE_WORD_THRESHOLD = 5
+QUOTE_WORD_THRESHOLD = 10
 
 _PROMPT_TEMPLATE = """You are roleplaying as a student debugging Python code.
 
@@ -37,13 +43,13 @@ You just received this hint #{hint_index} from an AI tutor:
 Based ONLY on this hint (no outside Python knowledge), what would you change
 in the code?
 
-IMPORTANT: Your "proposed_change" field MUST quote at least 5 consecutive
-words verbatim from the hint above. If you cannot quote 5 consecutive words
+IMPORTANT: Your "proposed_change" field MUST quote at least 10 consecutive
+words verbatim from the hint above. If you cannot quote 10 consecutive words
 from the hint that informed your change, set would_fix_bug to false — the
 hint did not give you enough specific guidance to produce a fix on its own.
 
 Respond with valid JSON ONLY:
-{{"understood_hint": true, "would_fix_bug": true, "proposed_change": "...quoting at least 5 consecutive words from the hint..."}}
+{{"understood_hint": true, "would_fix_bug": true, "proposed_change": "...quoting at least 10 consecutive words from the hint..."}}
 or with false where appropriate.
 """
 

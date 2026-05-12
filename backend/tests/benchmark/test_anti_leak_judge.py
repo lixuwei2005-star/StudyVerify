@@ -51,6 +51,93 @@ def test_phrase_filter_case_insensitive() -> None:
     assert not ok
 
 
+# ---------- Step 11 Day 1: new entries derived from Step 10 LLM-judge catches ----------
+
+
+def test_phrase_filter_catches_dictionary_lookup() -> None:
+    ok, matches = check_phrase_filter(
+        "Compare that to the expression you use in the dictionary lookup."
+    )
+    assert not ok
+    assert "dictionary lookup" in matches
+
+
+def test_phrase_filter_catches_slice_notation() -> None:
+    ok, matches = check_phrase_filter(
+        "Python's slice notation lets you specify a start, stop, and step."
+    )
+    assert not ok
+    assert "slice notation" in matches
+
+
+def test_phrase_filter_catches_complement() -> None:
+    ok, matches = check_phrase_filter(
+        "Which number matches the complement needed to reach the target?"
+    )
+    assert not ok
+    assert "complement" in matches
+
+
+def test_phrase_filter_catches_step_value_and_negative_step() -> None:
+    ok, matches = check_phrase_filter(
+        "What step value would let you traverse with a negative step?"
+    )
+    assert not ok
+    assert "step value" in matches
+    assert "negative step" in matches
+
+
+def test_phrase_filter_catches_bare_list_comprehension() -> None:
+    # Without the "use" prefix that the old entry required.
+    ok, matches = check_phrase_filter(
+        "A list comprehension can build the result in a single expression."
+    )
+    assert not ok
+    assert "list comprehension" in matches
+
+
+def test_phrase_filter_catches_string_method() -> None:
+    ok, matches = check_phrase_filter(
+        "Consider a Python string method that converts characters to lowercase."
+    )
+    assert not ok
+    assert "string method" in matches
+
+
+def test_phrase_filter_catches_dot_lower() -> None:
+    ok, matches = check_phrase_filter("How can you call .lower() on c directly?")
+    assert not ok
+    assert ".lower()" in matches
+
+
+def test_phrase_filter_catches_slice_literals() -> None:
+    ok, matches = check_phrase_filter("What does the slice [:-1] exclude from the reversal?")
+    assert not ok
+    assert "[:-1]" in matches
+
+
+def test_phrase_filter_passes_socratic_trace_hint() -> None:
+    """Regression: a tracing/debugging Socratic hint must still pass.
+
+    "Trace through" and "test cases" are common in valid Socratic hints
+    — our Step 11 additions must not catch them.
+    """
+    ok, matches = check_phrase_filter(
+        "Trace through what your code returns for the empty test case."
+    )
+    assert ok
+    assert matches == []
+
+
+def test_phrase_filter_passes_edge_case_hint() -> None:
+    """Regression: asking about an edge case shouldn't trigger anything."""
+    ok, matches = check_phrase_filter(
+        "Did you handle the case where the input is empty or has one element?"
+    )
+    assert ok
+    assert matches == []
+
+
 # ---------- LLM judge wrapper ----------
 
 

@@ -13,13 +13,30 @@ from benchmark.eval_pipeline import evaluate_problem
 from benchmark.helpful_judge import quotes_hint
 
 
-# ---------- quotes_hint ----------
+# ---------- quotes_hint (Step 11 Day 1: threshold raised 5 → 10) ----------
 
 
-def test_quotes_hint_exact_5_word_run() -> None:
+def test_quotes_hint_passes_10_word_match() -> None:
     assert quotes_hint(
-        proposed_change="I will check the relationship between the elements first.",
-        hint_text="Think about the relationship between the elements when summing.",
+        proposed_change="I will think about the relationship between the elements when summing them carefully.",
+        hint_text="Think about the relationship between the elements when summing them together.",
+    )
+
+
+def test_quotes_hint_fails_5_word_match() -> None:
+    # A 5-word run used to pass at the old threshold; with threshold=10 it must fail.
+    # Hint and proposed_change share "the relationship between the elements" (5 words) but
+    # no run of 10 consecutive words.
+    assert not quotes_hint(
+        proposed_change="I think the relationship between the elements is irrelevant here.",
+        hint_text="Think about the relationship between the elements when summing them together pieces.",
+    )
+
+
+def test_quotes_hint_fails_no_overlap() -> None:
+    assert not quotes_hint(
+        proposed_change="I will use a completely different approach to solving this problem now.",
+        hint_text="Think about the relationship between the elements when summing them together.",
     )
 
 
@@ -33,23 +50,23 @@ def test_quotes_hint_below_threshold() -> None:
 def test_quotes_hint_punctuation_insensitive() -> None:
     # Punctuation between words shouldn't break the match.
     assert quotes_hint(
-        proposed_change="...the relationship, between, the elements...",
-        hint_text="Think about the relationship between the elements when summing.",
+        proposed_change="...think, about, the relationship; between the elements when summing them together...",
+        hint_text="Think about the relationship between the elements when summing them together.",
     )
 
 
 def test_quotes_hint_too_short_hint() -> None:
-    # Hint with fewer than 5 words can never be quoted at threshold 5.
+    # Hint with fewer than 10 words can never be quoted at threshold 10.
     assert not quotes_hint(
         proposed_change="anything goes here",
-        hint_text="Try harder",
+        hint_text="Try harder with this approach",
     )
 
 
 def test_quotes_hint_case_insensitive() -> None:
     assert quotes_hint(
-        proposed_change="THE RELATIONSHIP BETWEEN THE ELEMENTS",
-        hint_text="the relationship between the elements matters",
+        proposed_change="THINK ABOUT THE RELATIONSHIP BETWEEN THE ELEMENTS WHEN SUMMING THEM TOGETHER",
+        hint_text="think about the relationship between the elements when summing them together matters",
     )
 
 
