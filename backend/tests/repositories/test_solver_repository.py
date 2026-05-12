@@ -195,6 +195,39 @@ async def test_list_by_problem_empty_when_no_match(
 # ---------- count_by_problem ----------
 
 
+# ---------- topics (Step 11 Day 2.5) ----------
+
+
+async def test_create_persists_topics_list_round_trip(
+    sqlite_session: AsyncSession, repo: SolverRepository
+) -> None:
+    """Topics passed to create() must round-trip out of the DB unchanged so the
+    Hint Agent's per-topic anti-leak constraint injection has a faithful source."""
+    row = await repo.create(
+        sqlite_session,
+        **_create_kwargs(topics=["recursion", "tree"]),
+    )
+    await sqlite_session.commit()
+
+    fetched = await repo.get_by_id(sqlite_session, row.id)
+    assert fetched is not None
+    assert fetched.topics == ["recursion", "tree"]
+
+
+async def test_create_defaults_topics_to_empty_list_when_omitted(
+    sqlite_session: AsyncSession, repo: SolverRepository
+) -> None:
+    """Existing callers (frontend, benchmark) that omit topics get [] — not
+    None — so downstream `solver_row.topics or []` and direct iteration both
+    work without surprises."""
+    row = await repo.create(sqlite_session, **_create_kwargs())
+    await sqlite_session.commit()
+
+    fetched = await repo.get_by_id(sqlite_session, row.id)
+    assert fetched is not None
+    assert fetched.topics == []
+
+
 async def test_count_by_problem_counts_only_matching_rows(
     sqlite_session: AsyncSession, repo: SolverRepository
 ) -> None:

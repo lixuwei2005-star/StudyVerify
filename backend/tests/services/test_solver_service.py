@@ -149,6 +149,35 @@ async def test_solve_and_persist_propagates_retry_used_to_repository():
     assert create_f.await_args.kwargs["retry_used"] is False
 
 
+async def test_solve_and_persist_propagates_topics_to_repository():
+    """Topics arrive on SolverInput from the API and must reach the repository's
+    create() so they're persisted on solver_sessions. The Hint Agent later
+    reads solver_row.topics to inject per-topic anti-leak constraints."""
+    service, _, create, session = _service(_output())
+
+    input_with_topics = SolverInput(
+        problem_id="py-001-sum-list",
+        problem_text="Return the sum of a list.",
+        entry_function="sum_list",
+        test_cases=[TestCase(input="[]", expected="0", description="empty")],
+        topics=["recursion", "two-pointers"],
+    )
+    await service.solve_and_persist(session, input_with_topics)
+
+    kwargs = create.await_args.kwargs
+    assert kwargs["topics"] == ["recursion", "two-pointers"]
+
+
+async def test_solve_and_persist_defaults_topics_to_empty_list():
+    """Existing callers that don't supply topics keep working: SolverInput's
+    default_factory=list produces [], which reaches the repo unchanged."""
+    service, _, create, session = _service(_output())
+
+    await service.solve_and_persist(session, _input())  # no topics in helper
+
+    assert create.await_args.kwargs["topics"] == []
+
+
 async def test_solve_and_persist_serializes_pydantic_nested_fields():
     """SolverInput.test_cases (TestCase), SolverOutput.plan_steps (PlanStep),
     and SolverOutput.test_results (TestExecutionResult) must arrive at the

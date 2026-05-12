@@ -675,3 +675,40 @@ async def test_hint_service_no_retry_when_clean() -> None:
     await service.generate_and_persist(session, uuid.uuid4())
 
     assert generate.await_count == 1, "clean hint should not trigger retry"
+
+
+async def test_hint_service_propagates_solver_topics_into_hint_input() -> None:
+    """solver_row.topics must reach the HintAgent so per-topic anti-leak
+    constraints fire. Without this plumbing the Day 2 prompt machinery
+    silently no-ops in production."""
+    solver = _solver_row()
+    solver.topics = ["recursion", "tree"]
+    verifier = _verifier_row(solver.id)
+
+    (service, _, _, _, _, _, generate, session) = _service(
+        solver_row=solver, verifier_row=verifier
+    )
+
+    await service.generate_and_persist(session, verifier.id)
+
+    hint_input = generate.await_args.args[0]
+    assert isinstance(hint_input, HintInput)
+    assert hint_input.topics == ["recursion", "tree"]
+
+
+async def test_hint_service_defaults_to_empty_topics_when_solver_topics_none() -> None:
+    """Legacy solver_sessions rows (predating the column) hydrate topics=None
+    via SQLAlchemy; the service must coerce to [] so HintInput validation
+    succeeds and no per-topic constraint section is injected."""
+    solver = _solver_row()
+    solver.topics = None  # legacy row shape
+    verifier = _verifier_row(solver.id)
+
+    (service, _, _, _, _, _, generate, session) = _service(
+        solver_row=solver, verifier_row=verifier
+    )
+
+    await service.generate_and_persist(session, verifier.id)
+
+    hint_input = generate.await_args.args[0]
+    assert hint_input.topics == []

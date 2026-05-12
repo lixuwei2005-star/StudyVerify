@@ -219,6 +219,7 @@ class HintService:
                 )
                 for r in retrieved
             ],
+            topics=list(solver_row.topics or []),
         )
 
         # LLM generation with at-most-one regeneration when the produced hint

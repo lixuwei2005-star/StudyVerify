@@ -16,6 +16,15 @@ class SolverInput(BaseModel):
     problem_text: str
     entry_function: str = Field(description="Exact Python function name students must implement")
     test_cases: list[TestCase]
+    topics: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Optional algorithmic-pattern tags (e.g. 'recursion', 'two-pointers'). "
+            "Persisted on solver_sessions and propagated to /hint so the Hint "
+            "Agent can inject per-topic anti-leak constraints. Empty list is "
+            "valid and is the default for callers that don't supply topics."
+        ),
+    )
 
 
 class PlanStep(BaseModel):

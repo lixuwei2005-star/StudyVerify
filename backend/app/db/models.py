@@ -37,6 +37,16 @@ class SolverSession(Base):
     problem_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     problem_text: Mapped[str] = mapped_column(Text, nullable=False)
     test_cases: Mapped[list] = mapped_column(JSONType, nullable=False)
+    # Step 11 Day 2.5 — algorithmic-pattern tags (e.g. 'recursion',
+    # 'two-pointers'). Used by HintAgent to inject per-topic anti-leak
+    # constraints. Nullable + server_default='[]' so legacy rows hydrate as
+    # an empty list without backfill.
+    topics: Mapped[list] = mapped_column(
+        JSONType,
+        nullable=True,
+        default=list,
+        server_default=sa.text("'[]'"),
+    )
 
     analysis: Mapped[str] = mapped_column(Text, nullable=False)
     plan_steps: Mapped[list] = mapped_column(JSONType, nullable=False)

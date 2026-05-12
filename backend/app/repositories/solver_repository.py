@@ -34,12 +34,14 @@ class SolverRepository:
         confidence: float,
         retry_used: bool,
         total_latency_ms: int,
+        topics: list[str] | None = None,
     ) -> SolverSession:
         row = SolverSession(
             problem_id=problem_id,
             problem_text=problem_text,
             entry_function=entry_function,
             test_cases=test_cases,
+            topics=list(topics) if topics is not None else [],
             analysis=analysis,
             plan_steps=plan_steps,
             code=code,

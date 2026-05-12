@@ -36,6 +36,10 @@ class StudyVerifyAPI:
             "problem_text": problem["problem_text"],
             "entry_function": problem["entry_function"],
             "test_cases": problem["test_cases"],
+            # Step 11 Day 2.5 — propagate topics so the backend persists them
+            # on solver_sessions and the Hint Agent can inject per-topic
+            # anti-leak constraints. Default to [] for problems without tags.
+            "topics": problem.get("topics", []),
         }
         return await self._post("/api/v1/solve", body)
 
