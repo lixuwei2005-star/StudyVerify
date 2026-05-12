@@ -45,6 +45,13 @@ class HintInput(BaseModel):
         description="One-shot reinforcement injected by HintService when a "
         "previous attempt leaked input values. Empty for first attempts.",
     )
+    topics: list[str] = Field(
+        default_factory=list,
+        description="Problem topic tags (e.g. 'recursion', 'two-pointers'). "
+        "Drives per-topic anti-leak constraint injection in the hint prompt. "
+        "Empty list = no per-topic constraints applied (current default until "
+        "topics are persisted on solver_sessions; see Step 11 Day 2 notes).",
+    )
 
 
 class HintOutput(BaseModel):

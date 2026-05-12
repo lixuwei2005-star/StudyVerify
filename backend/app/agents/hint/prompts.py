@@ -70,6 +70,95 @@ BAD examples (NEVER produce hints like these — they dictate the algorithm):
 _MAX_FAILED_INPUTS_IN_PROMPT = 3
 
 
+# Per-topic anti-leak constraints (Step 11 Day 2). Step 10 anti-leak pass-rates
+# by topic showed concentrated leakage on a handful of topics where the hint
+# LLM tends to use the topic's signature syntax/structure words (e.g. "two
+# pointers", "recursion / base case"). The constraints below forbid the
+# *syntax/structure vocabulary* of each topic, NOT the underlying concept —
+# the student must still understand what to do, but the LLM is pushed toward
+# describing the *shape of the task* in plain English instead of naming the
+# algorithm. Forbid SYNTAX/STRUCTURE words only; do NOT forbid abstract
+# reasoning words, or hints degenerate to vague nothing.
+#
+# Activated per-problem by build_hint_prompt() when HintInput.topics contains
+# a matching tag. Multiple topics → all matching blocks are injected.
+TOPIC_ANTI_LEAK_CONSTRAINTS: dict[str, str] = {
+    "recursion": (
+        "This problem involves recursion. In your hint, you MUST NOT use these "
+        "words or phrases: 'recursion', 'recursive', 'recursive call', "
+        "'base case', 'recursive case'. Instead, describe what the function "
+        "does to a smaller input, or what the simplest version of the input "
+        "looks like."
+    ),
+    "two-pointers": (
+        "This problem can be solved with two pointers. In your hint, you MUST "
+        "NOT use these words or phrases: 'two pointers', 'left pointer', "
+        "'right pointer', 'pointer technique', 'sliding window'. Instead, "
+        "describe what to track from the start of the data and what to track "
+        "from the end."
+    ),
+    "linked-list": (
+        "This problem involves linked lists. In your hint, you MUST NOT use "
+        "these words or phrases: 'linked list', 'node', 'next pointer', "
+        "'head node', 'tail node'. Describe the structure abstractly as "
+        "'each element points to the next' instead."
+    ),
+    "tree": (
+        "This problem involves a tree. In your hint, you MUST NOT use: "
+        "'tree', 'node', 'root', 'leaf', 'parent', 'child', 'depth-first', "
+        "'breadth-first', 'preorder', 'inorder', 'postorder'. Describe the "
+        "structure as 'each element connects to other elements' instead."
+    ),
+    "binary-tree": (
+        "This problem involves a binary tree. In your hint, you MUST NOT use: "
+        "'binary tree', 'left subtree', 'right subtree', 'left child', "
+        "'right child', 'root', 'leaf', 'depth-first'. Describe the structure "
+        "as 'each element has at most two connected elements' instead."
+    ),
+    "set": (
+        "This problem may use sets. In your hint, you MUST NOT use these "
+        "words or phrases: 'set', 'use a set', 'unique elements', 'distinct "
+        "values', 'membership check', 'in operator'. Describe the property of "
+        "'no repeats' instead."
+    ),
+    "hash-table": (
+        "In your hint, you MUST NOT use: 'hash table', 'hash map', "
+        "'dictionary', 'dict lookup', 'key-value', 'mapping'. Describe the "
+        "goal of 'look up something by its identifier' instead."
+    ),
+    "prefix-sum": (
+        "In your hint, you MUST NOT use: 'prefix sum', 'cumulative sum', "
+        "'running total', 'accumulator'. Describe the goal of 'know the total "
+        "of all elements up to and including position X' instead."
+    ),
+}
+
+
+def _build_topic_constraints_section(topics: list[str]) -> str:
+    """Return a system-prompt-ready block of per-topic anti-leak constraints.
+
+    Order is stable: follows the order of TOPIC_ANTI_LEAK_CONSTRAINTS' insertion
+    so prompts are deterministic regardless of input topic ordering. Returns
+    "" when no topic matches (caller appends nothing).
+    """
+    matched = [
+        TOPIC_ANTI_LEAK_CONSTRAINTS[t]
+        for t in TOPIC_ANTI_LEAK_CONSTRAINTS
+        if t in topics
+    ]
+    if not matched:
+        return ""
+    body = "\n\n".join(matched)
+    return (
+        "\n\n## Topic-specific anti-leak constraints\n\n"
+        "These constraints supplement the CRITICAL RULES above. They forbid "
+        "the signature vocabulary of the algorithmic pattern this problem "
+        "uses, so the student must reason about the shape of the task rather "
+        "than be told its name.\n\n"
+        f"{body}"
+    )
+
+
 def build_hint_prompt(input: HintInput) -> dict[str, str]:
     """Returns {'system': ..., 'user': ...} for chat completion."""
     prior_block = (
@@ -115,7 +204,9 @@ HINTS ALREADY SHOWN:
 
 Generate the next hint per the rules in the system message."""
 
+    system_message = HINT_SYSTEM_PROMPT + _build_topic_constraints_section(input.topics)
+
     return {
-        "system": HINT_SYSTEM_PROMPT,
+        "system": system_message,
         "user": user_message,
     }
