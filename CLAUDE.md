@@ -20,3 +20,7 @@ Every new feature requires a test. Run `uv run pytest -v` before committing.
 ## Do Not Commit
 
 `.env`, `__pycache__/`, `.venv/`, IDE files (`.vscode/`, `.idea/`), `.DS_Store`.
+
+## Agent LLM temperatures
+
+Hint generation uses temperature=0.3 (Step 12) to reduce creative-but-leaky hints. Other agents (Solver, Verifier) keep default temperature for analytical work.
