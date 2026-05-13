@@ -4,29 +4,39 @@ Verification-driven AI learning companion.
 
 ## Evaluation
 
-Step 10 full 100-problem production re-eval after the Solver `entry_function` fix. Full report: [`backend/benchmark/results/2026-05-11_eval.md`](backend/benchmark/results/2026-05-11_eval.md). Baseline report: [`backend/benchmark/results/2026-05-05_eval.md`](backend/benchmark/results/2026-05-05_eval.md).
+Step 11 full 100-problem production re-eval after anti-leak iteration (62-phrase filter + 10-word quote-gate + per-topic constraints). Full report: [`backend/benchmark/results/2026-05-12_step11_eval.md`](backend/benchmark/results/2026-05-12_step11_eval.md). Prior reports: [Step 10](backend/benchmark/results/2026-05-11_eval.md), [Step 9 baseline](backend/benchmark/results/2026-05-05_eval.md).
 
-| Metric | Step 9 baseline | Step 10 full re-eval |
-|---|---:|---:|
-| Verifier accuracy | 84.2% (320/380) | **100.0% (380/380)** |
-| Anti-leak success | 70.6% (1,004/1,423 hints) | **60.0% (829/1,381 hints)** |
-| Helpfulness (hint 1 -> hint 5) | 91.9% -> 96.1% | **97.2% -> 98.1%** |
-| Latency p95 | solve 38s / verify 8s / hint 23s | solve 40s / verify 14s / hint 46s |
-| Production reliability | 99.6% (7 / 1,903 hard failures) | 97.4% (49 / 1,861 hard failures) |
-| Run cost | ~$1.50 (DeepSeek) | ~$1.50 (DeepSeek) |
+Step 11 anti-leak improvements over Step 10:
+- Forbidden phrase filter: 33 → 62 entries (sourced from Step 10 LLM-judge catches)
+- Helpfulness quote-gate: 5 → 10 consecutive words
+- Per-topic anti-leak constraints injected into the hint prompt for 7 high-leak topics (recursion, two-pointers, linked-list, tree, set, hash-table, prefix-sum)
+
+The 10-word quote-gate and 62-phrase filter are strictly tighter measurements; a drop on either is partly a stricter ruler, not a regression.
+
+| Metric | Step 9 | Step 10 | Step 11 |
+|---|---:|---:|---:|
+| Verifier accuracy | 84.2% | 100.0% | **100.0%** |
+| Anti-leak combined | 70.6% | 60.0% | **60.1%** |
+| ↳ Phrase filter | 93.8% | 92.0% | 85.1% *(new 62-phrase list)* |
+| ↳ LLM judge | 75.2% | 65.5% | 65.5% |
+| Helpfulness hint_1 | 91.9% | 97.2% | 94.5% *(10-word gate)* |
+| Helpfulness hint_5 | 96.1% | 98.1% | 95.2% *(10-word gate)* |
+| Latency p95 solve | 38s | 40s | **32s** |
+| Production reliability | 99.6% | 97.4% | **99.4%** |
 
 Notable findings:
 
-- **Verifier false-reject issue fixed** — Step 9's 60 false-rejected references were traced to Solver-generated function-name drift. The targeted Step 10 production re-eval confirmed all 60 now pass after the `entry_function` fix (60/60 verifier_correct).
-- **Full-run verifier accuracy is now clean** — every reference and variant that reached verification was classified correctly (380/380). The full run still had 5 solve-time HTTP 504s before verifier execution.
-- **Hint safety is now the main quality frontier** — anti-leak combined dropped from 70.6% to 60.0%. The Step 9 number was likely inflated by subset bias: the `entry_function` bug changed the effective hint mix and produced less representative verifier/hint contexts for many harder algorithmic-pattern problems. Step 10's full pipeline is the more representative baseline.
-- **Hint reliability needs a follow-up check** — `/hint` hard failures spiked to 2.93% (44/1500) in this run versus 0.13% (2/1500) in Step 9. This is likely a production transient or DeepSeek timeout cluster, but it is worth re-checking in a future run.
+- **Aggregate anti-leak combined held flat** (60.0% → 60.1%) — the 75%+ target was not hit. The aggregate masks a real per-topic split, however.
+- **Targeted topics improved substantially** — prefix-sum +30.3 pp, set +23.3 pp, tree +22.3 pp, recursion +13.1 pp, linked-list +8.9 pp. 6 of 7 targeted topics moved positively. The per-topic constraint mechanism works where it fires.
+- **Non-targeted topics regressed slightly** (math −3.9 pp, string −4.7 pp, bit-manipulation −7.5 pp), washing out the aggregate. Likely from the Day 2.5 prompt rewrite nudging the default (no-constraint) path. Step 12 candidate.
+- **Reliability and latency improved sharply** — `/hint` hard failures fell 44 → 8 (5.5×), `/hint` p95 fell 46s → 29s, end-to-end reliability recovered 97.4% → 99.4%.
+- **The LLM judge is the binding constraint** (65.5% → 65.5% flat); future anti-leak gains require either prompt redesign or a different judge framing.
 
-See the [full Step 10 report](backend/benchmark/results/2026-05-11_eval.md) for per-topic breakdowns, sampled hint examples, and latency/reliability details.
+See the [full Step 11 report](backend/benchmark/results/2026-05-12_step11_eval.md) for per-topic breakdowns, leaked-then-fixed hint pairs, and Step 12 priorities.
 
 ## Status
 
-✅ **Production deployed — Step 10/12 complete**
+✅ **Production deployed — Step 11/12 complete (anti-leak iteration ongoing; LLM judge is binding constraint)**
 
 Live demo: https://studyverify.vercel.app  
 100-problem benchmark · Verifier 100% accuracy · 60% anti-leak baseline (primary frontier)
@@ -302,9 +312,9 @@ Layered architecture with clear separation of concerns:
 ### Future work
 
 **P0 (current quality frontier)**
-- Topic-specific anti-leak prompts (anti-leak combined 60% in Step 10 — primary quality frontier; recursion / two-pointers leak most)
-- `/hint` hard fail rate investigation (44/1500 in Step 10 vs 2/1500 in Step 9; likely production transient or DeepSeek timeout cluster)
-- Helpfulness quote-gate tightening to 10 consecutive words for sharper progression signal
+- **LLM judge anti-leak gap closure** — 65.5% flat across Step 9, 10, 11. Phrase filter and per-topic constraints can't budge it; it is the binding constraint. Candidates: tighter LLM judge prompt, hint LLM retry-on-judge-flag, or lower hint LLM temperature.
+- **`two-pointers` constraint not binding** — only +1.3 pp vs the targeted-topics average of +19 pp in Step 11. LLM likely substituting "indices" / "positions" / "starting point" for forbidden words. Strengthen constraint text or add the substitutes to the phrase filter.
+- **Non-targeted topics regressed 4–7 pp in Step 11 despite no intentional change** (math, string, bit-manipulation). May be LLM non-determinism over a 4-hour run, or a side-effect of the prompt rewrite touching the no-constraint default path. Worth a reproducibility re-run.
 
 **P1**
 - RAG corpus expansion (currently 50 examples; aim 200+)
