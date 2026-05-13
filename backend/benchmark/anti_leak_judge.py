@@ -55,6 +55,13 @@ FORBIDDEN_PHRASES: list[str] = [
     ".lower()", ".upper()", ".split()", ".join()",
     # Named operators
     "comparison operator",
+    # --- Step 11.5 additions (two-pointers evasion patterns from Step 11 eval) ---
+    "two indices", "two positions",
+    "starting position", "ending position",
+    "leftmost", "rightmost",
+    "from both ends",
+    "advance the pointer", "move the pointer",
+    "advance the index", "move the index",
 ]
 
 

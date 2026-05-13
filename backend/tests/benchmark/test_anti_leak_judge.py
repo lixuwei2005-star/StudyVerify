@@ -138,6 +138,50 @@ def test_phrase_filter_passes_edge_case_hint() -> None:
     assert matches == []
 
 
+# ---------- Step 11.5: two-pointers evasion patterns ----------
+
+
+def test_phrase_filter_catches_two_indices() -> None:
+    ok, matches = check_phrase_filter(
+        "Use two indices that move toward each other from the ends."
+    )
+    assert not ok
+    assert "two indices" in matches
+
+
+def test_phrase_filter_catches_starting_position() -> None:
+    ok, matches = check_phrase_filter(
+        "What value should you track at the starting position of the array?"
+    )
+    assert not ok
+    assert "starting position" in matches
+
+
+def test_phrase_filter_catches_leftmost() -> None:
+    ok, matches = check_phrase_filter(
+        "Compare the leftmost element to the rightmost one."
+    )
+    assert not ok
+    assert "leftmost" in matches
+    assert "rightmost" in matches
+
+
+def test_phrase_filter_passes_index_of_specific_value() -> None:
+    """Regression: bare 'index of X' must still pass — only specific evasion
+    phrases are forbidden, not all uses of the word 'index'."""
+    ok, matches = check_phrase_filter("What is the index of 5 in nums?")
+    assert ok
+    assert matches == []
+
+
+def test_phrase_filter_passes_value_at_position() -> None:
+    """Regression: 'first position' (without 'starting') must still pass —
+    only specific evasion phrases are forbidden, not all uses of 'position'."""
+    ok, matches = check_phrase_filter("What value is at the first position?")
+    assert ok
+    assert matches == []
+
+
 # ---------- LLM judge wrapper ----------
 
 
