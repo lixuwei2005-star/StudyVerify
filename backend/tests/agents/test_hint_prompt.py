@@ -41,22 +41,6 @@ def test_two_pointers_topic_injects_constraint() -> None:
     assert "'left pointer'" in prompt["system"]
 
 
-def test_two_pointers_constraint_includes_evasion_words() -> None:
-    """Step 11.5: the two-pointers constraint must list the evasion phrases
-    the LLM used in Step 11 to slip past the original constraint
-    ('two indices', 'starting position', 'leftmost', etc.)."""
-    constraint = TOPIC_ANTI_LEAK_CONSTRAINTS["two-pointers"]
-    for evasion in (
-        "'two indices'",
-        "'starting position'",
-        "'leftmost'",
-        "'rightmost'",
-        "'from both ends'",
-        "'advance the pointer'",
-    ):
-        assert evasion in constraint, f"missing evasion phrase {evasion}"
-
-
 def test_no_matching_topic_does_not_inject_constraint_section() -> None:
     # 'array' and 'math' are not in TOPIC_ANTI_LEAK_CONSTRAINTS — no block.
     prompt = build_hint_prompt(_input(topics=["array", "math"]))

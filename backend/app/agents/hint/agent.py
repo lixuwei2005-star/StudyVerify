@@ -46,7 +46,7 @@ class HintAgent:
                     {"role": "system", "content": prompt["system"]},
                     {"role": "user", "content": prompt["user"]},
                 ],
-                temperature=0.3,
+                temperature=0.4,
                 json_mode=False,
             )
             hint_text = response.strip()

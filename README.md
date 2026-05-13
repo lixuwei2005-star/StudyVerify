@@ -4,35 +4,29 @@ Verification-driven AI learning companion.
 
 ## Evaluation
 
-Step 11 full 100-problem production re-eval after anti-leak iteration (62-phrase filter + 10-word quote-gate + per-topic constraints). Full report: [`backend/benchmark/results/2026-05-12_step11_eval.md`](backend/benchmark/results/2026-05-12_step11_eval.md). Prior reports: [Step 10](backend/benchmark/results/2026-05-11_eval.md), [Step 9 baseline](backend/benchmark/results/2026-05-05_eval.md).
+**Production baseline: Step 11.** Step 12 (two-pointers strengthening + hint LLM temperature 0.3) was an attempted iteration that backfired and has been reverted. Latest report: [`backend/benchmark/results/2026-05-13_step12_eval.md`](backend/benchmark/results/2026-05-13_step12_eval.md). Prior reports: [Step 11](backend/benchmark/results/2026-05-12_step11_eval.md), [Step 10](backend/benchmark/results/2026-05-11_eval.md), [Step 9 baseline](backend/benchmark/results/2026-05-05_eval.md).
 
-Step 11 anti-leak improvements over Step 10:
-- Forbidden phrase filter: 33 → 62 entries (sourced from Step 10 LLM-judge catches)
-- Helpfulness quote-gate: 5 → 10 consecutive words
-- Per-topic anti-leak constraints injected into the hint prompt for 7 high-leak topics (recursion, two-pointers, linked-list, tree, set, hash-table, prefix-sum)
+| Metric | Step 9 | Step 10 | **Step 11** | Step 12 (reverted) |
+|---|---:|---:|---:|---:|
+| Verifier accuracy | 84.2% | 100.0% | **100.0%** | 100.0% |
+| Anti-leak combined | 70.6% | 60.0% | **60.1%** | 57.7% |
+| ↳ Phrase filter | 93.8% | 92.0% | **85.1%** | 84.6% |
+| ↳ LLM judge | 75.2% | 65.5% | **65.5%** | 64.7% |
+| Helpfulness hint_1 | 91.9% | 97.2% | **94.5%** *(10-word)* | 95.3% |
+| Helpfulness hint_5 | 96.1% | 98.1% | **95.2%** *(10-word)* | 95.9% |
+| Latency p95 hint | 23s | 46s | **29s** | 27s |
+| Production reliability | 99.6% | 97.4% | **99.4%** | 99.5% |
 
-The 10-word quote-gate and 62-phrase filter are strictly tighter measurements; a drop on either is partly a stricter ruler, not a regression.
-
-| Metric | Step 9 | Step 10 | Step 11 |
-|---|---:|---:|---:|
-| Verifier accuracy | 84.2% | 100.0% | **100.0%** |
-| Anti-leak combined | 70.6% | 60.0% | **60.1%** |
-| ↳ Phrase filter | 93.8% | 92.0% | 85.1% *(new 62-phrase list)* |
-| ↳ LLM judge | 75.2% | 65.5% | 65.5% |
-| Helpfulness hint_1 | 91.9% | 97.2% | 94.5% *(10-word gate)* |
-| Helpfulness hint_5 | 96.1% | 98.1% | 95.2% *(10-word gate)* |
-| Latency p95 solve | 38s | 40s | **32s** |
-| Production reliability | 99.6% | 97.4% | **99.4%** |
+Step 11 is the current production baseline (in bold). Step 12 (two-pointers strengthening + hint LLM temperature 0.3) was an attempted iteration that backfired: anti-leak dropped −2.4 pp, and 6 of 7 Step-11-targeted topics regressed (notably two-pointers −14.0 pp on the directly targeted change). The production code was reverted to Step 11 settings. The Step 12 ablation data is preserved in [`backend/benchmark/results/2026-05-13_step12_eval.md`](backend/benchmark/results/2026-05-13_step12_eval.md) as documented evidence.
 
 Notable findings:
 
-- **Aggregate anti-leak combined held flat** (60.0% → 60.1%) — the 75%+ target was not hit. The aggregate masks a real per-topic split, however.
-- **Targeted topics improved substantially** — prefix-sum +30.3 pp, set +23.3 pp, tree +22.3 pp, recursion +13.1 pp, linked-list +8.9 pp. 6 of 7 targeted topics moved positively. The per-topic constraint mechanism works where it fires.
-- **Non-targeted topics regressed slightly** (math −3.9 pp, string −4.7 pp, bit-manipulation −7.5 pp), washing out the aggregate. Likely from the Day 2.5 prompt rewrite nudging the default (no-constraint) path. Step 12 candidate.
-- **Reliability and latency improved sharply** — `/hint` hard failures fell 44 → 8 (5.5×), `/hint` p95 fell 46s → 29s, end-to-end reliability recovered 97.4% → 99.4%.
-- **The LLM judge is the binding constraint** (65.5% → 65.5% flat); future anti-leak gains require either prompt redesign or a different judge framing.
+- **LLM judge invariant across iterations:** 75.2% (Step 9) → 65.5% (Step 10) → 65.5% (Step 11) → 64.7% (Step 12). The Step 9 → Step 10 drop reflects the `entry_function` bug fix changing which hints reached the judge (more hard algorithmic-pattern hints in the corpus post-fix). The 65.5% / 65.5% / 64.7% sequence across Step 10/11/12 — same hint mix, different anti-leak interventions — shows the judge pinned at ~65% regardless of prompt constraints, phrase filter expansions, or temperature changes. Intrinsic structural-leakage ceiling under the current judge prompt. Real improvement requires either hint LLM upgrade or retry-on-judge-flag architecture (Step 13+ future work).
+- **Lower temperature backfired despite intuition.** At T=0.3 the model substitutes *less* creatively but reaches for *more directly algorithmic phrasing* (e.g. "recursive call" verbatim, attribute access like `.l`/`.r`) — exactly what the LLM judge flags. The "creative substitution" theory of judge-gap closure does not survive the data.
+- **More forbid-list entries can hurt.** Two-pointers went from 5 forbidden phrases to 19 and dropped −14 pp — *worse than having no per-topic constraint at all* (61.2% at Step 10 with zero phrases, 48.5% at Step 12 with 19). Over-constrained prompts appear to crowd out the user task and push the model toward fallback algorithmic English.
+- **Helpfulness held under T=0.3** (+0.7 to +3.2 pp across hint levels) — the pre-flight risk for the temperature change did not materialize. Reverted not because helpfulness suffered, but because the anti-leak loss outweighed it.
 
-See the [full Step 11 report](backend/benchmark/results/2026-05-12_step11_eval.md) for per-topic breakdowns, leaked-then-fixed hint pairs, and Step 12 priorities.
+See the [full Step 12 report](backend/benchmark/results/2026-05-13_step12_eval.md) for per-topic breakdowns, regression examples (Step 11 clean → Step 12 leaked), and Step 13 priorities.
 
 ## Status
 
@@ -312,9 +306,7 @@ Layered architecture with clear separation of concerns:
 ### Future work
 
 **P0 (current quality frontier)**
-- **LLM judge anti-leak gap closure** — 65.5% flat across Step 9, 10, 11. Phrase filter and per-topic constraints can't budge it; it is the binding constraint. Candidates: tighter LLM judge prompt, hint LLM retry-on-judge-flag, or lower hint LLM temperature.
-- **`two-pointers` constraint not binding** — only +1.3 pp vs the targeted-topics average of +19 pp in Step 11. LLM likely substituting "indices" / "positions" / "starting point" for forbidden words. Strengthen constraint text or add the substitutes to the phrase filter.
-- **Non-targeted topics regressed 4–7 pp in Step 11 despite no intentional change** (math, string, bit-manipulation). May be LLM non-determinism over a 4-hour run, or a side-effect of the prompt rewrite touching the no-constraint default path. Worth a reproducibility re-run.
+- **Anti-leak ceiling investigation.** LLM judge invariant across 4 configurations (Step 9 75.2% [different mix], Step 10 65.5%, Step 11 65.5%, Step 12 64.7%). Phrase filters, per-topic prompt constraints, and lower hint temperature have all failed to move it. Consider hint LLM model upgrade (DeepSeek → Claude/GPT-4) or retry-on-judge-flag architecture. Both increase production cost; ROI uncertain given current 60% baseline is acceptable for demo MVP.
 
 **P1**
 - RAG corpus expansion (currently 50 examples; aim 200+)

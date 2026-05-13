@@ -5,7 +5,7 @@ Ten tests covering:
 - Anti-leak guards (no 'expected' in prompt, all prior hints in prompt)
 - LLM error degrades to fallback
 - Edge cases: empty failed_test_inputs, >3 failed_test_inputs capped
-- Contract locks: temperature=0.3 (Step 12), .chat called (not .complete), first-hint framing
+- Contract locks: temperature=0.4 (Step 11 baseline; Step 12 0.3 reverted), .chat called (not .complete), first-hint framing
 """
 
 from __future__ import annotations
@@ -158,12 +158,13 @@ async def test_prompt_caps_failed_test_inputs_at_three() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 8. temperature=0.3 is used (Step 12) — lock against drift.
+# 8. temperature=0.4 is used — lock against drift.
 #
-# Step 11 eval surfaced the LLM judge as the binding anti-leak constraint
-# (65.5% flat across Step 9/10/11). Lowering hint generation temperature
-# 0.4 -> 0.3 reduces creative substitutions the model uses to evade the
-# per-topic constraints. Solver/Verifier keep their existing temperatures.
+# Step 12 lowered this to 0.3 in an attempt to close the LLM-judge anti-leak
+# gap (creative substitution theory). The Step 12 full re-eval showed the
+# change backfired (anti-leak combined -2.4 pp, two-pointers -14 pp).
+# Reverted to the Step 11 baseline of 0.4. See benchmark/results/
+# 2026-05-13_step12_eval.md for the ablation evidence.
 # ---------------------------------------------------------------------------
 async def test_hint_agent_uses_low_temperature() -> None:
     agent, chat = _agent(llm_responses=["A hint."])
@@ -171,7 +172,7 @@ async def test_hint_agent_uses_low_temperature() -> None:
     await agent.generate(_input())
 
     call_kwargs = chat.call_args.kwargs
-    assert call_kwargs["temperature"] == pytest.approx(0.3)
+    assert call_kwargs["temperature"] == pytest.approx(0.4)
 
 
 # ---------------------------------------------------------------------------

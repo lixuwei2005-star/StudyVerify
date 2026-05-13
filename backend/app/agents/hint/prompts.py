@@ -91,20 +91,11 @@ TOPIC_ANTI_LEAK_CONSTRAINTS: dict[str, str] = {
         "looks like."
     ),
     "two-pointers": (
-        "This problem can be solved with two pointers. In your "
-        "hint, you MUST NOT use these words or phrases: "
-        "'two pointers', 'left pointer', 'right pointer', "
-        "'pointer technique', 'sliding window', "
-        "'two indices', 'two positions', "
-        "'starting position', 'ending position', "
-        "'first index', 'last index', 'start index', 'end index', "
-        "'leftmost', 'rightmost', 'from both ends', "
-        "'advance the pointer', 'move the pointer'. "
-        "Instead, describe what to track from the start of the "
-        "data and what to track from the end — but in terms of "
-        "the values themselves, not their locations. For example: "
-        "'what value would we need from the front' rather than "
-        "'what pointer should advance'."
+        "This problem can be solved with two pointers. In your hint, you MUST "
+        "NOT use these words or phrases: 'two pointers', 'left pointer', "
+        "'right pointer', 'pointer technique', 'sliding window'. Instead, "
+        "describe what to track from the start of the data and what to track "
+        "from the end."
     ),
     "linked-list": (
         "This problem involves linked lists. In your hint, you MUST NOT use "

@@ -23,4 +23,4 @@ Every new feature requires a test. Run `uv run pytest -v` before committing.
 
 ## Agent LLM temperatures
 
-Hint generation uses temperature=0.3 (Step 12) to reduce creative-but-leaky hints. Other agents (Solver, Verifier) keep default temperature for analytical work.
+Hint generation uses temperature=0.4. Step 12 lowered to 0.3 to test the "reduce creative substitution" hypothesis; full 100-problem eval showed −2.4 pp anti-leak regression, reverted. Documented in `backend/benchmark/results/2026-05-13_step12_eval.md`.
