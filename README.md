@@ -28,6 +28,41 @@ Notable findings:
 
 See the [full Step 12 report](backend/benchmark/results/2026-05-13_step12_eval.md) for per-topic breakdowns, regression examples (Step 11 clean → Step 12 leaked), and Step 13 priorities.
 
+## Engineering lessons
+
+This project was built eval-driven: a 100-problem benchmark
+(Step 9) surfaces issues, fixes are measured against it, and
+results — including failures — are committed.
+
+- **The benchmark caught a bug the unit tests couldn't.** Step 9
+  showed 84.2% verifier accuracy. Investigation (Step 10) traced
+  60 false-rejected reference solutions to the Solver LLM renaming
+  the entry function during code generation — sandbox "function
+  not found" errors, not logic errors. A one-line prompt
+  constraint lifted verifier accuracy to 100%.
+
+- **More forbidden phrases made anti-leak worse, not better.**
+  Step 11 added per-topic anti-leak prompt constraints; targeted
+  topics improved +13 to +30 pp. Step 11.5/12 pushed further —
+  19 forbidden phrases for two-pointers, lower LLM temperature.
+  The 100-problem re-eval showed that topic at 48.5%, *worse* than
+  the 61.2% it had with no constraint at all. The interventions
+  were reverted.
+
+- **The LLM judge has an intrinsic ceiling.** Anti-leak LLM-judge
+  pass rate held at ~65% across four different configurations
+  (Step 10-12). Phrase filters and prompt constraints don't move
+  it. Real improvement would require a different hint model or a
+  retry-on-flag architecture — documented as future work, not
+  pursued, because 60% is acceptable for a demo MVP.
+
+- **Production deployment surfaces what local testing doesn't.**
+  Six production-only fixes shipped over the project: Docker
+  socket GID for sibling containers, sandbox image distribution,
+  Linux file permissions, async SQLAlchemy lazy-load, student
+  print() polluting sandbox stdout, and nginx proxy timeouts on
+  slow LLM calls.
+
 ## Status
 
 ✅ **Production deployed — Step 11/12 complete (anti-leak iteration ongoing; LLM judge is binding constraint)**
@@ -226,6 +261,32 @@ Test counts (Step 10):
 - E2E: 3/3 Playwright smoke stable on production frontend
 
 ## Architecture
+
+```mermaid
+flowchart TD
+    User[Student] -->|POST /solve| API[FastAPI<br/>Route Layer]
+    User -->|POST /verify| API
+    User -->|POST /hint| API
+
+    API --> SVC[Service Layer<br/>orchestration]
+    SVC --> REPO[(PostgreSQL<br/>+ pgvector)]
+
+    SVC --> SOLVER[Solver Agent<br/>3-stage LLM pipeline]
+    SVC --> VERIFIER[Verifier Agent<br/>Docker sandbox]
+    SVC --> HINT[Hint Agent<br/>progressive hints]
+
+    SOLVER --> SANDBOX[Docker Sandbox<br/>network=none, cap_drop=ALL]
+    VERIFIER --> SANDBOX
+    HINT --> RAG[pgvector RAG<br/>past-failure retrieval]
+    RAG --> REPO
+
+    SOLVER --> GW[LLM Gateway<br/>DeepSeek + OpenAI fallback]
+    VERIFIER --> GW
+    HINT --> GW
+
+    HINT --> AL[Anti-leak defense<br/>3 layers]
+    VERIFIER --> AL
+```
 
 Layered architecture with clear separation of concerns:
 
