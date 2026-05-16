@@ -80,6 +80,43 @@ bash scripts/db-smoke-test.sh
 bash scripts/redis-smoke-test.sh
 ```
 
+## Production nginx timeout configuration
+
+The Oracle VM runs nginx as a reverse proxy in front of the FastAPI container
+(`127.0.0.1:8000`). nginx config is managed by BaoTa panel at:
+
+```text
+/www/server/panel/vhost/nginx/proxy/api.005917.xyz/*.conf
+```
+
+The proxy location block MUST include extended timeouts, because LLM-backed
+endpoints (`/solve`, `/verify`, `/hint`, `/generate-test-cases`) can exceed
+nginx's default 60s `proxy_read_timeout`:
+
+```nginx
+location ^~ /
+{
+    proxy_pass http://127.0.0.1:8000;
+    proxy_connect_timeout 75s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+    ...
+}
+```
+
+Without these, intermittent 504 Gateway Timeout occurs on slow LLM calls.
+Diagnosed in Step 13 from nginx `error.log`:
+`upstream timed out (110: Connection timed out) while reading response header
+from upstream` -- roughly 80 occurrences over a week, almost all on
+`/api/v1/hint`.
+
+After editing, validate and reload:
+
+```bash
+nginx -t
+nginx -s reload
+```
+
 ## Troubleshooting
 
 - **Port 5432 / 6379 already in use** — something else (Postgres.app, system Redis) is bound. Diagnose with `lsof -nP -i :5432 -i :6379`. Either stop the conflicting service or bump `POSTGRES_PORT` / `REDIS_PORT` in `.env.docker` and `make compose-up` again. No code change needed.
